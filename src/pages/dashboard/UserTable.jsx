@@ -66,7 +66,7 @@ function OrderTableHead({ user, userPhoneNumber }) {
 const handleUpateStatus = async (phoneNumber) => {
   // Use the phoneNumber parameter directly
   console.log('Phone Number:', phoneNumber);
-  const response = await axios.post('http://localhost:12000/auth/updateUserStatus', { phoneNumber: phoneNumber });
+  const response = await axios.post('https://omify-backend.vercel.app/auth/updateUserStatus', { phoneNumber: phoneNumber });
   console.log(response, 'response');
   // Add your logic here
 };

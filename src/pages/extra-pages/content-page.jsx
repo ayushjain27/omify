@@ -19,18 +19,18 @@ export default function ContentPage() {
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const response = await axios.get(`http://localhost:12000/paymentPage/getPaymentPageDetailById?id=${id}`);
+        const response = await axios.get(`https://omify-backend.vercel.app/paymentPage/getPaymentPageDetailById?id=${id}`);
 
         if (response.status === 200) {
           setData(response.data);
           if (!isEmpty(response?.data?.imageUrl)) {
             const filename = response.data.imageUrl.split('/').pop();
-            const imageResponse = await axios.get(`http://localhost:12000/paymentPage/getImage/${filename}`, { responseType: 'blob' });
+            const imageResponse = await axios.get(`https://omify-backend.vercel.app/paymentPage/getImage/${filename}`, { responseType: 'blob' });
             setImageSrc(URL.createObjectURL(imageResponse.data));
           }
 
           if (!isEmpty(response.data)) {
-            const res = await axios.get('http://localhost:12000/auth/getUserDataById', {
+            const res = await axios.get('https://omify-backend.vercel.app/auth/getUserDataById', {
               params: { phoneNumber: response?.data?.phoneNumber }
             });
             if (!isEmpty(res?.data)) setUserDetail(res?.data);
@@ -110,12 +110,12 @@ export default function ContentPage() {
                 console.log(data, 'dmkr');
 
                 // Sending the POST request with the values
-                const response = await axios.post('http://localhost:12000/paymentPage/createUserPaymentDetails', data);
+                const response = await axios.post('https://omify-backend.vercel.app/paymentPage/createUserPaymentDetails', data);
 
                 // Check if the request was successful and navigate
                 if (response.status === 200) {
                   console.log(id,"demk")
-                  const qrResponse = await axios.post('http://localhost:12000/paymentPage/create-qr', {
+                  const qrResponse = await axios.post('https://omify-backend.vercel.app/paymentPage/create-qr', {
                     paymentPageId: id
                   });
 
