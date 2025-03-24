@@ -15,7 +15,7 @@ export default function ProtectedRoute({ children }) {
 
   // If the user is not authenticated, redirect to the login page
   if (!isAuthenticated) {
-    return <Navigate to="/mainDashboardSection" />;
+    return <Navigate to="/" />;
   }
 
     return children;
