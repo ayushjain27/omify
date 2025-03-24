@@ -93,7 +93,7 @@ export default function AuthLogin() {
               )}
               <Grid item xs={12}>
                 <AnimateButton>
-                  <Button disabled={isSubmitting} fullWidth size="large" type="submit" variant="contained" color="primary">
+                  <Button fullWidth size="large" type="submit" variant="contained" color="primary">
                     Login
                   </Button>
                 </AnimateButton>

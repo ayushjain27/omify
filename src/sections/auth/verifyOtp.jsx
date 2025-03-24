@@ -73,7 +73,7 @@ export default function VerifyOtp() {
           }
         }}
       >
-        {({ errors, handleBlur, handleChange, handleSubmit, isSubmitting, touched, values }) => (
+        {({ errors, handleBlur, handleChange, handleSubmit, touched, values }) => (
           <form noValidate onSubmit={handleSubmit}>
             <Grid container spacing={3}>
               <Grid item xs={12}>
@@ -104,7 +104,7 @@ export default function VerifyOtp() {
               )}
               <Grid item xs={12}>
                 <AnimateButton>
-                  <Button disabled={isSubmitting} fullWidth size="large" type="submit" variant="contained" color="primary">
+                  <Button fullWidth size="large" type="submit" variant="contained" color="primary">
                     Verify
                   </Button>
                 </AnimateButton>
