@@ -2,7 +2,7 @@ import PropTypes from 'prop-types';
 import React, { useState } from 'react';
 
 // material-ui
-import { Grid, Stack, FormHelperText, InputLabel, OutlinedInput, Button, FormHelperText } from '@mui/material';
+import { Grid, Stack, FormHelperText, InputLabel, OutlinedInput, Button } from '@mui/material';
 
 // third-party
 import * as Yup from 'yup';
