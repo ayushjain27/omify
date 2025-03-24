@@ -91,12 +91,12 @@ export default function Profile() {
 
   const { setIsAuthenticated } = useAuth();
 
-  const naviagte = useNavigate();
+  const navigate = useNavigate();
 
   const handleLogOut = async() => {
     setIsAuthenticated(false);
     await localStorage.removeItem('omifyUserPhoneNumber');
-    naviagte('/mainDashboardSection');
+    navigate('/mainDashboardSection');
   }
 
   const iconBackColorOpen = 'grey.100';
