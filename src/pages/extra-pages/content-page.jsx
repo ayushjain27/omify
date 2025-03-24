@@ -94,7 +94,7 @@ export default function ContentPage() {
                 .matches(/^[0-9]{10}$/, 'Must be 10 digits')
                 .required('Phone Number is required')
             })}
-            onSubmit={async (values) => {
+            onSubmit={async (values, { setSubmitting }) => {
               console.log('Submitting:', values);
               try {
                 console.log('Form submitted with values:', values);
@@ -129,7 +129,9 @@ export default function ContentPage() {
                 }
               } catch (error) {
                 console.error('Error during API request:', error);
-              }
+            } finally {
+              setSubmitting(false);
+            }
               // API call logic goes here
             }}
           >

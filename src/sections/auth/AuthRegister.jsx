@@ -46,7 +46,7 @@ export default function AuthRegister() {
           // adhaarCardNumber: Yup.number().required('Adhaar Card Number is required').min(10, 'Min 12 length is required'),
           // panCardNumber: Yup.number().required('Pan Card Number is required').min(10, 'Min 12 length is required'),
         })}
-        onSubmit={async (values) => {
+        onSubmit={async (values, { setSubmitting }) => {
           console.log('Form submitted with values:', values);
           // localStorage.setItem('omifyUserPhoneNumber', values.phoneNumber)
           try {
@@ -75,6 +75,8 @@ export default function AuthRegister() {
             }
           } catch (error) {
             console.error('Error during API request:', error);
+          } finally {
+            setSubmitting(false);
           }
         }}
       >

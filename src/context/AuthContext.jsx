@@ -9,12 +9,10 @@ const AuthContext = createContext();
 export function AuthProvider({ children }) {
   const [isAuthenticated, setIsAuthenticated] = useState(false); // default false for unauthenticated
   const [loading, setLoading] = useState(true); // Add loading state
-  console.log("menkjn")
 
   useEffect(() => {
     const fetchData = async () => {
       let phoneNumber = await localStorage.getItem('omifyUserPhoneNumber');
-      console.log(phoneNumber,"FEr")
       if (!isEmpty(phoneNumber)) {
         console.log(phoneNumber);
         setIsAuthenticated(true);

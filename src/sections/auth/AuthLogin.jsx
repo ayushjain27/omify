@@ -2,29 +2,22 @@ import PropTypes from 'prop-types';
 import React, { useState } from 'react';
 
 // material-ui
-import { Grid, Stack, FormHelperText, InputLabel, OutlinedInput, Button } from '@mui/material';
+import { Grid, Stack, FormHelperText, InputLabel, Button, TextField } from '@mui/material';
 
 // third-party
 import * as Yup from 'yup';
 import { Formik } from 'formik';
 
 // project imports
-import IconButton from 'components/@extended/IconButton';
 import AnimateButton from 'components/@extended/AnimateButton';
 import { useNavigate } from 'react-router';
 import axios from 'axios';
 import { AlertBox } from 'components/AlertBox';
-import { isEmpty } from 'lodash';
-
-// assets
-import EyeOutlined from '@ant-design/icons/EyeOutlined';
-import EyeInvisibleOutlined from '@ant-design/icons/EyeInvisibleOutlined';
-
-// ============================|| JWT - LOGIN ||============================ //
 
 export default function AuthLogin() {
   const navigate = useNavigate();
   const [isAlert, setIsAlert] = useState(false);
+
   return (
     <>
       <Formik
@@ -34,19 +27,15 @@ export default function AuthLogin() {
         validationSchema={Yup.object().shape({
           email: Yup.string().email('Must be a valid email').required('Email is required')
         })}
-        onSubmit={async (values) => {
+        onSubmit={async (values, { setSubmitting }) => {
           try {
             console.log('Form submitted with values:', values);
 
-            // Create the data object to send in the POST request
-            const data = {
-              email: values.email // You can add other fields to the data object if needed
-            };
+            const data = { email: values.email };
 
-            // Sending the POST request with the values
+            // Sending the POST request
             const response = await axios.post('https://omify-backend.vercel.app/auth/login', data);
 
-            // Check if the request was successful and navigate
             if (response.status === 200) {
               console.log('API request successful:', response.data);
               if (response.data?.message === 'User does not exists') {
@@ -59,16 +48,18 @@ export default function AuthLogin() {
             }
           } catch (error) {
             console.error('Error during API request:', error.message);
+          } finally {
+            setSubmitting(false);
           }
         }}
       >
-        {({ errors, handleBlur, handleChange, touched, values }) => (
-          <form noValidate>
+        {({ errors, handleBlur, handleChange, touched, values, handleSubmit, isSubmitting }) => (
+          <form noValidate onSubmit={handleSubmit}>
             <Grid container spacing={3}>
               <Grid item xs={12}>
                 <Stack spacing={1}>
                   <InputLabel htmlFor="email">Email Address</InputLabel>
-                  <OutlinedInput
+                  <TextField
                     id="email"
                     type="email"
                     value={values.email}
@@ -78,13 +69,9 @@ export default function AuthLogin() {
                     placeholder="Enter email address"
                     fullWidth
                     error={Boolean(touched.email && errors.email)}
+                    helperText={touched.email && errors.email ? errors.email : ''}
                   />
                 </Stack>
-                {touched.email && errors.email && (
-                  <FormHelperText error id="standard-weight-helper-text-email">
-                    {errors.email}
-                  </FormHelperText>
-                )}
               </Grid>
               {errors.submit && (
                 <Grid item xs={12}>
@@ -93,8 +80,8 @@ export default function AuthLogin() {
               )}
               <Grid item xs={12}>
                 <AnimateButton>
-                  <Button fullWidth size="large" type="submit" variant="contained" color="primary">
-                    Login
+                  <Button fullWidth size="large" type="submit" variant="contained" color="primary" disabled={isSubmitting}>
+                    {isSubmitting ? 'Logging in...' : 'Login'}
                   </Button>
                 </AnimateButton>
               </Grid>

@@ -38,7 +38,7 @@ export default function VerifyOtp() {
         validationSchema={Yup.object().shape({
           otp: Yup.number().required('Otp is required').min(6, 'Min 6 digit is required'),
         })}
-        onSubmit={async(values) => {
+        onSubmit={async (values, { setSubmitting }) => {
           console.log('Form submitted with values:', values);
           try {
             console.log('Form submitted with values:', values);
@@ -70,6 +70,8 @@ export default function VerifyOtp() {
             }
           } catch (error) {
             console.error('Error during API request:', error.message);
+          } finally {
+            setSubmitting(false);
           }
         }}
       >

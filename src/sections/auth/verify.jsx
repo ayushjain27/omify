@@ -1,5 +1,5 @@
 // material-ui
-import { Grid, Divider, Typography } from '@mui/material';
+import { Grid, Divider, Typography, Stack } from '@mui/material';
 
 // project import
 import AuthWrapper from './AuthWrapper';
