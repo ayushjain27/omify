@@ -23,9 +23,7 @@ import { useAuth } from 'context/AuthContext';
 
 export default function VerifyOtp() {
   const location = useLocation();
-  console.log(location,"D;e;mrk")
   const state = location.state; // Access the data passed in the state
-  console.log(state,"fekm")
   const navigate = useNavigate();
   const { setIsAuthenticated } = useAuth();
 
