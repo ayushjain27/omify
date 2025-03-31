@@ -164,7 +164,7 @@ export default function PaymentTable(props) {
 
   const handleCopyLink = (id) => {
     console.log(id, 'dmrkfmk');
-    const link = `http://localhost:3000/omify/contentPage?id=${encodeURIComponent(id)}`;
+    const link = `https://omify-backend.vercel.app/omify/contentPage?id=${encodeURIComponent(id)}`;
     console.log(link, 'dmrkmf');
     navigator.clipboard
       .writeText(link)
