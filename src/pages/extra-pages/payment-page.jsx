@@ -26,7 +26,7 @@ export default function PaymentPage() {
       try {
         let phoneNumber = await localStorage.getItem('omifyUserPhoneNumber');
         console.log(phoneNumber, 'delmfk');
-        const response = await axios.get( phoneNumber === '+917838245184' ? 'https://omify-backend.vercel.app/paymentPage/getAllPaymentPages' : 'https://omify-backend.vercel.app/paymentPage/getPaymentDetailsListByPhoneNumber', {
+        const response = await axios.get( phoneNumber === '+917838245184' ? 'http://localhost:12000/paymentPage/getAllPaymentPages' : 'http://localhost:12000/paymentPage/getPaymentDetailsListByPhoneNumber', {
           params: { phoneNumber: phoneNumber } // Pass phoneNumber in the `params` field
         });
 

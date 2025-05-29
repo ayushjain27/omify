@@ -7,15 +7,15 @@ import Loadable from 'components/Loadable';
 import { element } from 'prop-types';
 
 // render - login
-const AuthLogin = Loadable(lazy(() => import('../pages/auth/Login')));
-const AuthRegister = Loadable(lazy(() => import('../pages/auth/Register')));
+const AuthLogin = Loadable(lazy(() => import('../sections/auth/AuthLogin')));
+const AuthRegister = Loadable(lazy(() => import('pages/auth/Register')));
 const VerifyOtp = Loadable(lazy(() => import('../sections/auth/verify')));
 const MainDashboardSection = Loadable(lazy(() => import('../sections/auth/MainDashboardSection')));
 const ContentPage = Loadable(lazy(() => import('pages/extra-pages/content-page')));
 
 // jwt auth
-const LoginPage = Loadable(lazy(() => import('pages/auth/Login')));
-const RegisterPage = Loadable(lazy(() => import('pages/auth/Register')));
+// const LoginPage = Loadable(lazy(() => import('pages/auth/Login')));
+// const RegisterPage = Loadable(lazy(() => import('pages/auth/Register')));
 
 // ==============================|| AUTH ROUTING ||============================== //
 
@@ -25,6 +25,7 @@ const LoginRoutes = {
     {
       path: '/login',
       element: <AuthLogin />
+      
     },
     {
       path: '/register',

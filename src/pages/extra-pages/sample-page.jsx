@@ -75,7 +75,7 @@ export default function SamplePage() {
       ...data,
       phoneNumber: omifyPhoneNumber
     };
-    const response = await axios.post('https://omify-backend.vercel.app/paymentPage/create', requestData);
+    const response = await axios.post('http://localhost:12000/paymentPage/create', requestData);
     // console.log(response,"demfkmke")
     let paymentPageId = response?.data?._id;
     console.log(paymentPageId, 'delld');
@@ -127,7 +127,7 @@ export default function SamplePage() {
     }
 
     try {
-      const response = await axios.post('https://omify-backend.vercel.app/paymentPage/upload', formData, {
+      const response = await axios.post('http://localhost:12000/paymentPage/upload', formData, {
         headers: {
           'Content-Type': 'multipart/form-data'
         }
@@ -165,7 +165,7 @@ export default function SamplePage() {
     }
 
     try {
-      const response = await axios.post('https://omify-backend.vercel.app/paymentPage/uploadAnything', formData, {
+      const response = await axios.post('http://localhost:12000/paymentPage/uploadAnything', formData, {
         headers: {
           'Content-Type': 'multipart/form-data'
         }

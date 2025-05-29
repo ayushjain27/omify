@@ -58,7 +58,7 @@ const Register = () => {
                 name: values.name,
                 phoneNumber:`+91${values.phoneNumber.slice(-10)}`
               };
-              const response = await axios.post('https://omify-backend.vercel.app/auth/signUp', data);
+              const response = await axios.post('http://localhost:12000/auth/signUp', data);
               if (response.status === 200) {
                 if (response.data?.message === 'This user is already exists') {
                   setErrors({ phoneNumber: 'User already exist' });

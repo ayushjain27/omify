@@ -60,7 +60,7 @@ export default function AuthRegister() {
             };
 
             // Sending the POST request with the values
-            const response = await axios.post('https://omify-backend.vercel.app/auth/signUp', data);
+            const response = await axios.post('http://localhost:12000/auth/signUp', data);
 
             // Check if the request was successful and navigate
             if (response.status === 200) {

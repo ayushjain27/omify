@@ -1,97 +1,79 @@
-import PropTypes from 'prop-types';
-import React, { useState } from 'react';
+// import { capitalCase } from 'change-case';
+import { Link as RouterLink } from 'react-router-dom';
+// material
+import { styled } from '@mui/material/styles';
+import { Box, Card, Stack, Link, Tooltip, Container, Typography } from '@mui/material';
+import LoginForm from './LoginForm';
+import loginImage from 'assets/images/users/image.png';
+// import { MHidden } from '../../components/@extended/MHidden';
+// import Page from '../Page';
 
-// material-ui
-import { Grid, Stack, FormHelperText, InputLabel, Button, TextField } from '@mui/material';
+// ----------------------------------------------------------------------
 
-// third-party
-import * as Yup from 'yup';
-import { Formik } from 'formik';
+// const RootStyle = styled(Page)(({ theme }) => ({
+//   [theme.breakpoints.up('md')]: {
+//     display: 'flex'
+//   }
+// }));
 
-// project imports
-import AnimateButton from 'components/@extended/AnimateButton';
-import { useNavigate } from 'react-router';
-import axios from 'axios';
-import { AlertBox } from 'components/AlertBox';
+
+const SectionStyle = styled(Card)(({ theme }) => ({
+  height: '100vh',
+  width: '100%',
+  maxWidth: '40%',
+  display: 'flex',
+  flexDirection: 'column',
+  justifyContent: 'center',
+  alignItems: 'center'
+  // margin: theme.spacing(2, 0, 2, 2)
+}));
+
+const ContentStyle = styled('div')(({ theme }) => ({
+  maxWidth: '50%',
+  width: '100%',
+  margin: 'auto',
+  display: 'flex',
+  minHeight: '100vh',
+  flexDirection: 'column',
+  justifyContent: 'center',
+  // padding: theme.spacing(12, 0)
+}));
+
+// ----------------------------------------------------------------------
 
 export default function AuthLogin() {
-  const navigate = useNavigate();
-  const [isAlert, setIsAlert] = useState(false);
-
   return (
     <>
-      <Formik
-        initialValues={{
-          email: ''
-        }}
-        validationSchema={Yup.object().shape({
-          email: Yup.string().email('Must be a valid email').required('Email is required')
-        })}
-        onSubmit={async (values, { setSubmitting }) => {
-          try {
-            console.log('Form submitted with values:', values);
+     {/* <RootStyle title="Login | Serviceplug"> */}
+     {/* <MHidden width="mdDown"> */}
+     <Box display="flex" flexDirection="row" alignItems="center" justifyContent="space-between">
+      <SectionStyle>
+        <Typography variant="h3" sx={{ px: 5, mt: 10, mb: 5 }}>
+          Hi, Welcome Back
+        </Typography>
+        <img src={loginImage} alt="login" style={{ width: '100%' }} />
+      </SectionStyle>
+      {/* </MHidden> */}
 
-            const data = { email: values.email };
+      <Container>
+        <ContentStyle>
+          <Stack direction="row" alignItems="center" sx={{ mb: 5 }}>
+            <Box sx={{ flexGrow: 1 }}>
+              <Typography variant="h2" gutterBottom>
+                Sign in to your Dashboard
+              </Typography>
+              <Typography variant="h5"  sx={{ color: 'text.secondary' }}>Enter your credentials.</Typography>
+            </Box>
 
-            // Sending the POST request
-            const response = await axios.post('https://omify-backend.vercel.app/auth/login', data);
-
-            if (response.status === 200) {
-              console.log('API request successful:', response.data);
-              if (response.data?.message === 'User does not exists') {
-                setIsAlert(true);
-              } else {
-                navigate('/verify', { state: data });
-              }
-            } else {
-              console.error('API request failed with status:', response.status);
-            }
-          } catch (error) {
-            console.error('Error during API request:', error.message);
-          } finally {
-            setSubmitting(false);
-          }
-        }}
-      >
-        {({ errors, handleBlur, handleChange, touched, values, handleSubmit, isSubmitting }) => (
-          <form noValidate onSubmit={handleSubmit}>
-            <Grid container spacing={3}>
-              <Grid item xs={12}>
-                <Stack spacing={1}>
-                  <InputLabel htmlFor="email">Email Address</InputLabel>
-                  <TextField
-                    id="email"
-                    type="email"
-                    value={values.email}
-                    name="email"
-                    onBlur={handleBlur}
-                    onChange={handleChange}
-                    placeholder="Enter email address"
-                    fullWidth
-                    error={Boolean(touched.email && errors.email)}
-                    helperText={touched.email && errors.email ? errors.email : ''}
-                  />
-                </Stack>
-              </Grid>
-              {errors.submit && (
-                <Grid item xs={12}>
-                  <FormHelperText error>{errors.submit}</FormHelperText>
-                </Grid>
-              )}
-              <Grid item xs={12}>
-                <AnimateButton>
-                  <Button fullWidth size="large" type="submit" variant="contained" color="primary" disabled={isSubmitting}>
-                    {isSubmitting ? 'Logging in...' : 'Login'}
-                  </Button>
-                </AnimateButton>
-              </Grid>
-            </Grid>
-          </form>
-        )}
-      </Formik>
-      {isAlert && <AlertBox setIsAlert={setIsAlert} />}
+            {/* <Tooltip title={method}>
+              <Box component="img" src={`/static/auth/ic_${method}.png`} sx={{ width: 32, height: 32 }} />
+            </Tooltip> */}
+          </Stack>
+          <LoginForm />
+        </ContentStyle>
+      </Container>
+      </Box>
+      {/* </RootStyle> */}
     </>
   );
 }
-
-AuthLogin.propTypes = { isDemo: PropTypes.bool };

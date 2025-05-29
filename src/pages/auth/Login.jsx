@@ -1,106 +1,68 @@
-import React from 'react';
-import {
-  Container,
-  Avatar,
-  Typography,
-  TextField,
-  Button,
-  Box
-} from '@mui/material';
-import LockOutlinedIcon from '@mui/icons-material/LockOutlined';
-import { Formik } from 'formik';
-import * as Yup from 'yup';
-import axios from 'axios';
-import { useNavigate, Link } from 'react-router-dom';
+// import { capitalCase } from 'change-case';
+import { Link as RouterLink } from 'react-router-dom';
+// material
+import { styled } from '@mui/material/styles';
+import { Box, Card, Stack, Link, Tooltip, Container, Typography } from '@mui/material';
+// route
+// hooks
+// components
 
-const LoginScreen = () => {
-  const navigate = useNavigate();
+// ----------------------------------------------------------------------
+const RootStyle = styled(Page)(({ theme }) => ({
+  [theme.breakpoints.up('md')]: {
+    display: 'flex'
+  }
+}));
 
+const SectionStyle = styled(Card)(({ theme }) => ({
+  width: '100%',
+  maxWidth: 464,
+  display: 'flex',
+  flexDirection: 'column',
+  justifyContent: 'center',
+  margin: theme.spacing(2, 0, 2, 2)
+}));
+
+const ContentStyle = styled('div')(({ theme }) => ({
+  maxWidth: 480,
+  margin: 'auto',
+  display: 'flex',
+  minHeight: '100vh',
+  flexDirection: 'column',
+  justifyContent: 'center',
+  padding: theme.spacing(12, 0)
+}));
+
+// ----------------------------------------------------------------------
+
+export default function Login() {
   return (
-    <Container component="main" maxWidth="xs">
-      <Box
-        sx={{
-          display: 'flex',
-          flexDirection: 'column',
-          alignItems: 'center',
-          marginTop: '40%',
-          padding: 3,
-          borderRadius: 2,
-          boxShadow: 3,
-          backgroundColor: 'white'
-        }}
-      >
-        <Avatar sx={{ m: 1, bgcolor: 'primary.main' }}>
-          <LockOutlinedIcon />
-        </Avatar>
-        <Typography component="h1" variant="h5">Login</Typography>
+    <RootStyle title="Login | Serviceplug">
+        <SectionStyle>
+          <Typography variant="h3" sx={{ px: 5, mt: 10, mb: 5 }}>
+            Hi, Welcome Back
+          </Typography>
+          <img src="/static/illustrations/illustration_login.png" alt="login" />
+        </SectionStyle>
+      {/* </MHidden> */}
 
-        <Formik
-          initialValues={{ email: '' }}
-          validationSchema={Yup.object({
-            email: Yup.string().email('Must be a valid email').required('Email is required')
-          })}
-          onSubmit={async (values, { setSubmitting, setErrors }) => {
-            try {
-              const response = await axios.post('https://omify-backend.vercel.app/auth/login', { email: values.email.toLowerCase() });
-              if (response.status === 200) {
-                if (response.data?.message === 'User does not exist') {
-                  setErrors({ email: 'User does not exist' });
-                } else {
-                  navigate('/verify', { state: { email: values.email.toLowerCase() } });
-                }
-              }
-            } catch (error) {
-              console.error('Error during API request:', error);
-              setErrors({ email: 'Login failed, please try again' });
-            } finally {
-              setSubmitting(false);
-            }
-          }}
-        >
-          {({ errors, handleBlur, handleChange, touched, values, handleSubmit, isSubmitting }) => (
-            <form noValidate onSubmit={handleSubmit}>
-              <TextField
-                variant="outlined"
-                margin="normal"
-                required
-                fullWidth
-                label="Email Address"
-                name="email"
-                autoComplete="email"
-                autoFocus
-                value={values.email}
-                onChange={handleChange}
-                onBlur={handleBlur}
-                error={touched.email && Boolean(errors.email)}
-                helperText={touched.email && errors.email}
-                inputProps={{ style: { borderRadius: '8px' } }}
-              />
-              <Button
-                type="submit"
-                fullWidth
-                variant="contained"
-                sx={{
-                  mt: 3,
-                  mb: 2,
-                  bgcolor: 'primary.main',
-                  '&:hover': {
-                    bgcolor: 'primary.dark',
-                  },
-                }}
-                disabled={isSubmitting}
-              >
-                Login
-              </Button>
-              <Typography component={Link} to={'/register'} variant="body2" color="text.secondary" align="center">
-                Don't have an account? Sign Up
+      <Container maxWidth="sm">
+        <ContentStyle>
+          <Stack direction="row" alignItems="center" sx={{ mb: 5 }}>
+            <Box sx={{ flexGrow: 1 }}>
+              <Typography variant="h4" gutterBottom>
+                Sign in to your Dashboard
               </Typography>
-            </form>
-          )}
-        </Formik>
-      </Box>
-    </Container>
-  );
-};
+              <Typography sx={{ color: 'text.secondary' }}>Enter your credentials.</Typography>
+            </Box>
 
-export default LoginScreen;
+            {/* <Tooltip title={method}>
+              <Box component="img" src={`/static/auth/ic_${method}.png`} sx={{ width: 32, height: 32 }} />
+            </Tooltip> */}
+          </Stack>
+          <LoginForm />
+        </ContentStyle>
+      </Container>
+    </RootStyle>
+  );
+}

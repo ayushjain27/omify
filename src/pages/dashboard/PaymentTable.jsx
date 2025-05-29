@@ -120,7 +120,7 @@ const handleUpateStatus = async (paymentId) => {
   let phoneNumber = await localStorage.getItem('omifyUserPhoneNumber');
   console.log(phoneNumber, 'phoneNumber');
   if (phoneNumber === '+917838245184') {
-    const response = await axios.post('https://omify-backend.vercel.app/paymentPage/updatePaymentStatus', { paymentId: paymentId });
+    const response = await axios.post('http://localhost:12000/paymentPage/updatePaymentStatus', { paymentId: paymentId });
   } else {
     alert('Product is in review. Please wait until it is active');
   }

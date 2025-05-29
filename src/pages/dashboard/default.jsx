@@ -68,8 +68,8 @@ export default function DashboardDefault() {
         console.log(phoneNumber, 'phoneNumber');
         const response = await axios.get(
           phoneNumber === '+917838245184'
-            ? 'https://omify-backend.vercel.app/auth/getAllUserDetails'
-            : 'https://omify-backend.vercel.app/userPaymentDetails/getAllPaymentUserDetails',
+            ? 'http://localhost:12000/auth/getAllUserDetails'
+            : 'http://localhost:12000/userPaymentDetails/getAllPaymentUserDetails',
           { params: { phoneNumber: phoneNumber } }
         );
 

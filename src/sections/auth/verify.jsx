@@ -52,7 +52,7 @@ const Verify = () => {
                 phoneNumber: String(state?.phoneNumber), // Correct syntax to assign value
                 name: state?.name // Correct syntax to assign value
               };
-              const response = await axios.post('https://omify-backend.vercel.app/auth/verifyOtp', data);
+              const response = await axios.post('http://localhost:12000/auth/verifyOtp', data);
               if (response.status === 400 && response.data?.message === 'Invalid or expired OTP') {
                 setErrors({ otp: 'Invalid or expired OTP' });
               }

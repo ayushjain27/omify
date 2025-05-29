@@ -57,7 +57,7 @@ export default function Profile() {
       try {
         let phoneNumber = await localStorage.getItem('omifyUserPhoneNumber');
         console.log(phoneNumber,"delmfk")
-        const response = await axios.get('https://omify-backend.vercel.app/auth/getUserDataById', {
+        const response = await axios.get('http://localhost:12000/auth/getUserDataById', {
           params: { phoneNumber: phoneNumber }, // Pass phoneNumber in the `params` field
         });
   
