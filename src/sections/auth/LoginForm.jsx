@@ -19,8 +19,10 @@ import {
   InputAdornment,
   FormControlLabel,
   MenuItem,
-  Typography
+  Typography,
 } from '@mui/material';
+
+import { LoadingButton } from '@mui/lab';
 
 // import { LoadingButton } from '@mui/lab';
 //
@@ -32,15 +34,17 @@ export default function LoginForm() {
   const navigate = useNavigate();
   // const { enqueueSnackbar, closeSnackbar } = useSnackbar();
   const [showPassword, setShowPassword] = useState(false);
+  const [loading, setLoading] = useState(false);
+  const [otpVisible, setOtpVisible] = useState(false);
 
   const LoginSchema = Yup.object().shape({
-    email: Yup.string().email('Must be a valid email').required('Email is required'),
+    phoneNumber: Yup.string().required('Please enter a PhoneNumber').length(10, 'Please enter 10 digit phonenumber')
     // password: Yup.string().required('Password is required')
   });
 
   const formik = useFormik({
     initialValues: {
-      email: '',
+      phoneNumber: '',
       employeeId: '',
       password: ''
       // remember: true,
@@ -49,6 +53,8 @@ export default function LoginForm() {
     validationSchema: LoginSchema,
     onSubmit: async (values, { setErrors, setSubmitting, resetForm }) => {
       try {
+        setLoading(true);
+        console.log(values, 'dlmekrnfj');
         // const user = await login(values.userName, values.password);
         // if (user?.role === 'EMPLOYEE') {
         //   const params = {};
@@ -98,7 +104,6 @@ export default function LoginForm() {
         //   storeStartTime();
         // }
 
-        // eslint-disable-next-line no-debugger
         // enqueueSnackbar('Login success', {
         //   variant: 'success',
         //   action: (key) => (
@@ -125,6 +130,7 @@ export default function LoginForm() {
   });
 
   const { errors, touched, values, isSubmitting, handleSubmit, getFieldProps } = formik;
+  
 
   const handleShowPassword = () => {
     setShowPassword((show) => !show);
@@ -139,15 +145,44 @@ export default function LoginForm() {
 
             <TextField
               fullWidth
-              autoComplete="email"
-              // type="number"
-              label="Email"
-              {...getFieldProps('email')}
-              onChange={({ target: { value } }) => {
-                formik.setFieldValue('email', _.toLower(value));
+              autoComplete="phoneNumber"
+              type="number"
+              maxLength={10} // Maximum 10 digits
+              inputProps={{
+                maxLength: 10, // Maximum 10 digits
+                inputMode: 'numeric', // Brings up numeric keypad on mobile
+                pattern: '[0-9]*' // Ensures only numbers are entered
               }}
-              error={Boolean(touched.email && errors.email)}
-              helperText={touched.email && errors.email}
+              label="Enter PhoneNumber"
+              {...getFieldProps('phoneNumber')}
+              onChange={({ target: { value } }) => {
+                formik.setFieldValue('phoneNumber', _.toLower(value));
+              }}
+              error={Boolean(touched.phoneNumber && errors.phoneNumber)}
+              helperText={touched.phoneNumber && errors.phoneNumber}
+            />
+            <Typography
+              sx={{
+                color: 'red',
+                marginTop: '4px !important',
+                marginBottom: '-16px !important',
+                fontSize: '0.875rem',
+                lineHeight: 1.5
+              }}
+            >
+              Enter employeeId if you are an employee
+            </Typography>
+            <TextField
+              fullWidth
+              autoComplete="employeeId"
+              // type="number"
+              label="Enter Employee Id"
+              {...getFieldProps('employeeId')}
+              onChange={({ target: { value } }) => {
+                formik.setFieldValue('employeeId', _.toLower(value));
+              }}
+              error={Boolean(touched.employeeId && errors.employeeId)}
+              helperText={touched.employeeId && errors.employeeId}
             />
 
             <TextField
@@ -170,12 +205,9 @@ export default function LoginForm() {
             />
           </Stack>
 
-          <Stack direction="row" alignItems="center" justifyContent="space-between" sx={{ my: 2 }}>
-            <FormControlLabel
-              control={<Checkbox {...getFieldProps('remember')} checked={values.remember} />}
-              label="Remember me"
-            />
-            {/* <Stack direction="row" alignItems="center" justifyContent="space-between">
+          {/* <Stack direction="row" alignItems="center" justifyContent="space-between" sx={{ my: 2 }}>
+            <FormControlLabel control={<Checkbox {...getFieldProps('remember')} checked={values.remember} />} label="Remember me" /> */}
+          {/* <Stack direction="row" alignItems="center" justifyContent="space-between">
               <Link component={RouterLink} variant="subtitle2" to={PATH_AUTH.forgotPassword}>
                 Forgot password
               </Link>{' '}
@@ -184,10 +216,16 @@ export default function LoginForm() {
                 Partner Register
               </Link>
             </Stack> */}
-          </Stack>
-          {/* <LoadingButton fullWidth size="large" type="submit" variant="contained" loading={isSubmitting}>
-            Login
-          </LoadingButton> */}
+          {/* </Stack> */}
+          {!otpVisible ? (
+            <LoadingButton variant="contained" type="submit" sx={{ mt: 2, width: '100%' }} color="success" loading={loading}>
+             {loading ? 'Logging in...' : 'Login'}
+            </LoadingButton>
+          ) : (
+            <LoadingButton variant="contained" sx={{ mt: 2, width: '100%' }} type="submit" color="success" loading={loading}>
+              Verify OTP
+            </LoadingButton>
+          )}
           {/* <Typography>{`v ${window?.env?.VERSION_NAME}(${window?.env?.VERSION_CODE})`}</Typography> */}
         </Form>
       </FormikProvider>
