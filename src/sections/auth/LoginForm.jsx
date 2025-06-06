@@ -1,6 +1,6 @@
 import * as Yup from 'yup';
 import { useEffect, useState } from 'react';
-// import { useSnackbar } from 'notistack';
+import { useSnackbar } from 'notistack';
 import _ from 'lodash';
 import { Link as RouterLink, useNavigate } from 'react-router-dom';
 import { useFormik, Form, FormikProvider } from 'formik';
@@ -9,20 +9,12 @@ import { useFormik, Form, FormikProvider } from 'formik';
 // import closeFill from '@iconify/icons-eva/close-fill';
 // import eyeOffFill from '@iconify/icons-eva/eye-off-fill';
 // material
-import {
-  Link,
-  Stack,
-  Alert,
-  Checkbox,
-  TextField,
-  IconButton,
-  InputAdornment,
-  FormControlLabel,
-  MenuItem,
-  Typography,
-} from '@mui/material';
+import { Link, Stack, Alert, Checkbox, TextField, IconButton, InputAdornment, FormControlLabel, MenuItem, Typography } from '@mui/material';
 
 import { LoadingButton } from '@mui/lab';
+import { useDispatch } from 'react-redux';
+import { sendOtpApi, verifyOtpApi } from '../../store/auth/authApi';
+import { unwrapResult } from '@reduxjs/toolkit';
 
 // import { LoadingButton } from '@mui/lab';
 //
@@ -32,20 +24,23 @@ import { LoadingButton } from '@mui/lab';
 
 export default function LoginForm() {
   const navigate = useNavigate();
-  // const { enqueueSnackbar, closeSnackbar } = useSnackbar();
+  const { enqueueSnackbar, closeSnackbar } = useSnackbar();
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [otpLoading, setOtpLoading] = useState(false);
   const [otpVisible, setOtpVisible] = useState(false);
 
   const LoginSchema = Yup.object().shape({
-    phoneNumber: Yup.string().required('Please enter a PhoneNumber').length(10, 'Please enter 10 digit phonenumber')
+    email: Yup.string().required('Please enter a email').email('Please enter valid email')
     // password: Yup.string().required('Password is required')
   });
 
+  const dispatch = useDispatch();
+
   const formik = useFormik({
     initialValues: {
-      phoneNumber: '',
-      employeeId: '',
+      email: '',
+      userId: '',
       password: ''
       // remember: true,
       // role: 'oem'
@@ -55,6 +50,26 @@ export default function LoginForm() {
       try {
         setLoading(true);
         console.log(values, 'dlmekrnfj');
+        const params = {
+          email: values.email,
+          userId: values.userId
+        };
+        let response = await dispatch(sendOtpApi(params));
+        response = unwrapResult(response);
+        console.log(response, 'Dmrf');
+        if (response?.message === 'OTP sent successfully.') {
+          enqueueSnackbar('Otp sent successfully. Please check your email', {
+            variant: 'success'
+          });
+          setLoading(false);
+          setOtpVisible(true);
+        } else {
+          console.log('dkemkm');
+          enqueueSnackbar('User Does not exists, Enter user Id to login', {
+            variant: 'error'
+          });
+        }
+
         // const user = await login(values.userName, values.password);
         // if (user?.role === 'EMPLOYEE') {
         //   const params = {};
@@ -129,8 +144,30 @@ export default function LoginForm() {
     }
   });
 
+  const verifyOtp = async() => {
+    const reqBody = {
+      email: formik.values.email,
+      otpId: formik.values.otp,
+      userId: formik.values.userId
+    }
+    let response = await dispatch(verifyOtpApi(reqBody));
+    response = unwrapResult(response);
+    console.log(response,"Demkkm")
+    if (response?.message === 'Invalid OTP.') {
+          enqueueSnackbar('Invalid OTP. Please enter valid OTP', {
+            variant: 'error'
+          });
+          setLoading(false);
+          setOtpVisible(true);
+        } else {
+          console.log('dkemkm');
+          enqueueSnackbar('User Does not exists, Enter user Id to login', {
+            variant: 'error'
+          });
+        }
+  }
+
   const { errors, touched, values, isSubmitting, handleSubmit, getFieldProps } = formik;
-  
 
   const handleShowPassword = () => {
     setShowPassword((show) => !show);
@@ -145,21 +182,27 @@ export default function LoginForm() {
 
             <TextField
               fullWidth
-              autoComplete="phoneNumber"
-              type="number"
-              maxLength={10} // Maximum 10 digits
-              inputProps={{
-                maxLength: 10, // Maximum 10 digits
-                inputMode: 'numeric', // Brings up numeric keypad on mobile
-                pattern: '[0-9]*' // Ensures only numbers are entered
-              }}
-              label="Enter PhoneNumber"
-              {...getFieldProps('phoneNumber')}
+              autoComplete="email"
+              label="Enter Email"
+              {...getFieldProps('email')}
               onChange={({ target: { value } }) => {
-                formik.setFieldValue('phoneNumber', _.toLower(value));
+                formik.setFieldValue('email', _.toLower(value));
               }}
-              error={Boolean(touched.phoneNumber && errors.phoneNumber)}
-              helperText={touched.phoneNumber && errors.phoneNumber}
+              error={Boolean(touched.email && errors.email)}
+              helperText={touched.email && errors.email}
+            />
+            <TextField
+              fullWidth
+              autoComplete="userId"
+              // type="number"
+              label="Enter User Id"
+              disabled={otpVisible}
+              {...getFieldProps('userId')}
+              onChange={({ target: { value } }) => {
+                formik.setFieldValue('userId', _.toLower(value));
+              }}
+              error={Boolean(touched.userId && errors.userId)}
+              helperText={touched.userId && errors.userId}
             />
             <Typography
               sx={{
@@ -170,39 +213,28 @@ export default function LoginForm() {
                 lineHeight: 1.5
               }}
             >
-              Enter employeeId if you are an employee
+              Enter userId if you are a new user
             </Typography>
-            <TextField
-              fullWidth
-              autoComplete="employeeId"
-              // type="number"
-              label="Enter Employee Id"
-              {...getFieldProps('employeeId')}
-              onChange={({ target: { value } }) => {
-                formik.setFieldValue('employeeId', _.toLower(value));
-              }}
-              error={Boolean(touched.employeeId && errors.employeeId)}
-              helperText={touched.employeeId && errors.employeeId}
-            />
-
-            <TextField
-              fullWidth
-              autoComplete="current-password"
-              type={showPassword ? 'text' : 'password'}
-              label="Password"
-              {...getFieldProps('password')}
-              // InputProps={{
-              //   endAdornment: (
-              //     <InputAdornment position="end">
-              //       <IconButton onClick={handleShowPassword} edge="end">
-              //         <Icon icon={showPassword ? eyeFill : eyeOffFill} />
-              //       </IconButton>
-              //     </InputAdornment>
-              //   )
-              // }}
-              error={Boolean(touched.password && errors.password)}
-              helperText={touched.password && errors.password}
-            />
+            {otpVisible && (
+              <TextField
+                fullWidth
+                autoComplete="otp"
+                type="number"
+                label="Enter Otp"
+                {...getFieldProps('otp')}
+                // InputProps={{
+                //   endAdornment: (
+                //     <InputAdornment position="end">
+                //       <IconButton onClick={handleShowPassword} edge="end">
+                //         <Icon icon={showPassword ? eyeFill : eyeOffFill} />
+                //       </IconButton>
+                //     </InputAdornment>
+                //   )
+                // }}
+                error={Boolean(touched.otp && errors.otp)}
+                helperText={touched.otp && errors.otp}
+              />
+            )}
           </Stack>
 
           {/* <Stack direction="row" alignItems="center" justifyContent="space-between" sx={{ my: 2 }}>
@@ -218,11 +250,11 @@ export default function LoginForm() {
             </Stack> */}
           {/* </Stack> */}
           {!otpVisible ? (
-            <LoadingButton variant="contained" type="submit" sx={{ mt: 2, width: '100%' }} color="success" loading={loading}>
-             {loading ? 'Logging in...' : 'Login'}
+            <LoadingButton variant="contained" type="submit" sx={{ mt: 4, width: '100%' }} color="success" loading={loading}>
+              {loading ? 'Logging in...' : 'Login'}
             </LoadingButton>
           ) : (
-            <LoadingButton variant="contained" sx={{ mt: 2, width: '100%' }} type="submit" color="success" loading={loading}>
+            <LoadingButton variant="contained" sx={{ mt: 2, width: '100%' }} onClick={verifyOtp} color="success" loading={otpLoading}>
               Verify OTP
             </LoadingButton>
           )}
