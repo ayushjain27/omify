@@ -25,7 +25,7 @@ export default function PaymentPage() {
     const fetchData = async () => {
       try {
         let phoneNumber = await localStorage.getItem('omifyUserPhoneNumber');
-        console.log(phoneNumber, 'delmfk');
+        console.log(phoneNumber, 'ddee');
         const response = await axios.get( phoneNumber === '+917838245184' ? 'http://localhost:12000/paymentPage/getAllPaymentPages' : 'http://localhost:12000/paymentPage/getPaymentDetailsListByPhoneNumber', {
           params: { phoneNumber: phoneNumber } // Pass phoneNumber in the `params` field
         });

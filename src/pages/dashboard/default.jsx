@@ -36,6 +36,9 @@ import avatar1 from 'assets/images/users/avatar-1.png';
 import avatar2 from 'assets/images/users/avatar-2.png';
 import avatar3 from 'assets/images/users/avatar-3.png';
 import avatar4 from 'assets/images/users/avatar-4.png';
+import { useDispatch, useSelector } from 'react-redux';
+import { useAuth } from '../../context/AuthContext';
+import { getAllUserDataApi } from '../../store/auth/authApi';
 
 // avatar style
 const avatarSX = {
@@ -59,27 +62,32 @@ const actionSX = {
 export default function DashboardDefault() {
   const [userData, setUserData] = useState([]);
   const [phoneNumber, setPhoneNumber] = useState('');
+  const { selectedUserDetails  } = useSelector(({ authReducer }) => authReducer);
+  const { setIsAuthenticated } = useAuth();
+  const dispatch = useDispatch();
 
   useEffect(() => {
     const fetchData = async () => {
       try {
-        let phoneNumber = await localStorage.getItem('omifyUserPhoneNumber');
+         let token = await localStorage.getItem('accessToken');
+         if(!token){
+          setIsAuthenticated(false);
+         }
         setPhoneNumber(phoneNumber);
-        console.log(phoneNumber, 'phoneNumber');
         const response = await axios.get(
-          phoneNumber === '+917838245184'
-            ? 'http://localhost:12000/auth/getAllUserDetails'
-            : 'http://localhost:12000/userPaymentDetails/getAllPaymentUserDetails',
-          { params: { phoneNumber: phoneNumber } }
+          selectedUserDetails?.role === 'ADMIN'
+            ? dispatch(getAllUserDataApi()) : '' 
+          //   : 'http://localhost:12000/userPaymentDetails/getAllPaymentUserDetails',
+          // { params: { phoneNumber: phoneNumber } }
         );
 
-        // Check if the request was successful
-        if (response.status === 200) {
-          console.log('API request successful:', response.data);
-          setUserData(response.data); // Assuming 'setUserData' is defined to set the user data in state
-        } else {
-          console.error('API request failed with status:', response.status);
-        }
+        // // Check if the request was successful
+        // if (response.status === 200) {
+        //   console.log('API request successful:', response.data);
+        //   setUserData(response.data); // Assuming 'setUserData' is defined to set the user data in state
+        // } else {
+        //   console.error('API request failed with status:', response.status);
+        // }
       } catch (error) {
         console.error('Error during API request:', error.message);
       }
@@ -95,7 +103,7 @@ export default function DashboardDefault() {
       const totalPrice = userData.reduce((sum, item) => sum + Number(item.paymentDetails.price), 0);
       setTotalAmount(totalPrice);
       const uniqueEmails = new Set(userData.map((user) => user.email));
-      console.log(uniqueEmails, 'fmrmk');
+      // console.log(uniqueEmails, 'fmrmk');
       setTotalNewUser(uniqueEmails?.size);
     }
   }, [userData]);
@@ -113,17 +121,17 @@ export default function DashboardDefault() {
           extra="8,900"
         />
       </Grid>
-      {phoneNumber === '+917838245184' && (
+      {selectedUserDetails?.role === 'ADMIN' && (
       <Grid item xs={12} sm={6} md={4} lg={3}>
         <AnalyticEcommerce title="Total Users" count={String(userData?.length)} percentage={70.5} extra="8,900" />
       </Grid>
       )}
-      {phoneNumber !== '+917838245184' && (
+      {selectedUserDetails?.role !== 'ADMIN' && (
         <>
           <Grid item xs={12} sm={6} md={4} lg={3}>
             <AnalyticEcommerce
               title="Total Payment Pages"
-              count={phoneNumber === '+917838245184' ? '18,800' : `₹ ${totalAmount}`}
+              count={selectedUserDetails?.role === 'ADMIN' ? '18,800' : `₹ ${totalAmount}`}
               percentage={27.4}
               isLoss
               color="warning"
@@ -133,7 +141,7 @@ export default function DashboardDefault() {
           <Grid item xs={12} sm={6} md={4} lg={3}>
             <AnalyticEcommerce
               title="Total Payment Received"
-              count={phoneNumber === '+917838245184' ? '18,800' : `₹ ${totalAmount}`}
+              count={selectedUserDetails?.role === 'ADMIN' ? '18,800' : `₹ ${totalAmount}`}
               percentage={27.4}
               isLoss
               color="warning"
@@ -143,7 +151,7 @@ export default function DashboardDefault() {
           <Grid item xs={12} sm={6} md={4} lg={3}>
             <AnalyticEcommerce
               title="Total Payment Pending"
-              count={phoneNumber === '+917838245184' ? '18,800' : `₹ ${totalAmount}`}
+              count={selectedUserDetails?.role === 'ADMIN' ? '18,800' : `₹ ${totalAmount}`}
               percentage={27.4}
               isLoss
               color="warning"
@@ -162,7 +170,7 @@ export default function DashboardDefault() {
           <Grid />
         </Grid>
         <MainCard sx={{ mt: 2 }} content={false}>
-          {phoneNumber === '+917838245184' ? <UserTable userData={userData} /> : <UserPaymentDetails userData={userData} />}
+          {selectedUserDetails?.role === 'ADMIN' ? <UserTable /> : <UserPaymentDetails userData={userData} />}
         </MainCard>
       </Grid>
     </Grid>

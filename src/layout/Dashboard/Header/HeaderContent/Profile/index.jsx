@@ -50,32 +50,6 @@ export default function Profile() {
     setOpen((prevOpen) => !prevOpen);
   };
 
-  const [userData, setUserData] = useState({});
-
-  useEffect(()=>{
-    const fetchData = async () => {
-      try {
-        let phoneNumber = await localStorage.getItem('omifyUserPhoneNumber');
-        console.log(phoneNumber,"delmfk")
-        const response = await axios.get('http://localhost:12000/auth/getUserDataById', {
-          params: { phoneNumber: phoneNumber }, // Pass phoneNumber in the `params` field
-        });
-  
-        // Check if the request was successful
-        if (response.status === 200) {
-          console.log('API request successful:', response.data);
-          setUserData(response.data);  // Assuming 'setUserData' is defined to set the user data in state
-        } else {
-          console.error('API request failed with status:', response.status);
-        }
-      } catch (error) {
-        console.error('Error during API request:', error.message);
-      }
-    };
-
-    fetchData();
-  },[])
-
   const handleClose = (event) => {
     if (anchorRef.current && anchorRef.current.contains(event.target)) {
       return;
@@ -95,7 +69,7 @@ export default function Profile() {
 
   const handleLogOut = async() => {
     setIsAuthenticated(false);
-    await localStorage.removeItem('omifyUserPhoneNumber');
+    await localStorage.removeItem('accessToken');
     navigate('/mainDashboardSection');
   }
 
@@ -121,7 +95,8 @@ export default function Profile() {
         <Stack direction="row" sx={{ gap: 1.25, alignItems: 'center', p: 0.5 }}>
           <Avatar alt="profile user" src={avatar1} size="sm" />
           <Typography variant="subtitle1" sx={{ textTransform: 'capitalize' }}>
-            {userData?.name}
+            {/* {userData?.name} */}
+            dkneknfr
           </Typography>
         </Stack>
       </ButtonBase>
@@ -154,9 +129,13 @@ export default function Profile() {
                         <Stack direction="row" sx={{ gap: 1.25, alignItems: 'center' }}>
                           <Avatar alt="profile user" src={avatar1} sx={{ width: 32, height: 32 }} />
                           <Stack>
-                            <Typography variant="h6">{userData?.name}</Typography>
-                            <Typography variant="body2" color={userData === 'ACTIVE' ? 'green' : 'red'}>
+                            {/* <Typography variant="h6">{userData?.name}</Typography> */}
+                            <Typography variant="h6">ded</Typography>
+                            {/* <Typography variant="body2" color={userData === 'ACTIVE' ? 'green' : 'red'}>
                               {userData?.status}
+                            </Typography> */}
+                            <Typography variant="body2">
+                             def
                             </Typography>
                           </Stack>
                         </Stack>

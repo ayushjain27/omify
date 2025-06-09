@@ -133,7 +133,7 @@ export default function SamplePage() {
         }
       });
 
-      console.log(response.data.filePath, 'Delmfkl');
+      console.log(response.data.filePath, 'def');
 
       setUploadedFilePath(response.data.filePath);
       alert('File uploaded successfully');

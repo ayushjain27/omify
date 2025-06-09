@@ -14,6 +14,7 @@ import Box from '@mui/material/Box';
 import Dot from 'components/@extended/Dot';
 import { Button } from '@mui/material';
 import axios from 'axios';
+import { useSelector } from 'react-redux';
 
 const headCells = [
   {
@@ -106,9 +107,11 @@ function UserStatus({ status, phoneNumber }) {
 // ==============================|| ORDER TABLE ||============================== //
 
 export default function UserTable(props) {
-  const { userData } = props;
+  const { allUserData  } = useSelector(({ authReducer }) => authReducer);
   const user = 'asc';
   const userPhoneNumber = 'phoneNumber';
+
+  console.log(allUserData,"allUserData")
 
   return (
     <Box>
@@ -126,7 +129,7 @@ export default function UserTable(props) {
         <Table aria-labelledby="tableTitle">
           <OrderTableHead user={user} userPhoneNumber={userPhoneNumber} />
           <TableBody>
-            {userData.map((item, index) => {
+            {allUserData.map((item, index) => {
               const labelId = `enhanced-table-checkbox-${index}`;
 
               return (

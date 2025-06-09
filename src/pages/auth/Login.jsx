@@ -53,7 +53,7 @@ export default function Login() {
               <Typography variant="h4" gutterBottom>
                 Sign in to your Dashboard
               </Typography>
-              <Typography sx={{ color: 'text.secondary' }}>Enter your credentials.</Typography>
+              <Typogloginforaphy sx={{ color: 'text.secondary' }}>Enter your credentials.</Typogloginforaphy>
             </Box>
 
             {/* <Tooltip title={method}>
