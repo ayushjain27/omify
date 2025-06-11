@@ -8,7 +8,7 @@ import support from './support';
 
 const menuItems = {
   // items: [dashboard, pages, support],
-  items: [dashboard, support]
+  items: [dashboard]
 };
 
 export default menuItems;

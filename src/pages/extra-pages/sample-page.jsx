@@ -14,7 +14,14 @@ import {
   FormControlLabel,
   FormControl,
   IconButton,
-  MenuItem
+  MenuItem,
+  Grid,
+  Paper,
+  Divider,
+  Stack,
+  InputLabel,
+  OutlinedInput,
+  Avatar
 } from '@mui/material';
 import UploadFileIcon from '@mui/icons-material/UploadFile';
 import { CloudUpload } from '@mui/icons-material';
@@ -23,6 +30,7 @@ import { useNavigate } from 'react-router';
 
 // project imports
 import MainCard from 'components/MainCard';
+import { useSelector } from 'react-redux';
 
 // ==============================|| SAMPLE PAGE ||============================== //
 
@@ -39,6 +47,8 @@ export default function SamplePage() {
   const handlePriceTypeChange = (event) => {
     setPriceType(event.target.value);
   };
+
+  const { selectedUserDetails  } = useSelector(({ authReducer }) => authReducer);
 
   const [data, setData] = useState({
     price: '',
@@ -57,15 +67,15 @@ export default function SamplePage() {
       alert('Please select a file first.');
       return;
     }
-    if(!data?.pageTitle){
+    if (!data?.pageTitle) {
       alert('Please select a page title.');
       return;
     }
-    if(!data?.price){
+    if (!data?.price) {
       alert('Please select a price.');
       return;
     }
-    if(!data?.description){
+    if (!data?.description) {
       alert('Please select a description.');
       return;
     }
@@ -187,219 +197,271 @@ export default function SamplePage() {
 
   return (
     <>
-      <Container maxWidth="sm" sx={{ py: 4 }}>
+      <Box>
         {/* Header */}
-        <Typography variant="h5" sx={{ fontWeight: 'bold', mb: 3 }}>
-          Upload your Digital Files
-        </Typography>
-
-        {/* File Upload Section */}
-        <Card
-          variant="outlined"
-          sx={{
-            borderStyle: 'dashed',
-            textAlign: 'center',
-            padding: '20px',
-            borderRadius: '10px',
-            borderColor: '#E0E0E0',
-            mb: 4
-          }}
-        >
-          <IconButton color="primary" component="label">
-            <CloudUpload />
-            <input hidden type="file" onChange={handleAnyfileChange} />
-          </IconButton>
-          <Typography variant="body1" sx={{ color: '#E91E63', fontWeight: 'bold', mb: 1 }}>
-            Browse files from your system
-          </Typography>
-          <Button component="label" sx={{ display: 'none' }} aria-label="Browse files">
-            <input type="file" hidden />
-          </Button>
-          <Typography sx={{ color: '#B0B0B0', mt: 2, mb: 1 }}>OR</Typography>
-          <TextField
-            onChange={(event) =>
-              setData((prevData) => ({
-                ...prevData,
-                link: event.target.value
-              }))
-            }
-            fullWidth
-            placeholder="Add link to your files"
-            size="small"
-            sx={{ mb: 2 }}
-          />
-        </Card>
-
-        {/* Pricing Section */}
-        <Typography variant="h5" sx={{ fontWeight: 'bold', mb: 2 }}>
-          Set Pricing
-        </Typography>
-        <Box>
-          <FormControl>
-            <RadioGroup row value={priceType} onChange={handlePriceTypeChange} sx={{ justifyContent: 'space-between', mb: 3 }}>
-              <FormControlLabel
-                value="fixed"
-                control={<Radio sx={{ color: '#E91E63' }} />}
-                label={
-                  <>
-                    <Typography
-                      variant="body1"
-                      sx={{
-                        fontWeight: 'bold',
-                        color: priceType === 'fixed' ? '#E91E63' : '#000'
-                      }}
-                    >
-                      Fixed Price
-                    </Typography>
-                    <Typography
-                      variant="body1"
-                      sx={{
-                        fontWeight: 'bold',
-                        color: priceType === 'fixed' ? '#E91E63' : '#000'
-                      }}
-                    >
-                      Charge a one-time fixed pay
-                    </Typography>
-                  </>
-                }
-              />
-            </RadioGroup>
-          </FormControl>
-          {/* {priceType === 'fixed' && ( */}
-          <TextField
-            fullWidth
-            type="number"
-            label="Price"
-            // value={price}
-            onChange={(event) =>
-              setData((prevData) => ({
-                ...prevData,
-                price: event.target.value
-              }))
-            }
-            InputProps={{
-              startAdornment: <Typography sx={{ color: '#000', pr: 1 }}>₹</Typography>
-            }}
-            size="small"
-            sx={{
-              mb: 2,
-              '& .MuiOutlinedInput-root': {
-                borderColor: '#B0B0B0'
-              }
-            }}
-          />
-        </Box>
-
-        <Box>
-          <Box component="form" noValidate autoComplete="off">
-            {/* Page Title */}
-            <TextField
-              label="Page Title"
-              variant="outlined"
-              fullWidth
-              margin="normal"
-              inputProps={{ maxLength: 75 }}
-              helperText="0/75"
-              onChange={(event) =>
-                setData((prevData) => ({
-                  ...prevData,
-                  pageTitle: event.target.value
-                }))
-              }
-            />
-
-            {/* Category Dropdown */}
-            <TextField
-              select
-              label="Category"
-              variant="outlined"
-              fullWidth
-              margin="normal"
-              defaultValue="Finance"
-              onChange={(event) =>
-                setData((prevData) => ({
-                  ...prevData,
-                  category: event.target.value
-                }))
-              }
-            >
-              <MenuItem value="Finance">Finance</MenuItem>
-              <MenuItem value="Health">Health</MenuItem>
-              <MenuItem value="Education">Education</MenuItem>
-            </TextField>
-
-            {/* Cover Image/Video */}
-            <Box border={1} borderColor="grey.400" borderRadius={1} p={2} textAlign="center" mt={2} mb={2}>
-              <IconButton color="primary" component="label">
-                <CloudUpload />
-                <input hidden accept="image/*,video/*" type="file" onChange={handleFileChange} />
-              </IconButton>
-              {/* <Typography></Typography> */}
-              <Typography variant="body2" color="textSecondary">
-                Browse files from your system
+        <Grid container spacing={2}>
+          <Grid item xs={12} md={4}>
+            <Box sx={{ backgroundColor: 'white', p: 2 }}>
+              <Typography variant="h5" sx={{ fontWeight: 'bold', mb: 3 }}>
+                Upload your Digital Files
               </Typography>
-              <Typography variant="caption" color="textSecondary">
-                1280 x 720 (16:9) recommended
+
+              {/* File Upload Section */}
+              <Card
+                variant="outlined"
+                sx={{
+                  borderStyle: 'dashed',
+                  textAlign: 'center',
+                  padding: '20px',
+                  borderRadius: '10px',
+                  borderColor: '#E0E0E0',
+                  mb: 4
+                }}
+              >
+                <IconButton color="primary" component="label">
+                  <CloudUpload />
+                  <input hidden type="file" onChange={handleAnyfileChange} />
+                </IconButton>
+                <Typography variant="body1" sx={{ color: '#E91E63', fontWeight: 'bold', mb: 1 }}>
+                  Browse files from your system
+                </Typography>
+                <Button component="label" sx={{ display: 'none' }} aria-label="Browse files">
+                  <input type="file" hidden />
+                </Button>
+                <Typography sx={{ color: '#B0B0B0', mt: 2, mb: 1 }}>OR</Typography>
+                <TextField
+                  onChange={(event) =>
+                    setData((prevData) => ({
+                      ...prevData,
+                      link: event.target.value
+                    }))
+                  }
+                  fullWidth
+                  placeholder="Add link to your files"
+                  size="small"
+                  sx={{ mb: 2 }}
+                />
+              </Card>
+
+              {/* Pricing Section */}
+              <Typography variant="h5" sx={{ fontWeight: 'bold', mb: 2 }}>
+                Set Pricing
               </Typography>
+              <Box>
+                <TextField
+                  fullWidth
+                  type="number"
+                  label="Price"
+                  // value={price}
+                  onChange={(event) =>
+                    setData((prevData) => ({
+                      ...prevData,
+                      price: event.target.value
+                    }))
+                  }
+                  InputProps={{
+                    startAdornment: <Typography sx={{ color: '#000', pr: 1 }}>₹</Typography>
+                  }}
+                  size="small"
+                  sx={{
+                    mb: 2,
+                    '& .MuiOutlinedInput-root': {
+                      borderColor: '#B0B0B0'
+                    }
+                  }}
+                />
+              </Box>
+
+              <Box>
+                <Box component="form" noValidate autoComplete="off">
+                  {/* Page Title */}
+                  <TextField
+                    label="Page Title"
+                    variant="outlined"
+                    fullWidth
+                    margin="normal"
+                    inputProps={{ maxLength: 75 }}
+                    helperText="0/75"
+                    onChange={(event) =>
+                      setData((prevData) => ({
+                        ...prevData,
+                        pageTitle: event.target.value
+                      }))
+                    }
+                  />
+
+                  {/* Category Dropdown */}
+                  <TextField
+                    select
+                    label="Category"
+                    variant="outlined"
+                    fullWidth
+                    margin="normal"
+                    defaultValue="Finance"
+                    onChange={(event) =>
+                      setData((prevData) => ({
+                        ...prevData,
+                        category: event.target.value
+                      }))
+                    }
+                  >
+                    <MenuItem value="Finance">Finance</MenuItem>
+                    <MenuItem value="Health">Health</MenuItem>
+                    <MenuItem value="Education">Education</MenuItem>
+                  </TextField>
+
+                  {/* Cover Image/Video */}
+                  <Box border={1} borderColor="grey.400" borderRadius={1} p={2} textAlign="center" mt={2} mb={2}>
+                    <IconButton color="primary" component="label">
+                      <CloudUpload />
+                      <input hidden accept="image/*,video/*" type="file" onChange={handleFileChange} />
+                    </IconButton>
+                    {/* <Typography></Typography> */}
+                    <Typography variant="body2" color="textSecondary">
+                      Browse files from your system
+                    </Typography>
+                    <Typography variant="caption" color="textSecondary">
+                      1280 x 720 (16:9) recommended
+                    </Typography>
+                  </Box>
+                  {/* {preview && (
+                    <div>
+                      <h3>Uploaded Image:</h3>
+                      <img src={preview} alt="Uploaded" style={{ maxWidth: '300px' }} />
+                    </div>
+                  )} */}
+
+                  {/* Description */}
+                  <TextField
+                    label="Description"
+                    variant="outlined"
+                    fullWidth
+                    multiline
+                    rows={4}
+                    margin="normal"
+                    onChange={(event) =>
+                      setData((prevData) => ({
+                        ...prevData,
+                        description: event.target.value
+                      }))
+                    }
+                  />
+
+                  {/* Button Text */}
+                  <TextField
+                    label="Button Text"
+                    variant="outlined"
+                    fullWidth
+                    margin="normal"
+                    defaultValue="Make Payment"
+                    inputProps={{ maxLength: 15 }}
+                    helperText="12/15"
+                    onChange={(event) =>
+                      setData((prevData) => ({
+                        ...prevData,
+                        buttonText: event.target.value
+                      }))
+                    }
+                  />
+                </Box>
+              </Box>
+              <Button
+                variant="contained"
+                fullWidth
+                sx={{
+                  mt: 3,
+                  backgroundColor: '#000000',
+                  color: '#FFFFFF',
+                  '&:hover': { backgroundColor: '#333333' },
+                  height: 48,
+                  borderRadius: 5
+                }}
+                onClick={handleSubmit}
+              >
+                Save and Continue
+              </Button>
             </Box>
-            {preview && (
-              <div>
-                <h3>Uploaded Image:</h3>
-                {/* Fetch and display the uploaded image */}
-                <img src={preview} alt="Uploaded" style={{ maxWidth: '300px' }} />
-              </div>
-            )}
+          </Grid>
+          <Grid item xs={12} md={8}>
+            <Box sx={{ backgroundColor: 'lightblue', height: '100%' }}>
+              <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', minHeight: '100vh', px: 2 }}>
+                <Grid container spacing={4} maxWidth="lg">
+                  {/* Left Section */}
+                  <Grid item xs={12} md={7}>
+                    <Paper sx={{ p: 4, borderRadius: 2 }}>
+                     <Avatar sx={{ bgcolor: 'orange' }}>{selectedUserDetails?.name?.slice(0, 1)}</Avatar>
+                      <Typography variant="body1" color="black">
+                        {selectedUserDetails?.name || 'N/A'}
+                      </Typography>
+                      <Divider sx={{ my: 2 }} />
 
-            {/* Description */}
-            <TextField
-              label="Description"
-              variant="outlined"
-              fullWidth
-              multiline
-              rows={4}
-              margin="normal"
-              onChange={(event) =>
-                setData((prevData) => ({
-                  ...prevData,
-                  description: event.target.value
-                }))
-              }
-            />
+                      <Typography variant="h5" fontWeight="bold">
+                        Title
+                      </Typography>
+                      <Typography variant="body1" color="textSecondary">
+                        {data?.pageTitle?.slice(0, 50) || '-'}
+                      </Typography>
 
-            {/* Button Text */}
-            <TextField
-              label="Button Text"
-              variant="outlined"
-              fullWidth
-              margin="normal"
-              defaultValue="Make Payment"
-              inputProps={{ maxLength: 15 }}
-              helperText="12/15"
-              onChange={(event) =>
-                setData((prevData) => ({
-                  ...prevData,
-                  buttonText: event.target.value
-                }))
-              }
-            />
-          </Box>
-        </Box>
-        <Button
-          variant="contained"
-          fullWidth
-          sx={{
-            mt: 3,
-            backgroundColor: '#000000',
-            color: '#FFFFFF',
-            '&:hover': { backgroundColor: '#333333' },
-            height: 48,
-            borderRadius: 5
-          }}
-          onClick={handleSubmit}
-        >
-          Save and Continue
-        </Button>
-      </Container>
+                      <Typography variant="h5" fontWeight="bold" sx={{ mt: 2 }}>
+                        Description
+                      </Typography>
+                      <Typography variant="body1" color="textSecondary">
+                        {data?.description?.slice(0, 80) || '-'}
+                      </Typography>
+
+                      <Divider sx={{ my: 2 }} />
+                      {preview && (
+                        <Box sx={{ my: 2 }}>
+                          <img src={preview} alt="Uploaded" style={{ maxWidth: '100%', borderRadius: 8, height: 150 }} />
+                        </Box>
+                        )}
+                    </Paper>
+                  </Grid>
+
+                  {/* Right Section - Form */}
+                  <Grid item xs={12} md={5}>
+                    <Paper sx={{ p: 4, borderRadius: 2 }} elevation={3}>
+                      <div>
+                        <Typography variant="h6" fontWeight="bold" gutterBottom>
+                          Enter Your Details
+                        </Typography>
+
+                        {/* Name Field */}
+                        <Stack spacing={1} mb={2}>
+                          <InputLabel htmlFor="name">Name*</InputLabel>
+                          <OutlinedInput id="name" name="name" placeholder="Enter your name" fullWidth />
+                        </Stack>
+
+                        {/* Email Field */}
+                        <Stack spacing={1} mb={2}>
+                          <InputLabel htmlFor="email">Email Address*</InputLabel>
+                          <OutlinedInput id="email" name="email" placeholder="Enter your email" fullWidth />
+                        </Stack>
+
+                        {/* Phone Number Field */}
+                        <Stack spacing={1} mb={2}>
+                          <InputLabel htmlFor="phoneNumber">Phone Number*</InputLabel>
+                          <OutlinedInput id="phoneNumber" name="phoneNumber" placeholder="Enter your phone number" fullWidth type="tel" />
+                        </Stack>
+
+                        {/* Payment Button */}
+                        <Button variant="contained" color="success" fullWidth sx={{ mb: 2, py: 1.5 }}>
+                          Payment Amount: ₹ {data?.price}
+                        </Button>
+
+                        {/* Submit Button */}
+                        <Button variant="contained" color="primary" fullWidth type="submit" sx={{ py: 1.5 }}>
+                          {data?.buttonText}
+                        </Button>
+                      </div>
+                    </Paper>
+                  </Grid>
+                </Grid>
+              </Box>
+            </Box>
+          </Grid>
+        </Grid>
+      </Box>
     </>
     // <MainCard title="Sample Card">
     //   <Typography variant="body2">

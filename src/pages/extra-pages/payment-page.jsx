@@ -21,33 +21,33 @@ export default function PaymentPage() {
 
   const [paymentList, setPaymentList] = useState([]);
 
-  useEffect(() => {
-    const fetchData = async () => {
-      try {
-        let phoneNumber = await localStorage.getItem('omifyUserPhoneNumber');
-        console.log(phoneNumber, 'ddee');
-        const response = await axios.get( phoneNumber === '+917838245184' ? 'http://localhost:12000/paymentPage/getAllPaymentPages' : 'http://localhost:12000/paymentPage/getPaymentDetailsListByPhoneNumber', {
-          params: { phoneNumber: phoneNumber } // Pass phoneNumber in the `params` field
-        });
+  // useEffect(() => {
+  //   const fetchData = async () => {
+  //     try {
+  //       let phoneNumber = await localStorage.getItem('omifyUserPhoneNumber');
+  //       console.log(phoneNumber, 'ddee');
+  //       const response = await axios.get( phoneNumber === '+917838245184' ? 'http://localhost:12000/paymentPage/getAllPaymentPages' : 'http://localhost:12000/paymentPage/getPaymentDetailsListByPhoneNumber', {
+  //         params: { phoneNumber: phoneNumber } // Pass phoneNumber in the `params` field
+  //       });
 
-        // Check if the request was successful
-        if (response.status === 200) {
-          console.log('API request successful:', response.data);
-          setPaymentList(response.data); // Assuming 'setPaymentList' is defined to set the user data in state
-        } else {
-          console.error('API request failed with status:', response.status);
-        }
-      } catch (error) {
-        console.error('Error during API request:', error.message);
-      }
-    };
+  //       // Check if the request was successful
+  //       if (response.status === 200) {
+  //         console.log('API request successful:', response.data);
+  //         setPaymentList(response.data); // Assuming 'setPaymentList' is defined to set the user data in state
+  //       } else {
+  //         console.error('API request failed with status:', response.status);
+  //       }
+  //     } catch (error) {
+  //       console.error('Error during API request:', error.message);
+  //     }
+  //   };
 
-    fetchData();
-  }, []);
+  //   fetchData();
+  // }, []);
 
   return (
     <>
-      <div style={{ margin: phoneNumber === '9999999999' ? '0px' : '24px' }}>
+      <div style={{ margin: '0px' }}>
         <div style={{ display: 'flex', flexDirection: 'row', justifyContent: 'flex-end' }}>
           <AnimateButton>
             <Button fullWidth size="large" type="submit" variant="contained" color="primary" onClick={handleNavigation}>

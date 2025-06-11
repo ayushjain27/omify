@@ -14,6 +14,7 @@ const MainDashboardSection = Loadable(lazy(() => import('../sections/auth/MainDa
 const UserProfile = Loadable(lazy(() => import('../sections/auth/UserProfile')));
 const UserLoginProfile = Loadable(lazy(() => import('../sections/auth/UserLoginInfo')));
 const ContentPage = Loadable(lazy(() => import('pages/extra-pages/content-page')));
+const PaymentList = Loadable(lazy(() => import('pages/extra-pages/sample-page')));
 
 // jwt auth
 // const LoginPage = Loadable(lazy(() => import('pages/auth/Login')));
@@ -48,6 +49,10 @@ const LoginRoutes = {
     {
       path: '/userLoginProfile',
       element: <UserLoginProfile />
+    },
+    {
+      path: 'createPayment',
+      element: <PaymentList />
     },
     {
       path: '/contentPage',

@@ -18,7 +18,6 @@ const Shadow = Loadable(lazy(() => import('pages/component-overview/shadows')));
 // render - sample page
 const SamplePage = Loadable(lazy(() => import('pages/extra-pages/sample-page')));
 const PaymentPage = Loadable(lazy(() => import('pages/extra-pages/payment-page')));
-const PaymentList = Loadable(lazy(() => import('pages/extra-pages/sample-page')));
 // const VerifyOtp = Loadable(lazy(() => import('pages/authentication/verifyOtp')));
 
 // ==============================|| MAIN ROUTING ||============================== //
@@ -55,10 +54,6 @@ const MainRoutes = {
     {
       path: 'color',
       element: <Color />
-    },
-    {
-      path: 'createPayment',
-      element: <PaymentList />
     },
     {
       path: 'sample-page',
