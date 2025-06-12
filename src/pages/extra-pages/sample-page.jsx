@@ -1,18 +1,11 @@
 // material-ui
-import React, { useEffect, useState } from 'react';
+import React, { useState } from 'react';
 import {
-  Container,
   Box,
   Typography,
   Button,
   TextField,
-  // Grid,
   Card,
-  // CardContent,
-  Radio,
-  RadioGroup,
-  FormControlLabel,
-  FormControl,
   IconButton,
   MenuItem,
   Grid,
@@ -23,13 +16,14 @@ import {
   OutlinedInput,
   Avatar
 } from '@mui/material';
-import UploadFileIcon from '@mui/icons-material/UploadFile';
 import { CloudUpload } from '@mui/icons-material';
+import PictureAsPdfIcon from '@mui/icons-material/PictureAsPdf';
+import DescriptionIcon from '@mui/icons-material/Description';
+import TableChartIcon from '@mui/icons-material/TableChart';
 import axios from 'axios';
 import { useNavigate } from 'react-router';
 
 // project imports
-import MainCard from 'components/MainCard';
 import { useSelector } from 'react-redux';
 
 // ==============================|| SAMPLE PAGE ||============================== //
@@ -41,6 +35,7 @@ export default function SamplePage() {
   const [anyFile, setAnyFile] = useState(null);
   const [preview, setPreview] = useState(null);
   const [anyPreview, setAnyPreview] = useState(null);
+  const [fileType, setFileType] = useState('');
   const [uploading, setUploading] = useState(false);
   const [uploadedFilePath, setUploadedFilePath] = useState('');
 
@@ -48,7 +43,7 @@ export default function SamplePage() {
     setPriceType(event.target.value);
   };
 
-  const { selectedUserDetails  } = useSelector(({ authReducer }) => authReducer);
+  const { selectedUserDetails } = useSelector(({ authReducer }) => authReducer);
 
   const [data, setData] = useState({
     price: '',
@@ -111,16 +106,124 @@ export default function SamplePage() {
 
   const handleAnyfileChange = (event) => {
     const selectedFile = event.target.files[0];
+    if (!selectedFile) return;
+
+    const fileExt = selectedFile.name.split('.').pop().toLowerCase();
+    const fileType = selectedFile.type;
+
+    // Validate file type
+    const allowedExtensions = ['pdf', 'doc', 'docx', 'xls', 'xlsx', 'mp4', 'jpg', 'jpeg', 'png'];
+    if (!allowedExtensions.includes(fileExt)) {
+      alert('Please upload only PDF, Excel, Word, MP4, JPG, or PNG files');
+      return;
+    }
     setAnyFile(selectedFile);
+    setFileType(fileExt);
     console.log(selectedFile, 'Demkrf');
 
     // handleUpload(file);
 
     // Create a preview
-    const previewUrl = URL.createObjectURL(selectedFile);
-    console.log(previewUrl, 'Demk');
-    setAnyPreview(previewUrl);
+    if (fileType.startsWith('image/') || fileExt === 'mp4') {
+      const previewUrl = URL.createObjectURL(selectedFile);
+      setAnyPreview(previewUrl);
+    } else {
+      // For documents, use icon preview
+      setAnyPreview(null);
+    }
+
     alert('File Added');
+  };
+
+  const renderPreview = () => {
+    console.log("msdkek")
+    if (!anyFile) return null;
+
+    switch (fileType) {
+      case 'jpg':
+      case 'jpeg':
+      case 'png':
+        return (
+          <div>
+            <Typography variant="h6">Uploaded Image:</Typography>
+            <img src={anyPreview} alt="Uploaded" style={{ maxWidth: '100%', maxHeight: '300px' }} />
+          </div>
+        );
+      case 'mp4':
+        return (
+          <div>
+            <Typography variant="h6">Uploaded Video:</Typography>
+            <video controls style={{ maxWidth: '100%', maxHeight: '300px' }}>
+              <source src={anyPreview} type="video/mp4" />
+              Your browser does not support the video tag.
+            </video>
+          </div>
+        );
+      case 'pdf':
+        return (
+          <div>
+            <Typography variant="h6">Uploaded PDF:</Typography>
+            <Box
+              sx={{
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                flexDirection: 'column',
+                p: 2,
+                border: '1px dashed #ccc',
+                borderRadius: 1
+              }}
+            >
+              <PictureAsPdfIcon color="error" sx={{ fontSize: 60 }} />
+              <Typography>{anyFile.name}</Typography>
+            </Box>
+          </div>
+        );
+      case 'doc':
+      case 'docx':
+        return (
+          <div>
+            <Typography variant="h6">Uploaded Word Document:</Typography>
+            <Box
+              sx={{
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                flexDirection: 'column',
+                p: 2,
+                border: '1px dashed #ccc',
+                borderRadius: 1
+              }}
+            >
+              <DescriptionIcon color="primary" sx={{ fontSize: 60 }} />
+              <Typography>{anyFile.name}</Typography>
+            </Box>
+          </div>
+        );
+      case 'xls':
+      case 'xlsx':
+        return (
+          <div>
+            <Typography variant="h6">Uploaded Excel File:</Typography>
+            <Box
+              sx={{
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                flexDirection: 'column',
+                p: 2,
+                border: '1px dashed #ccc',
+                borderRadius: 1
+              }}
+            >
+              <TableChartIcon color="success" sx={{ fontSize: 60 }} />
+              <Typography>{anyFile.name}</Typography>
+            </Box>
+          </div>
+        );
+      default:
+        return null;
+    }
   };
 
   const handleUpload = async (paymentPageId) => {
@@ -197,11 +300,41 @@ export default function SamplePage() {
 
   return (
     <>
-      <Box>
+      <Box
+        sx={{
+          height: '100vh',
+          overflow: 'hidden', // Prevent scrolling
+          display: 'flex',
+          flexDirection: 'column'
+        }}
+      >
         {/* Header */}
-        <Grid container spacing={2}>
-          <Grid item xs={12} md={4}>
+        <Grid
+          container
+          spacing={2}
+          sx={{
+            flex: 1, // Takes remaining space
+            overflow: 'hidden' // Prevent scrolling
+          }}
+        >
+          <Grid
+            item
+            xs={12}
+            md={4}
+            sx={{
+              height: '100%',
+              overflow: 'auto', // Enable scrolling only inside this column
+              scrollbarWidth: 'none',
+              '&::-webkit-scrollbar': {
+                display: 'none'
+              },
+              pb: 2 // Add some padding at bottom
+            }}
+          >
             <Box sx={{ backgroundColor: 'white', p: 2 }}>
+              <Typography variant="h3" sx={{ fontWeight: 'bold', mb: 3, textAlign: 'center' }}>
+                Create Payment Page
+              </Typography>
               <Typography variant="h5" sx={{ fontWeight: 'bold', mb: 3 }}>
                 Upload your Digital Files
               </Typography>
@@ -214,34 +347,65 @@ export default function SamplePage() {
                   textAlign: 'center',
                   padding: '20px',
                   borderRadius: '10px',
-                  borderColor: '#E0E0E0',
-                  mb: 4
+                  borderColor: '#E0E0E0'
                 }}
               >
                 <IconButton color="primary" component="label">
                   <CloudUpload />
-                  <input hidden type="file" onChange={handleAnyfileChange} />
+                  <input hidden accept=".pdf,.doc,.docx,.xls,.xlsx,.mp4,.jpg,.jpeg,.png" type="file" onChange={handleAnyfileChange} />
                 </IconButton>
                 <Typography variant="body1" sx={{ color: '#E91E63', fontWeight: 'bold', mb: 1 }}>
-                  Browse files from your system
+                  Upload files from your system
                 </Typography>
                 <Button component="label" sx={{ display: 'none' }} aria-label="Browse files">
                   <input type="file" hidden />
                 </Button>
-                <Typography sx={{ color: '#B0B0B0', mt: 2, mb: 1 }}>OR</Typography>
-                <TextField
-                  onChange={(event) =>
-                    setData((prevData) => ({
-                      ...prevData,
-                      link: event.target.value
-                    }))
-                  }
-                  fullWidth
-                  placeholder="Add link to your files"
-                  size="small"
-                  sx={{ mb: 2 }}
-                />
               </Card>
+              {renderPreview()}
+              <TextField
+                label="Page Title"
+                placeholder="Add Title"
+                variant="outlined"
+                fullWidth
+                margin="normal"
+                inputProps={{ maxLength: 50 }}
+                helperText={data?.pageTitle?.length > 0 ? `${data?.pageTitle?.length}/50` : `0/50`}
+                onChange={(event) =>
+                  setData((prevData) => ({
+                    ...prevData,
+                    pageTitle: event.target.value
+                  }))
+                }
+              />
+              <TextField
+                label="Description"
+                variant="outlined"
+                fullWidth
+                multiline
+                rows={4}
+                margin="normal"
+                onChange={(event) =>
+                  setData((prevData) => ({
+                    ...prevData,
+                    description: event.target.value
+                  }))
+                }
+                sx={{ mt: 0 }}
+              />
+              <TextField
+                onChange={(event) =>
+                  setData((prevData) => ({
+                    ...prevData,
+                    link: event.target.value
+                  }))
+                }
+                label="Add YouTube/Google Drive Link"
+                variant="outlined"
+                fullWidth
+                margin="normal"
+                placeholder="Add link to your files"
+                sx={{ mt: 0 }}
+              />
 
               {/* Pricing Section */}
               <Typography variant="h5" sx={{ fontWeight: 'bold', mb: 2 }}>
@@ -275,20 +439,6 @@ export default function SamplePage() {
               <Box>
                 <Box component="form" noValidate autoComplete="off">
                   {/* Page Title */}
-                  <TextField
-                    label="Page Title"
-                    variant="outlined"
-                    fullWidth
-                    margin="normal"
-                    inputProps={{ maxLength: 75 }}
-                    helperText="0/75"
-                    onChange={(event) =>
-                      setData((prevData) => ({
-                        ...prevData,
-                        pageTitle: event.target.value
-                      }))
-                    }
-                  />
 
                   {/* Category Dropdown */}
                   <TextField
@@ -304,6 +454,7 @@ export default function SamplePage() {
                         category: event.target.value
                       }))
                     }
+                    sx={{ mt: 0 }}
                   >
                     <MenuItem value="Finance">Finance</MenuItem>
                     <MenuItem value="Health">Health</MenuItem>
@@ -314,7 +465,7 @@ export default function SamplePage() {
                   <Box border={1} borderColor="grey.400" borderRadius={1} p={2} textAlign="center" mt={2} mb={2}>
                     <IconButton color="primary" component="label">
                       <CloudUpload />
-                      <input hidden accept="image/*,video/*" type="file" onChange={handleFileChange} />
+                      <input hidden accept=".jpg,.jpeg,.png" type="file" onChange={handleFileChange} />
                     </IconButton>
                     {/* <Typography></Typography> */}
                     <Typography variant="body2" color="textSecondary">
@@ -332,20 +483,6 @@ export default function SamplePage() {
                   )} */}
 
                   {/* Description */}
-                  <TextField
-                    label="Description"
-                    variant="outlined"
-                    fullWidth
-                    multiline
-                    rows={4}
-                    margin="normal"
-                    onChange={(event) =>
-                      setData((prevData) => ({
-                        ...prevData,
-                        description: event.target.value
-                      }))
-                    }
-                  />
 
                   {/* Button Text */}
                   <TextField
@@ -369,12 +506,11 @@ export default function SamplePage() {
                 variant="contained"
                 fullWidth
                 sx={{
-                  mt: 3,
                   backgroundColor: '#000000',
                   color: '#FFFFFF',
                   '&:hover': { backgroundColor: '#333333' },
                   height: 48,
-                  borderRadius: 5
+                  borderRadius: 2
                 }}
                 onClick={handleSubmit}
               >
@@ -382,14 +518,29 @@ export default function SamplePage() {
               </Button>
             </Box>
           </Grid>
-          <Grid item xs={12} md={8}>
-            <Box sx={{ backgroundColor: 'lightblue', height: '100%' }}>
+          <Grid
+            item
+            xs={12}
+            md={8}
+            sx={{
+              height: '100%',
+              overflow: 'auto', // Enable scrolling only inside this column
+              scrollbarWidth: 'none',
+              '&::-webkit-scrollbar': {
+                display: 'none'
+              }
+            }}
+          >
+            <Box sx={{ backgroundColor: 'lightblue' }}>
+              <Typography variant="h3" sx={{ fontWeight: 'bold', pt: 3, pl: 3 }}>
+                Preview
+              </Typography>
               <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', minHeight: '100vh', px: 2 }}>
                 <Grid container spacing={4} maxWidth="lg">
                   {/* Left Section */}
                   <Grid item xs={12} md={7}>
                     <Paper sx={{ p: 4, borderRadius: 2 }}>
-                     <Avatar sx={{ bgcolor: 'orange' }}>{selectedUserDetails?.name?.slice(0, 1)}</Avatar>
+                      <Avatar sx={{ bgcolor: 'orange' }}>{selectedUserDetails?.name?.slice(0, 1)}</Avatar>
                       <Typography variant="body1" color="black">
                         {selectedUserDetails?.name || 'N/A'}
                       </Typography>
@@ -414,7 +565,7 @@ export default function SamplePage() {
                         <Box sx={{ my: 2 }}>
                           <img src={preview} alt="Uploaded" style={{ maxWidth: '100%', borderRadius: 8, height: 150 }} />
                         </Box>
-                        )}
+                      )}
                     </Paper>
                   </Grid>
 
