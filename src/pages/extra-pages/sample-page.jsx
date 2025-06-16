@@ -24,7 +24,10 @@ import axios from 'axios';
 import { useNavigate } from 'react-router';
 
 // project imports
-import { useSelector } from 'react-redux';
+import { useDispatch, useSelector } from 'react-redux';
+import { createPaymentApi, uploadFileApi, uploadThumbnailApi } from '../../store/payment-page/paymentPageApi';
+import { useSnackbar } from 'notistack';
+import { unwrapResult } from '@reduxjs/toolkit';
 
 // ==============================|| SAMPLE PAGE ||============================== //
 
@@ -37,7 +40,7 @@ export default function SamplePage() {
   const [anyPreview, setAnyPreview] = useState(null);
   const [fileType, setFileType] = useState('');
   const [uploading, setUploading] = useState(false);
-  const [uploadedFilePath, setUploadedFilePath] = useState('');
+  const { enqueueSnackbar, closeSnackbar } = useSnackbar();
 
   const handlePriceTypeChange = (event) => {
     setPriceType(event.target.value);
@@ -55,37 +58,45 @@ export default function SamplePage() {
     link: ''
   });
 
+  const dispatch = useDispatch();
+
   const navigate = useNavigate();
 
   const handleSubmit = async () => {
     if (!file) {
-      alert('Please select a file first.');
+      enqueueSnackbar('Please select a thumbnail file.', {
+        variant: 'error'
+      });
       return;
     }
     if (!data?.pageTitle) {
-      alert('Please select a page title.');
-      return;
-    }
-    if (!data?.price) {
-      alert('Please select a price.');
+      enqueueSnackbar('Please select a Page Title.', {
+        variant: 'error'
+      });
       return;
     }
     if (!data?.description) {
-      alert('Please select a description.');
+      enqueueSnackbar('Please select a Page Desciption.', {
+        variant: 'error'
+      });
       return;
     }
-    console.log(data, 'dmekfmks');
-    let omifyPhoneNumber = localStorage.getItem('omifyUserPhoneNumber');
+    if (!data?.price) {
+      enqueueSnackbar('Please select a Price.', {
+        variant: 'error'
+      });
+      return;
+    }
     const requestData = {
       ...data,
-      phoneNumber: omifyPhoneNumber
+      userName: selectedUserDetails?.userName
     };
-    const response = await axios.post('http://localhost:12000/paymentPage/create', requestData);
-    // console.log(response,"demfkmke")
-    let paymentPageId = response?.data?._id;
-    console.log(paymentPageId, 'delld');
+    let response = await dispatch(createPaymentApi(requestData));
+    response = unwrapResult(response)
+    let paymentPageId = response?._id;
     await handleUpload(paymentPageId);
-    if (anyPreview) {
+    if (anyFile) {
+      console.log("dmkeik")
       await handleAnyFileUpload(paymentPageId);
     }
     navigate('/payment-page');
@@ -94,11 +105,6 @@ export default function SamplePage() {
   const handleFileChange = (event) => {
     const selectedFile = event.target.files[0];
     setFile(selectedFile);
-    console.log(selectedFile, 'Demkrf');
-
-    // handleUpload(file);
-
-    // Create a preview
     const previewUrl = URL.createObjectURL(selectedFile);
     console.log(previewUrl, 'Demk');
     setPreview(previewUrl);
@@ -114,12 +120,13 @@ export default function SamplePage() {
     // Validate file type
     const allowedExtensions = ['pdf', 'doc', 'docx', 'xls', 'xlsx', 'mp4', 'jpg', 'jpeg', 'png'];
     if (!allowedExtensions.includes(fileExt)) {
-      alert('Please upload only PDF, Excel, Word, MP4, JPG, or PNG files');
+      enqueueSnackbar('Please upload only PDF, Excel, Word, MP4, JPG, or PNG files', {
+        variant: 'error'
+      });
       return;
     }
     setAnyFile(selectedFile);
     setFileType(fileExt);
-    console.log(selectedFile, 'Demkrf');
 
     // handleUpload(file);
 
@@ -131,12 +138,9 @@ export default function SamplePage() {
       // For documents, use icon preview
       setAnyPreview(null);
     }
-
-    alert('File Added');
   };
 
   const renderPreview = () => {
-    console.log("msdkek")
     if (!anyFile) return null;
 
     switch (fileType) {
@@ -226,6 +230,8 @@ export default function SamplePage() {
     }
   };
 
+  console.log(anyFile,";fmkmekfke")
+
   const handleUpload = async (paymentPageId) => {
     const formData = new FormData();
     formData.append('paymentPageId', paymentPageId);
@@ -235,68 +241,47 @@ export default function SamplePage() {
 
     console.log(formData, 'dlemrnje');
     console.log('FormData contents:');
-    for (let [key, value] of formData.entries()) {
-      console.log(`${key}:`, value);
-    }
 
     try {
-      const response = await axios.post('http://localhost:12000/paymentPage/upload', formData, {
-        headers: {
-          'Content-Type': 'multipart/form-data'
-        }
+      await dispatch(uploadThumbnailApi(formData));
+      enqueueSnackbar('Thumbnail uploaded successfully', {
+        variant: 'success'
       });
-
-      console.log(response.data.filePath, 'def');
-
-      setUploadedFilePath(response.data.filePath);
-      alert('File uploaded successfully');
     } catch (error) {
-      console.error(error);
-      alert(`Failed to upload the file. ${error || error.message}`);
+      enqueueSnackbar(`Failed to upload the file. ${error || error.message}`, {
+        variant: 'error'
+      });
     } finally {
       setUploading(false);
     }
   };
 
   const handleAnyFileUpload = async (paymentPageId) => {
-    console.log(anyFile, 'ewfe');
     if (!anyFile) {
-      alert('Please select a file first.');
+      enqueueSnackbar('Please select a file', {
+        variant: 'error'
+      });
       return;
     }
 
     const formData = new FormData();
     formData.append('paymentPageId', paymentPageId);
     formData.append('file', anyFile);
-
-    // setUploading(true);
-
-    console.log(formData, 'dlemrnje');
-    console.log('FormData contents:');
-    for (let [key, value] of formData.entries()) {
-      console.log(`${key}:`, value);
-    }
-
+    console.log(anyFile,"anyFile")
     try {
-      const response = await axios.post('http://localhost:12000/paymentPage/uploadAnything', formData, {
-        headers: {
-          'Content-Type': 'multipart/form-data'
-        }
+      await dispatch(uploadFileApi(formData));
+      enqueueSnackbar('File Uploaded successfully', {
+        variant: 'success'
       });
-
-      console.log(response.data.filePath, 'response.data.filePath');
-
-      setUploadedFilePath(response.data.filePath);
-      alert('File uploaded successfully');
     } catch (error) {
       console.error(error);
-      alert(`Failed to upload the file. ${error || error.message}`);
+      enqueueSnackbar(`Failed to upload the file. ${error || error.message}`, {
+        variant: 'error'
+      });
     } finally {
       setUploading(false);
     }
   };
-
-  console.log(uploadedFilePath, 'demkmk');
 
   return (
     <>
@@ -461,8 +446,9 @@ export default function SamplePage() {
                     <MenuItem value="Education">Education</MenuItem>
                   </TextField>
 
+                    <Typography variant='h5'>Add Thumbnail for the page</Typography>
                   {/* Cover Image/Video */}
-                  <Box border={1} borderColor="grey.400" borderRadius={1} p={2} textAlign="center" mt={2} mb={2}>
+                  <Box border={1} borderColor="grey.400" borderRadius={1} p={2} textAlign="center" mt={1} mb={2}>
                     <IconButton color="primary" component="label">
                       <CloudUpload />
                       <input hidden accept=".jpg,.jpeg,.png" type="file" onChange={handleFileChange} />
