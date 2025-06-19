@@ -8,7 +8,8 @@ const initialState = {
   countAllPaymentPage: {},
   isCountAllPaymentPageLoading: true,
   isPaymentTablePaginatedLoading: true,
-  paymentList: []
+  paymentList: [],
+  paymentListPageSize: 50
 };
 
 const slice = createSlice({

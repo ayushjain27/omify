@@ -12,10 +12,11 @@ import AnalyticsEachNumberData from '../../components/Analytics/AnalyticsEachNum
 import InsertInvitationRoundedIcon from '@mui/icons-material/InsertInvitationRounded';
 import TodayRoundedIcon from '@mui/icons-material/TodayRounded';
 import { useDispatch, useSelector } from 'react-redux';
-import { countAllPaymentPageByUserNameApi } from '../../store/payment-page/paymentPageApi';
+import { countAllPaymentPageByUserNameApi, getPaymentTablePaginatedApi } from '../../store/payment-page/paymentPageApi';
 import Scrollbar from '../../components/Scrollbar';
 import PaymentTable from '../dashboard/PaymentTable';
 import ReactPaginate from 'react-paginate';
+import { toUpper } from 'lodash';
 
 // ==============================|| SAMPLE PAGE ||============================== //
 
@@ -25,10 +26,11 @@ export default function PaymentPage() {
   const theme = useTheme();
   const isDesktop = useMediaQuery(theme.breakpoints.down('sm'));
   const [tabValue, setValue] = useState('active');
+  const [forcePage, setForcePage] = useState(0);
+  const [itemOffset, setItemOffset] = useState(0);
   const { selectedUserDetails } = useSelector(({ authReducer }) => authReducer);
-  const { countAllPaymentPage, isCountAllPaymentPageLoading, paymentList, isPaymentTablePaginatedLoading } = useSelector(
-    ({ paymentPageReducer }) => paymentPageReducer
-  );
+  const { countAllPaymentPage, isCountAllPaymentPageLoading, paymentList, isPaymentTablePaginatedLoading, paymentListPageSize } =
+    useSelector(({ paymentPageReducer }) => paymentPageReducer);
 
   const handleNavigation = () => {
     navigate('/createPayment');
@@ -42,9 +44,40 @@ export default function PaymentPage() {
     let fetchData = async () => {
       addStyles();
       await dispatch(countAllPaymentPageByUserNameApi({ userName: selectedUserDetails?.userName }));
+      await getAllPaymentPagePaginated();
     };
     fetchData();
   }, []);
+
+  useEffect(() => {
+    setItemOffset(0);
+    setForcePage(0);
+    getAllPaymentPagePaginated();
+  }, [tabValue]);
+
+  useEffect(() => {
+    getAllPaymentPagePaginated();
+  }, [itemOffset]);
+
+  const handlePageClick = (event) => {
+    const newOffset = event.selected;
+    setItemOffset(newOffset);
+    setForcePage(event.selected);
+  };
+
+  const getAllPaymentPagePaginated = async () => {
+    const data = {
+      pageNo: itemOffset,
+      pageSize: paymentListPageSize,
+      status: toUpper(tabValue),
+      userName: selectedUserDetails?.userName
+    };
+    try {
+      await dispatch(getPaymentTablePaginatedApi(data));
+    } catch (error) {
+      console.log(error);
+    }
+  };
 
   let length = 0;
   if (tabValue === 'active') {
@@ -54,7 +87,6 @@ export default function PaymentPage() {
   }
   const items = Array.from({ length }, (_, index) => index + 1);
   const pageCount = Math.ceil(items.length / 1);
-
 
   const addStyles = () => {
     const style = document.createElement('style');
@@ -174,8 +206,8 @@ export default function PaymentPage() {
             pageCount={pageCount}
             marginPagesDisplayed={2}
             pageRangeDisplayed={3}
-            // onPageChange={handlePageClick}
-            // forcePage={forcePage} // Set the active page
+            onPageChange={handlePageClick}
+            forcePage={forcePage} // Set the active page
             containerClassName="pagination"
             pageClassName="page-item"
             pageLinkClassName="page-link"
@@ -188,15 +220,6 @@ export default function PaymentPage() {
             renderOnZeroPageCount={null}
           />
         </Card>
-
-        {/* <Grid item xs={12} mt={2}>
-          <Grid container alignItems="center" justifyContent="space-between">
-            <Grid item />
-          </Grid>
-          <MainCard sx={{ mt: 2 }} content={false}>
-            <PaymentTable paymentList={paymentList} />
-          </MainCard>
-        </Grid> */}
       </div>
     </>
   );

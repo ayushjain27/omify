@@ -100,8 +100,8 @@ export const getPaymentTablePaginatedApi = createAsyncThunk('serviceplug/getPaym
       data: params
     });
     const data = await response.data;
-    if (data?.result) {
-      return data.result;
+    if (data) {
+      return data;
     }
     return [];
   } catch (err) {
