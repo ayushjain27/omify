@@ -35,3 +35,10 @@ export const socialLinkOpts = [
     value: 'YouTube'
   }
 ];
+
+export const CustomLoadingCellRenderer = () => (
+  <div className="ag-custom-loading-cell" style={{ paddingLeft: '10px', lineHeight: '25px' }}>
+    <i className="fas fa-spinner fa-pulse" />
+    <span> Loading data...</span>
+  </div>
+);

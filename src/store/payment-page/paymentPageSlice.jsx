@@ -1,40 +1,45 @@
 import { createSlice } from '@reduxjs/toolkit';
-import { getAllUserDataApi, getUserDataByUserNameApi } from './authApi';
+import { countAllPaymentPageByUserNameApi, getPaymentTablePaginatedApi } from './paymentPageApi';
 // import { sendOtpApi } from './authApi';
 
 // ----------------------------------------------------------------------
 
 const initialState = {
-  // isStoreLoading: false,
-  // sendOtp: []
-  selectedUserDetails: {},
-  allUserData: []
+  countAllPaymentPage: {},
+  isCountAllPaymentPageLoading: true,
+  isPaymentTablePaginatedLoading: true,
+  paymentList: []
 };
 
 const slice = createSlice({
-  name: 'auth',
+  name: 'paymentPage',
   initialState,
   reducers: {},
   extraReducers: (builder) => {
-    builder.addCase(getUserDataByUserNameApi.fulfilled, (state, action) => {
-      state.selectedUserDetails = action.payload;
+    builder.addCase(countAllPaymentPageByUserNameApi.pending, (state, action) => {
+      state.isCountAllPaymentPageLoading = true;
     });
-    builder.addCase(getAllUserDataApi.fulfilled, (state, action) => {
-      console.log(action.payload,"allUserDatamkdmr")
-      state.allUserData = action.payload;
+    builder.addCase(countAllPaymentPageByUserNameApi.fulfilled, (state, action) => {
+      state.isCountAllPaymentPageLoading = false;
+      state.countAllPaymentPage = action.payload;
     });
-    // You can add more cases like this:
-    // .addCase(sendOtpApi.fulfilled, (state, action) => {
-    //   state.isStoreLoading = false;
-    //   state.sendOtp = action.payload;
-    // })
-    // .addCase(sendOtpApi.rejected, (state) => {
-    //   state.isStoreLoading = false;
-    // })
+    builder.addCase(countAllPaymentPageByUserNameApi.rejected, (state, action) => {
+      state.isCountAllPaymentPageLoading = false;
+    });
+    builder.addCase(getPaymentTablePaginatedApi.pending, (state, action) => {
+      state.isPaymentTablePaginatedLoading = false;
+    });
+    builder.addCase(getPaymentTablePaginatedApi.fulfilled, (state, action) => {
+      state.isPaymentTablePaginatedLoading = true;
+      state.paymentList = action.payload;
+    });
+    builder.addCase(getPaymentTablePaginatedApi.rejected, (state, action) => {
+      state.isPaymentTablePaginatedLoading = false;
+    });
   }
 });
 
 export const { actions } = slice;
-export const authActions = slice.actions;
+export const paymentPageActions = slice.actions;
 
 export default slice.reducer;

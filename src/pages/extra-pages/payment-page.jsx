@@ -1,49 +1,107 @@
+/* eslint-disable react-hooks/exhaustive-deps */
 // material-ui
 import React, { useEffect, useState } from 'react';
-import { Grid } from '@mui/material';
+import { Box, Card, Grid, Tab, Tabs, useMediaQuery, useTheme } from '@mui/material';
 import AnalyticEcommerce from 'components/cards/statistics/AnalyticEcommerce';
 import MainCard from 'components/MainCard';
-import PaymentTable from 'pages/dashboard/PaymentTable';
 import AnimateButton from 'components/@extended/AnimateButton';
 import Button from '@mui/material/Button';
 import { useNavigate } from 'react-router';
 import axios from 'axios';
+import AnalyticsEachNumberData from '../../components/Analytics/AnalyticsEachNumberData';
+import InsertInvitationRoundedIcon from '@mui/icons-material/InsertInvitationRounded';
+import TodayRoundedIcon from '@mui/icons-material/TodayRounded';
+import { useDispatch, useSelector } from 'react-redux';
+import { countAllPaymentPageByUserNameApi } from '../../store/payment-page/paymentPageApi';
+import Scrollbar from '../../components/Scrollbar';
+import PaymentTable from '../dashboard/PaymentTable';
+import ReactPaginate from 'react-paginate';
 
 // ==============================|| SAMPLE PAGE ||============================== //
 
 export default function PaymentPage() {
   const navigate = useNavigate();
-  let phoneNumber = localStorage.getItem('omifyUserPhoneNumber');
+  const dispatch = useDispatch();
+  const theme = useTheme();
+  const isDesktop = useMediaQuery(theme.breakpoints.down('sm'));
+  const [tabValue, setValue] = useState('active');
+  const { selectedUserDetails } = useSelector(({ authReducer }) => authReducer);
+  const { countAllPaymentPage, isCountAllPaymentPageLoading, paymentList, isPaymentTablePaginatedLoading } = useSelector(
+    ({ paymentPageReducer }) => paymentPageReducer
+  );
 
   const handleNavigation = () => {
     navigate('/createPayment');
   };
 
-  const [paymentList, setPaymentList] = useState([]);
+  const handleChange = (event, newValue) => {
+    setValue(newValue);
+  };
 
-  // useEffect(() => {
-  //   const fetchData = async () => {
-  //     try {
-  //       let phoneNumber = await localStorage.getItem('omifyUserPhoneNumber');
-  //       console.log(phoneNumber, 'ddee');
-  //       const response = await axios.get( phoneNumber === '+917838245184' ? 'http://localhost:12000/paymentPage/getAllPaymentPages' : 'http://localhost:12000/paymentPage/getPaymentDetailsListByPhoneNumber', {
-  //         params: { phoneNumber: phoneNumber } // Pass phoneNumber in the `params` field
-  //       });
+  useEffect(() => {
+    let fetchData = async () => {
+      addStyles();
+      await dispatch(countAllPaymentPageByUserNameApi({ userName: selectedUserDetails?.userName }));
+    };
+    fetchData();
+  }, []);
 
-  //       // Check if the request was successful
-  //       if (response.status === 200) {
-  //         console.log('API request successful:', response.data);
-  //         setPaymentList(response.data); // Assuming 'setPaymentList' is defined to set the user data in state
-  //       } else {
-  //         console.error('API request failed with status:', response.status);
-  //       }
-  //     } catch (error) {
-  //       console.error('Error during API request:', error.message);
-  //     }
-  //   };
+  let length = 0;
+  if (tabValue === 'active') {
+    length = Math.ceil(countAllPaymentPage?.active / 50);
+  } else if (tabValue === 'inActive') {
+    length = Math.ceil(countAllPaymentPage?.inActive / 50);
+  }
+  const items = Array.from({ length }, (_, index) => index + 1);
+  const pageCount = Math.ceil(items.length / 1);
 
-  //   fetchData();
-  // }, []);
+
+  const addStyles = () => {
+    const style = document.createElement('style');
+    style.innerHTML = `
+      .pagination {
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        list-style: none;
+        padding: 10px 20px;
+      }
+      .page-item {
+        margin: 0 5px;
+      }
+      .page-link {
+        display: inline-block;
+        padding: 4px 12px;
+        color: #337ab7;
+        text-decoration: none;
+        border: 1px solid #ddd;
+        border-radius: 50%;
+        transition: background-color 0.3s ease;
+      }
+      .page-link:hover {
+        background-color: #f5f5f5;
+      }
+      .active .page-link {
+        background-color: lightgray;
+        color: black;
+      }
+      .break-me {
+        display: inline-block;
+        color: #337ab7;
+        text-decoration: none;
+      }
+      .page-item.previous .page-link,
+      .page-item.next .page-link {
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        width: 40px;
+        height: 40px;
+      }
+    `;
+    document.head.appendChild(style);
+  };
 
   return (
     <>
@@ -56,51 +114,89 @@ export default function PaymentPage() {
           </AnimateButton>
         </div>
         <Grid container rowSpacing={4.5} columnSpacing={2.75} mt={1}>
-          <Grid item xs={12} sm={6} md={4} lg={4}>
-            <AnalyticEcommerce
-              title="Total Payment Pages Created"
-              count={paymentList.length}
-              percentage={27.4}
-              isLoss
-              color="warning"
-              extra="1,943"
+          <Grid item xs={12} sm={12} md={4} lg={4}>
+            <AnalyticsEachNumberData
+              title="Total Payment Pages"
+              number={countAllPaymentPage?.total}
+              loading={isCountAllPaymentPageLoading}
+              sx={{ backgroundColor: '#74CAFF' }}
             />
           </Grid>
-          <Grid item xs={12} sm={6} md={4} lg={4}>
-            <AnalyticEcommerce
-              title="Total Active Pages"
-              count={paymentList.filter((item) => item.status === 'ACTIVE').length}
-              percentage={27.4}
-              isLoss
-              color="warning"
-              extra="1,943"
+          <Grid item xs={12} sm={12} md={4} lg={4}>
+            <AnalyticsEachNumberData
+              title="Total Active Payment Pages"
+              number={countAllPaymentPage?.active}
+              loading={isCountAllPaymentPageLoading}
+              sx={{ backgroundColor: '#5BE584' }}
             />
           </Grid>
-          <Grid item xs={12} sm={6} md={4} lg={4}>
-            <AnalyticEcommerce
-              title="Total InActive Pages"
-              count={paymentList.filter((item) => item.status === 'INACTIVE').length}
-              percentage={27.4}
-              isLoss
-              color="warning"
-              extra="1,943"
+          <Grid item xs={12} sm={12} md={4} lg={4}>
+            <AnalyticsEachNumberData
+              title="Total In-Active Payment Pages"
+              number={countAllPaymentPage?.inActive}
+              loading={isCountAllPaymentPageLoading}
+              sx={{ backgroundColor: '#ffe704' }}
             />
           </Grid>
-          {/* <Grid item xs={12} sm={6} md={4} lg={3}>
-            <AnalyticEcommerce title="Total Payment Pages" count="18,800" percentage={27.4} isLoss color="warning" extra="1,943" />
-          </Grid> */}
         </Grid>
-        <Grid item xs={12} mt={2}>
+        <Card sx={{ marginTop: '16px' }}>
+          <Box sx={{ borderBottom: 1, borderColor: 'divider' }}>
+            <Tabs
+              value={tabValue}
+              onChange={handleChange}
+              variant={isDesktop ? 'fullWidth' : 'scrollable'}
+              scrollButtons="auto"
+              sx={{
+                '& .MuiTabs-flexContainer': {
+                  flexWrap: 'wrap',
+                  justifyContent: 'space-evenly'
+                }
+              }}
+            >
+              <Tab label="Active" icon={<InsertInvitationRoundedIcon />} iconPosition="start" value="active" />
+              <Tab label="InActive" icon={<TodayRoundedIcon />} iconPosition="start" value="inActive" />
+            </Tabs>
+          </Box>
+          <Scrollbar>
+            <PaymentTable
+              paymentList={paymentList}
+              selectedTab={tabValue}
+              isPaymentTablePaginatedLoading={isPaymentTablePaginatedLoading}
+            />
+          </Scrollbar>
+        </Card>
+        <Card sx={{ borderTopLeftRadius: '0px', borderTopRightRadius: '0px' }}>
+          <ReactPaginate
+            previousLabel="<"
+            nextLabel=">"
+            breakLabel="..."
+            breakClassName="break-me"
+            pageCount={pageCount}
+            marginPagesDisplayed={2}
+            pageRangeDisplayed={3}
+            // onPageChange={handlePageClick}
+            // forcePage={forcePage} // Set the active page
+            containerClassName="pagination"
+            pageClassName="page-item"
+            pageLinkClassName="page-link"
+            previousClassName="page-item"
+            previousLinkClassName="page-link"
+            nextClassName="page-item"
+            nextLinkClassName="page-link"
+            breakLinkClassName="page-link"
+            activeClassName="active"
+            renderOnZeroPageCount={null}
+          />
+        </Card>
+
+        {/* <Grid item xs={12} mt={2}>
           <Grid container alignItems="center" justifyContent="space-between">
-            {/* <Grid item>
-            <Typography variant="h5">Recent Orders</Typography>
-          </Grid> */}
             <Grid item />
           </Grid>
           <MainCard sx={{ mt: 2 }} content={false}>
             <PaymentTable paymentList={paymentList} />
           </MainCard>
-        </Grid>
+        </Grid> */}
       </div>
     </>
   );

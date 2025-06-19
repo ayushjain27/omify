@@ -20,17 +20,8 @@ const slice = createSlice({
       state.selectedUserDetails = action.payload;
     });
     builder.addCase(getAllUserDataApi.fulfilled, (state, action) => {
-      console.log(action.payload,"allUserDatamkdmr")
       state.allUserData = action.payload;
     });
-    // You can add more cases like this:
-    // .addCase(sendOtpApi.fulfilled, (state, action) => {
-    //   state.isStoreLoading = false;
-    //   state.sendOtp = action.payload;
-    // })
-    // .addCase(sendOtpApi.rejected, (state) => {
-    //   state.isStoreLoading = false;
-    // })
   }
 });
 
