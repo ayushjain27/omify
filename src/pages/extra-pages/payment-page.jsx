@@ -32,8 +32,13 @@ export default function PaymentPage() {
   const { countAllPaymentPage, isCountAllPaymentPageLoading, paymentList, isPaymentTablePaginatedLoading, paymentListPageSize } =
     useSelector(({ paymentPageReducer }) => paymentPageReducer);
 
+
   const handleNavigation = () => {
     navigate('/createPayment');
+  };
+
+  const handleUpdateKyc = () => {
+    navigate('/userProfile');
   };
 
   const handleChange = (event, newValue) => {
@@ -140,6 +145,9 @@ export default function PaymentPage() {
       <div style={{ margin: '0px' }}>
         <div style={{ display: 'flex', flexDirection: 'row', justifyContent: 'flex-end' }}>
           <AnimateButton>
+            <Button fullWidth size="large" type="submit" variant="contained" color="primary" onClick={handleUpdateKyc}>
+              Update Kyc
+            </Button>
             <Button fullWidth size="large" type="submit" variant="contained" color="primary" onClick={handleNavigation}>
               Create Payment Page
             </Button>

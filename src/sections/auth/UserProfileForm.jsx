@@ -49,7 +49,6 @@ export default function UserProfileForm() {
     phoneNumber: Yup.string().required('Please enter a phone number').length(10, 'Please enter 10 digit mobile number'),
     socialLinkSelected: Yup.string().required('Please select social link'),
     socialLink: Yup.string().required('Please enter a social link'),
-    nameSalutation: Yup.string().required('Please select a salutation')
   });
 
   const dispatch = useDispatch();
@@ -60,7 +59,6 @@ export default function UserProfileForm() {
       phoneNumber: '',
       socialLinkSelected: '',
       socialLink: '',
-      nameSalutation: ''
     },
     validationSchema: UserProfileSchema,
     onSubmit: async (values, { setErrors, setSubmitting, resetForm }) => {
@@ -71,8 +69,7 @@ export default function UserProfileForm() {
           name: values.name,
           phoneNumber: values.phoneNumber,
           socialLinkSelected: values.socialLinkSelected,
-          socialLink: values.socialLink,
-          nameSalutation: values.nameSalutation
+          socialLink: values.socialLink
         };
         let response = await dispatch(updateUserProfileByUserNameApi(params));
         response = unwrapResult(response);
@@ -109,30 +106,6 @@ export default function UserProfileForm() {
         <Form autoComplete="off" noValidate onSubmit={handleSubmit}>
           <Stack spacing={3}>
             {errors.afterSubmit && <Alert severity="error">{errors.afterSubmit}</Alert>}
-            <Autocomplete
-              name="nameSalutation"
-              options={nameSalOpts}
-              filterSelectedOptions
-              value={values.nameSalutation}
-              isOptionEqualToValue={(option, value) => option?.label === value?.label}
-              onChange={(event, newValue) => formik.setFieldValue('nameSalutation', newValue?.value)}
-              renderInput={(params) => (
-                <TextField
-                  {...params}
-                  fullWidth
-                  label="Select Salutation*"
-                  error={touched.nameSalutation && errors.nameSalutation}
-                  helperText={touched.nameSalutation && errors.nameSalutation}
-                />
-              )}
-              renderOption={(props, option) => (
-                <li {...props}>
-                  <Stack direction="row" alignItems="center" spacing={1}>
-                    <Typography>{option.label}</Typography>
-                  </Stack>
-                </li>
-              )}
-            />
             <TextField
               fullWidth
               autoComplete="name"

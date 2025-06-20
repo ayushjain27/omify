@@ -21,23 +21,29 @@ import { nameSalOpts } from '../../utils/constant';
 import _ from 'lodash';
 import { CloudUpload } from '@mui/icons-material';
 import { useState } from 'react';
-import { useSelector } from 'react-redux';
+import { useDispatch, useSelector } from 'react-redux';
+import { getUserDataByUserNameApi, updateKycByUserNameApi } from '../../store/auth/authApi';
+import { LoadingButton } from '@mui/lab';
 
 // ================================|| LOGIN ||================================ //
 
 const UserSchema = Yup.object().shape({
-  email: Yup.string().required('Please enter a email').email('Please enter valid email')
-  // password: Yup.string().required('Password is required')
+  adhaarCardNumber: Yup.string().required('Please enter a Aadhar Card Number'),
+  panCardNumber: Yup.string().required('Please enter a Pan Card Number'),
+  accountHolderName: Yup.string().required('Please enter a Account Holder Name'),
+  ifscCode: Yup.string().required('Please enter a Ifsc code'),
+  accountNumber: Yup.string().required('Please enter a Account Number')
 });
 
 export default function UserProfile() {
+  const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
   const [file, setFile] = useState(null);
   const [preview, setPreview] = useState(null);
   const [cancelCheckFile, setCancelCheckFile] = useState(null);
   const [cancelCheckPreview, setCancelCheckPreview] = useState(null);
 
-   const { selectedUserDetails } = useSelector(({ authReducer }) => authReducer);
+  const { selectedUserDetails } = useSelector(({ authReducer }) => authReducer);
 
   const handleFileChange = (event) => {
     const selectedFile = event.target.files[0];
@@ -65,43 +71,27 @@ export default function UserProfile() {
     setCancelCheckPreview(previewUrl);
   };
 
+  const dispatch = useDispatch();
+
   const formik = useFormik({
     initialValues: {
-      email: '',
-      userId: '',
-      password: ''
+      adhaarCardNumber: '',
+      panCardNumber: '',
+      accountHolderName: '',
+      ifscCode: '',
+      accountNumber: ''
     },
     validationSchema: UserSchema,
     onSubmit: async (values, { setErrors, setSubmitting, resetForm }) => {
       try {
-        // setLoading(true);
-        // console.log(values, 'dlmekrnfj');
-        // const params = {
-        //   email: values.email,
-        //   userId: values.userId
-        // };
-        // let response = await dispatch(sendOtpApi(params));
-        // response = unwrapResult(response);
-        // console.log(response, 'Dmrf');
-        // if (response?.message === 'OTP sent successfully.') {
-        //   enqueueSnackbar('Otp sent successfully. Please check your email', {
-        //     variant: 'success'
-        //   });
-        //   setLoading(false);
-        //   setOtpVisible(true);
-        // } else if (response?.message === 'Getting Invalid UserName.') {
-        //   enqueueSnackbar('Getting Invalid UserName. Please check UserName', {
-        //     variant: 'error'
-        //   });
-        //   setLoading(false);
-        // } else {
-        //   console.log('dkemkm');
-        //   enqueueSnackbar('User Does not exists, Enter user Id to login', {
-        //     variant: 'error'
-        //   });
-        //   setLoading(false);
-        // }
-        // setSubmitting(false);
+        let token = await localStorage.getItem('accessToken');
+        setLoading(true);
+        const reqBody = { ...values };
+        reqBody.userName = selectedUserDetails?.userName;
+        console.log(reqBody, 'lfnlken2k');
+        await dispatch(updateKycByUserNameApi(reqBody));
+        let response = await dispatch(getUserDataByUserNameApi({ token: token }));
+        setLoading(false);
       } catch (error) {
         console.error(error);
         setSubmitting(false);
@@ -122,9 +112,14 @@ export default function UserProfile() {
           Profile
         </Typography>
       </Box>
-      <Box mt={4}>
+      <Box>
         <FormikProvider value={formik}>
           <Form autoComplete="off" noValidate onSubmit={handleSubmit}>
+            <Box display="flex" flexDirection="row" justifyContent="flex-end">
+              <LoadingButton variant="contained" type="submit" sx={{ mt: 2, mb: 2, marginRight: '2%', width: '10%' }} color="success" loading={loading}>
+                {loading ? 'Submitting in...' : 'Submit'}
+              </LoadingButton>
+            </Box>
             <Card sx={{ padding: '20px', mx: 4, borderRadius: '16px' }}>
               <Typography variant="h5" mb={2}>
                 Basic Info
@@ -133,33 +128,21 @@ export default function UserProfile() {
                 <Grid item xs={12} sm={6} md={6}>
                   {/* Fixed: removed size prop and added item prop */}
                   <TextField
-                    select
                     fullWidth
-                    label="Name Salutation *"
-                    name="nameSalutation"
-                    value={values.nameSalutation}
-                    {...getFieldProps('nameSalutation')}
-                    error={Boolean(touched.nameSalutation && errors.nameSalutation)}
-                    helperText={touched.nameSalutation && errors.nameSalutation}
-                  >
-                    {_.map(nameSalOpts, (opt, ind) => (
-                      <MenuItem value={opt.value} key={`nameSal-${ind}`}>
-                        {opt.label}
-                      </MenuItem>
-                    ))}
-                  </TextField>
+                    // type="number"
+                    name="name"
+                    disabled={true}
+                    value={selectedUserDetails.name}
+                  />
                 </Grid>
                 <Grid item xs={12} sm={6} md={6}>
                   {/* Fixed: removed size prop and added item prop */}
                   <TextField
                     fullWidth
                     // type="number"
-                    label="User's Name"
-                    name="userName"
-                    value={values.userName}
-                    {...getFieldProps('userName')}
-                    error={touched.userName && errors.userName}
-                    helperText={touched.userName && errors.userName}
+                    name="phoneNumber"
+                    disabled={true}
+                    value={selectedUserDetails?.phoneNumber?.slice(-10)}
                   />
                 </Grid>
                 <Grid item xs={12} sm={6} md={6}>
@@ -168,11 +151,11 @@ export default function UserProfile() {
                     fullWidth
                     // type="number"
                     label="Aadhar Card Number"
-                    name="aadharCardNumber"
-                    value={values.aadharCardNumber}
-                    {...getFieldProps('aadharCardNumber')}
-                    error={touched.aadharCardNumber && errors.aadharCardNumber}
-                    helperText={touched.aadharCardNumber && errors.aadharCardNumber}
+                    name="adhaarCardNumber"
+                    value={values.adhaarCardNumber}
+                    {...getFieldProps('adhaarCardNumber')}
+                    error={touched.adhaarCardNumber && errors.adhaarCardNumber}
+                    helperText={touched.adhaarCardNumber && errors.adhaarCardNumber}
                   />
                 </Grid>
                 <Grid item xs={12} sm={6} md={6}>
@@ -201,11 +184,11 @@ export default function UserProfile() {
                     fullWidth
                     // type="number"
                     label="Account Holder's Name"
-                    name="acountHolderName"
-                    value={values.acountHolderName}
-                    {...getFieldProps('acountHolderName')}
-                    error={touched.acountHolderName && errors.acountHolderName}
-                    helperText={touched.acountHolderName && errors.acountHolderName}
+                    name="accountHolderName"
+                    value={values.accountHolderName}
+                    {...getFieldProps('accountHolderName')}
+                    error={touched.accountHolderName && errors.accountHolderName}
+                    helperText={touched.accountHolderName && errors.accountHolderName}
                   />
                 </Grid>
                 <Grid item xs={12} sm={6} md={6}>

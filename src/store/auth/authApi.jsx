@@ -7,7 +7,8 @@ const urls = {
   verifyOtp: 'auth/verifyOtp',
   getUserDataByUserName: 'auth/getUserDataByUserName',
   updateUserProfileByUserName: 'auth/updateUserProfileByUserName',
-  getAllUserData: 'auth/getAllUserDetails'
+  getAllUserData: 'auth/getAllUserDetails',
+  updateKycByUserName: 'auth/updateKycByUserName'
 };
 
 export const sendOtpApi = createAsyncThunk('store/sendOtpApi', async (params, thunkApi) => {
@@ -92,6 +93,29 @@ export const updateUserProfileByUserNameApi = createAsyncThunk('store/updateUser
   }
 });
 
+export const updateKycByUserNameApi = createAsyncThunk('store/updateKycByUserNameApi', async (params, thunkApi) => {
+  try {
+    const response = await axios.request({
+      url: `${urls.updateKycByUserName}`,
+      method: 'post',
+      data: params
+    });
+    const data = await response.data;
+    console.log(data,"demkdfme")
+
+    if(data?.message){
+      return data;
+    }
+
+    if (data && data.result) {
+      return data.result;
+    }
+    return thunkApi.rejectWithValue('Something went wrong');
+  } catch (err) {
+    // thunkApi.dispatch(showMessage({ message: 'Something went wrong. please try again!', variant: 'error' }));
+    return thunkApi.rejectWithValue('Something went wrong. Please try again!');
+  }
+});
 
 export const getAllUserDataApi = createAsyncThunk('serviceplug/getAllUserDataApi', async (params, thunkApi) => {
   try {
