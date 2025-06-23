@@ -8,7 +8,9 @@ const urls = {
   getUserDataByUserName: 'auth/getUserDataByUserName',
   updateUserProfileByUserName: 'auth/updateUserProfileByUserName',
   getAllUserData: 'auth/getAllUserDetails',
-  updateKycByUserName: 'auth/updateKycByUserName'
+  updateKycByUserName: 'auth/updateKycByUserName',
+  uploadAadharCardImage: 'auth/uploadPanCardImage',
+  uploadCancelCheckImage: 'auth/uploadCancelCheckImage',
 };
 
 export const sendOtpApi = createAsyncThunk('store/sendOtpApi', async (params, thunkApi) => {
@@ -127,5 +129,49 @@ export const getAllUserDataApi = createAsyncThunk('serviceplug/getAllUserDataApi
     return thunkApi.rejectWithValue('Something went wrong with this');
   } catch (error) {
     return thunkApi.rejectWithValue(error);
+  }
+});
+
+export const uploadAadharCardImageApi = createAsyncThunk('store/uploadAadharCardImageApi', async (params, thunkApi) => {
+  try {
+    const response = await axios.request({
+      url: `${urls.uploadAadharCardImage}`,
+      method: 'post',
+      data: params,
+      headers: {
+        'Content-Type': 'multipart/form-data'
+      }
+    });
+    const data = await response.data;
+
+    if (data?.message) {
+      return data;
+    }
+    return thunkApi.rejectWithValue('Something went wrong');
+  } catch (err) {
+    // thunkApi.dispatch(showMessage({ message: 'Something went wrong. please try again!', variant: 'error' }));
+    return thunkApi.rejectWithValue('Something went wrong. Please try again!');
+  }
+});
+
+export const uploadCancelCheckImageApi = createAsyncThunk('store/uploadCancelCheckImageApi', async (params, thunkApi) => {
+  try {
+    const response = await axios.request({
+      url: `${urls.uploadCancelCheckImage}`,
+      method: 'post',
+      data: params,
+      headers: {
+        'Content-Type': 'multipart/form-data'
+      }
+    });
+    const data = await response.data;
+
+    if (data?.message) {
+      return data;
+    }
+    return thunkApi.rejectWithValue('Something went wrong');
+  } catch (err) {
+    // thunkApi.dispatch(showMessage({ message: 'Something went wrong. please try again!', variant: 'error' }));
+    return thunkApi.rejectWithValue('Something went wrong. Please try again!');
   }
 });

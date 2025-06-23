@@ -22,8 +22,9 @@ import _ from 'lodash';
 import { CloudUpload } from '@mui/icons-material';
 import { useState } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
-import { getUserDataByUserNameApi, updateKycByUserNameApi } from '../../store/auth/authApi';
+import { getUserDataByUserNameApi, updateKycByUserNameApi, uploadAadharCardImageApi, uploadCancelCheckImageApi } from '../../store/auth/authApi';
 import { LoadingButton } from '@mui/lab';
+import { useSnackbar } from 'notistack';
 
 // ================================|| LOGIN ||================================ //
 
@@ -42,33 +43,78 @@ export default function UserProfile() {
   const [preview, setPreview] = useState(null);
   const [cancelCheckFile, setCancelCheckFile] = useState(null);
   const [cancelCheckPreview, setCancelCheckPreview] = useState(null);
+  const { enqueueSnackbar, closeSnackbar } = useSnackbar();
 
   const { selectedUserDetails } = useSelector(({ authReducer }) => authReducer);
 
   const handleFileChange = (event) => {
     const selectedFile = event.target.files[0];
+    if (!selectedFile) return;
+
+    const fileExt = selectedFile.name.split('.').pop().toLowerCase();
+
+    // Validate file type
+    const allowedExtensions = ['jpg', 'jpeg', 'png'];
+    if (!allowedExtensions.includes(fileExt)) {
+      enqueueSnackbar('Please upload only JPG, JPEG, or PNG files', {
+        variant: 'error'
+      });
+      return;
+    }
     setFile(selectedFile);
-    console.log(selectedFile, 'Demkrf');
-
-    // handleUpload(file);
-
-    // Create a preview
     const previewUrl = URL.createObjectURL(selectedFile);
-    console.log(previewUrl, 'Demk');
     setPreview(previewUrl);
+  };
+
+  const handleUpload = async () => {
+    const formData = new FormData();
+    formData.append('userName', selectedUserDetails?.userName);
+    formData.append('file', file);
+    try {
+      await dispatch(uploadAadharCardImageApi(formData));
+    } catch (error) {
+      enqueueSnackbar(`Failed to upload the file. ${error || error.message}`, {
+        variant: 'error'
+      });
+    } finally {
+      // setUploading(false);
+    }
   };
 
   const handleCancelCheckFileChange = (event) => {
     const selectedFile = event.target.files[0];
+
+    if (!selectedFile) return;
+
+    const fileExt = selectedFile.name.split('.').pop().toLowerCase();
+
+    // Validate file type
+    const allowedExtensions = ['jpg', 'jpeg', 'png'];
+    if (!allowedExtensions.includes(fileExt)) {
+      enqueueSnackbar('Please upload only JPG, JPEG, or PNG files', {
+        variant: 'error'
+      });
+      return;
+    }
     setCancelCheckFile(selectedFile);
-    console.log(selectedFile, 'Demkrf');
-
-    // handleUpload(file);
-
-    // Create a preview
     const previewUrl = URL.createObjectURL(selectedFile);
-    console.log(previewUrl, 'Demk');
     setCancelCheckPreview(previewUrl);
+  };
+
+  const handleCancelCheckImageUpload = async () => {
+    const formData = new FormData();
+    formData.append('userName', selectedUserDetails?.userName);
+    formData.append('file', cancelCheckFile);
+
+    try {
+      await dispatch(uploadCancelCheckImageApi(formData));
+    } catch (error) {
+      enqueueSnackbar(`Failed to upload the file. ${error || error.message}`, {
+        variant: 'error'
+      });
+    } finally {
+      // setUploading(false);
+    }
   };
 
   const dispatch = useDispatch();
@@ -90,8 +136,11 @@ export default function UserProfile() {
         reqBody.userName = selectedUserDetails?.userName;
         console.log(reqBody, 'lfnlken2k');
         await dispatch(updateKycByUserNameApi(reqBody));
-        let response = await dispatch(getUserDataByUserNameApi({ token: token }));
+        await dispatch(getUserDataByUserNameApi({ token: token }));
+        await handleUpload();
+        await handleCancelCheckImageUpload();
         setLoading(false);
+        navigate('/payment-page');
       } catch (error) {
         console.error(error);
         setSubmitting(false);

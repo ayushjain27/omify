@@ -62,9 +62,11 @@ const actionSX = {
 export default function DashboardDefault() {
   const [userData, setUserData] = useState([]);
   const [phoneNumber, setPhoneNumber] = useState('');
-  const { selectedUserDetails  } = useSelector(({ authReducer }) => authReducer);
+  const { selectedUserDetails, allUserData } = useSelector(({ authReducer }) => authReducer);
   const { setIsAuthenticated } = useAuth();
   const dispatch = useDispatch();
+
+  console.log(allUserData,"allUserData")
 
   useEffect(() => {
     const fetchData = async () => {

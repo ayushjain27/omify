@@ -122,8 +122,10 @@ export default function PaymentTable(props) {
           idProperty="id"
           columnDefs={columns}
           rowData={rowData}
-          pagination={true}
+          pagination={false}
           paginationPageSize={10}
+          rowHeight={50}
+          headerHeight={50}
           rowSelection="multiple"
           onGridReady={onGridReady}
           masterDetail={false}
@@ -134,6 +136,12 @@ export default function PaymentTable(props) {
             sortable: true,
             filter: true,
             flex: 1,
+            cellStyle: { 
+              borderBottom: '1px solid rgba(0, 0, 0, 0.1)',
+              display: 'flex',
+              alignItems: 'center'
+            },
+            headerClass: 'ag-header-cell-label',
           }}
         />
       </div>
