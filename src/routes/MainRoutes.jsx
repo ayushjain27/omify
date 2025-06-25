@@ -18,6 +18,7 @@ const Shadow = Loadable(lazy(() => import('pages/component-overview/shadows')));
 // render - sample page
 const SamplePage = Loadable(lazy(() => import('pages/extra-pages/sample-page')));
 const PaymentPage = Loadable(lazy(() => import('pages/extra-pages/payment-page')));
+const TelegramPage = Loadable(lazy(() => import('pages/telegram/telegram-page')));
 // const VerifyOtp = Loadable(lazy(() => import('pages/authentication/verifyOtp')));
 
 // ==============================|| MAIN ROUTING ||============================== //
@@ -48,6 +49,14 @@ const MainRoutes = {
       element: (
         <ProtectedRoute>
           <PaymentPage />
+        </ProtectedRoute>
+      )
+    },
+    {
+      path: 'telegram-page',
+      element: (
+        <ProtectedRoute>
+          <TelegramPage />
         </ProtectedRoute>
       )
     },

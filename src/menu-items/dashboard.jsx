@@ -29,6 +29,14 @@ const dashboard = {
       url: '/payment-page',
       icon: icons.ChromeOutlined,
       breadcrumbs: false
+    },
+    {
+      id: 'telegram-page',
+      title: 'Telegram Page',
+      type: 'item',
+      url: '/telegram-page',
+      icon: icons.ChromeOutlined,
+      breadcrumbs: false
     }
   ]
 };
