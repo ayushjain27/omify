@@ -1,180 +1,225 @@
+/* eslint-disable react-hooks/exhaustive-deps */
 // material-ui
-import {
-  Grid,
-  Stack,
-  Typography,
-  Avatar,
-  AvatarGroup,
-  Button,
-  List,
-  ListItem,
-  ListItemAvatar,
-  ListItemButton,
-  ListItemText,
-  Box
-} from '@mui/material';
-
-// project imports
-import MainCard from 'components/MainCard';
+import React, { useEffect, useState } from 'react';
+import { Box, Card, Grid, Tab, Tabs, useMediaQuery, useTheme } from '@mui/material';
 import AnalyticEcommerce from 'components/cards/statistics/AnalyticEcommerce';
-import UserTable from './UserTable';
-import { useEffect, useState } from 'react';
+import MainCard from 'components/MainCard';
+import AnimateButton from 'components/@extended/AnimateButton';
+import Button from '@mui/material/Button';
+import { useNavigate } from 'react-router';
 import axios from 'axios';
-import UserPaymentDetails from './UserPaymentDetails';
-import MonthlyBarChart from 'sections/dashboard/default/MonthlyBarChart';
-import ReportAreaChart from 'sections/dashboard/default/ReportAreaChart';
-import UniqueVisitorCard from 'sections/dashboard/default/UniqueVisitorCard';
-import SaleReportCard from 'sections/dashboard/default/SaleReportCard';
-// import OrdersTable from 'sections/dashboard/default/OrdersTable';
-
-// assets
-import GiftOutlined from '@ant-design/icons/GiftOutlined';
-import MessageOutlined from '@ant-design/icons/MessageOutlined';
-import SettingOutlined from '@ant-design/icons/SettingOutlined';
-
-import avatar1 from 'assets/images/users/avatar-1.png';
-import avatar2 from 'assets/images/users/avatar-2.png';
-import avatar3 from 'assets/images/users/avatar-3.png';
-import avatar4 from 'assets/images/users/avatar-4.png';
+import AnalyticsEachNumberData from '../../components/Analytics/AnalyticsEachNumberData';
+import InsertInvitationRoundedIcon from '@mui/icons-material/InsertInvitationRounded';
+import TodayRoundedIcon from '@mui/icons-material/TodayRounded';
 import { useDispatch, useSelector } from 'react-redux';
-import { useAuth } from '../../context/AuthContext';
-import { getAllUserDataApi } from '../../store/auth/authApi';
+import Scrollbar from '../../components/Scrollbar';
+import UserTable from '../dashboard/UserTable';
+import ReactPaginate from 'react-paginate';
+import { toUpper } from 'lodash';
+import { getAllUserCountsApi, getAllUserDataApi } from '../../store/auth/authApi';
 
-// avatar style
-const avatarSX = {
-  width: 36,
-  height: 36,
-  fontSize: '1rem'
-};
-
-// action style
-const actionSX = {
-  mt: 0.75,
-  ml: 1,
-  top: 'auto',
-  right: 'auto',
-  alignSelf: 'flex-start',
-  transform: 'none'
-};
-
-// ==============================|| DASHBOARD - DEFAULT ||============================== //
+// ==============================|| SAMPLE PAGE ||============================== //
 
 export default function DashboardDefault() {
-  const [userData, setUserData] = useState([]);
-  const [phoneNumber, setPhoneNumber] = useState('');
-  const { selectedUserDetails, allUserData } = useSelector(({ authReducer }) => authReducer);
-  const { setIsAuthenticated } = useAuth();
+  const navigate = useNavigate();
   const dispatch = useDispatch();
+  const theme = useTheme();
+  const isDesktop = useMediaQuery(theme.breakpoints.down('sm'));
+  const [tabValue, setValue] = useState('active');
+  const [forcePage, setForcePage] = useState(0);
+  const [itemOffset, setItemOffset] = useState(0);
+  const { selectedUserDetails } = useSelector(({ authReducer }) => authReducer);
+  const { allUsersCount, isCountUserLoading, allUserData, isUserDataLoading, userPageSize } = useSelector(({ authReducer }) => authReducer);
 
-  console.log(allUserData,"allUserData")
+  const handleChange = (event, newValue) => {
+    setValue(newValue);
+  };
 
   useEffect(() => {
-    const fetchData = async () => {
-      try {
-         let token = await localStorage.getItem('accessToken');
-         if(!token){
-          setIsAuthenticated(false);
-         }
-        setPhoneNumber(phoneNumber);
-        const response = await axios.get(
-          selectedUserDetails?.role === 'ADMIN'
-            ? dispatch(getAllUserDataApi()) : '' 
-          //   : 'http://localhost:12000/userPaymentDetails/getAllPaymentUserDetails',
-          // { params: { phoneNumber: phoneNumber } }
-        );
-
-        // // Check if the request was successful
-        // if (response.status === 200) {
-        //   console.log('API request successful:', response.data);
-        //   setUserData(response.data); // Assuming 'setUserData' is defined to set the user data in state
-        // } else {
-        //   console.error('API request failed with status:', response.status);
-        // }
-      } catch (error) {
-        console.error('Error during API request:', error.message);
+    let fetchData = async () => {
+      addStyles();
+      if (selectedUserDetails?.role === 'ADMIN') {
+        await dispatch(getAllUserCountsApi());
+        await getAllUserDetailsPaginated();
       }
     };
-
-    fetchData(); // Call the fetchData function
+    fetchData();
   }, []);
 
-  const [totalAmount, setTotalAmount] = useState(null);
-  const [totalNewUser, setTotalNewUser] = useState(null);
   useEffect(() => {
-    if (phoneNumber !== '+917838245184') {
-      const totalPrice = userData.reduce((sum, item) => sum + Number(item.paymentDetails.price), 0);
-      setTotalAmount(totalPrice);
-      const uniqueEmails = new Set(userData.map((user) => user.email));
-      // console.log(uniqueEmails, 'fmrmk');
-      setTotalNewUser(uniqueEmails?.size);
+    setItemOffset(0);
+    setForcePage(0);
+    getAllUserDetailsPaginated();
+  }, [tabValue]);
+
+  useEffect(() => {
+    getAllUserDetailsPaginated();
+  }, [itemOffset]);
+
+  const handlePageClick = (event) => {
+    const newOffset = event.selected;
+    setItemOffset(newOffset);
+    setForcePage(event.selected);
+  };
+
+  const getAllUserDetailsPaginated = async () => {
+    const data = {
+      pageNo: itemOffset,
+      pageSize: userPageSize,
+      status: toUpper(tabValue)
+    };
+    try {
+      await dispatch(getAllUserDataApi(data));
+    } catch (error) {
+      console.log(error);
     }
-  }, [userData]);
+  };
+
+  let length = 0;
+  if (tabValue === 'active') {
+    length = Math.ceil(allUsersCount?.active / 50);
+  } else if (tabValue === 'inActive') {
+    length = Math.ceil(allUsersCount?.inActive / 50);
+  }
+  const items = Array.from({ length }, (_, index) => index + 1);
+  const pageCount = Math.ceil(items.length / 1);
+
+  const addStyles = () => {
+    const style = document.createElement('style');
+    style.innerHTML = `
+      .pagination {
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        list-style: none;
+        padding: 10px 20px;
+      }
+      .page-item {
+        margin: 0 5px;
+      }
+      .page-link {
+        display: inline-block;
+        padding: 4px 12px;
+        color: #337ab7;
+        text-decoration: none;
+        border: 1px solid #ddd;
+        border-radius: 50%;
+        transition: background-color 0.3s ease;
+      }
+      .page-link:hover {
+        background-color: #f5f5f5;
+      }
+      .active .page-link {
+        background-color: lightgray;
+        color: black;
+      }
+      .break-me {
+        display: inline-block;
+        color: #337ab7;
+        text-decoration: none;
+      }
+      .page-item.previous .page-link,
+      .page-item.next .page-link {
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        width: 40px;
+        height: 40px;
+      }
+    `;
+    document.head.appendChild(style);
+  };
 
   return (
-    <Grid container rowSpacing={4.5} columnSpacing={2.75}>
-      <Grid item xs={12} sx={{ mb: -2.25 }}>
-        <Typography variant="h5">Dashboard</Typography>
-      </Grid>
-      <Grid item xs={12} sm={6} md={4} lg={3}>
-        <AnalyticEcommerce
-          title="Total New Users"
-          count={phoneNumber === '+917838245184' ? '18,800' : `${totalNewUser}`}
-          percentage={70.5}
-          extra="8,900"
-        />
-      </Grid>
-      {selectedUserDetails?.role === 'ADMIN' && (
-      <Grid item xs={12} sm={6} md={4} lg={3}>
-        <AnalyticEcommerce title="Total Users" count={String(userData?.length)} percentage={70.5} extra="8,900" />
-      </Grid>
-      )}
-      {selectedUserDetails?.role !== 'ADMIN' && (
-        <>
-          <Grid item xs={12} sm={6} md={4} lg={3}>
-            <AnalyticEcommerce
-              title="Total Payment Pages"
-              count={selectedUserDetails?.role === 'ADMIN' ? '18,800' : `₹ ${totalAmount}`}
-              percentage={27.4}
-              isLoss
-              color="warning"
-              extra="1,943"
+    <>
+      <div style={{ margin: '0px' }}>
+        {/* <div style={{ display: 'flex', flexDirection: 'row', justifyContent: 'flex-end' }}>
+          <AnimateButton>
+            <Button fullWidth size="large" type="submit" variant="contained" color="primary" onClick={handleUpdateKyc}>
+              Update Kyc
+            </Button>
+            <Button fullWidth size="large" type="submit" variant="contained" color="primary" onClick={handleNavigation}>
+              Create Payment Page
+            </Button>
+          </AnimateButton>
+        </div> */}
+        <Grid container rowSpacing={4.5} columnSpacing={2.75} mt={1}>
+          <Grid item xs={12} sm={12} md={4} lg={4}>
+            <AnalyticsEachNumberData
+              title="Total Users Pages"
+              number={allUsersCount?.total}
+              loading={isCountUserLoading}
+              sx={{ backgroundColor: '#74CAFF' }}
             />
           </Grid>
-          <Grid item xs={12} sm={6} md={4} lg={3}>
-            <AnalyticEcommerce
-              title="Total Payment Received"
-              count={selectedUserDetails?.role === 'ADMIN' ? '18,800' : `₹ ${totalAmount}`}
-              percentage={27.4}
-              isLoss
-              color="warning"
-              extra="1,943"
+          <Grid item xs={12} sm={12} md={4} lg={4}>
+            <AnalyticsEachNumberData
+              title="Total Active Users"
+              number={allUsersCount?.active}
+              loading={isCountUserLoading}
+              sx={{ backgroundColor: '#5BE584' }}
             />
           </Grid>
-          <Grid item xs={12} sm={6} md={4} lg={3}>
-            <AnalyticEcommerce
-              title="Total Payment Pending"
-              count={selectedUserDetails?.role === 'ADMIN' ? '18,800' : `₹ ${totalAmount}`}
-              percentage={27.4}
-              isLoss
-              color="warning"
-              extra="1,943"
+          <Grid item xs={12} sm={12} md={4} lg={4}>
+            <AnalyticsEachNumberData
+              title="Total In-Active Users"
+              number={allUsersCount?.inActive}
+              loading={isCountUserLoading}
+              sx={{ backgroundColor: '#ffe704' }}
             />
           </Grid>
-        </>
-      )}
-
-      <Grid item md={8} sx={{ display: { sm: 'none', md: 'block', lg: 'none' } }} />
-      <Grid item xs={12}>
-        <Grid container alignItems="center" justifyContent="space-between">
-          <Grid item>
-            <Typography variant="h5">Users Data</Typography>
-          </Grid>
-          <Grid />
         </Grid>
-        <MainCard sx={{ mt: 2 }} content={false}>
-          {selectedUserDetails?.role === 'ADMIN' ? <UserTable /> : <UserPaymentDetails userData={userData} />}
-        </MainCard>
-      </Grid>
-    </Grid>
+        <Card sx={{ marginTop: '16px' }}>
+          <Box sx={{ borderBottom: 1, borderColor: 'divider' }}>
+            <Tabs
+              value={tabValue}
+              onChange={handleChange}
+              variant={isDesktop ? 'fullWidth' : 'scrollable'}
+              scrollButtons="auto"
+              sx={{
+                '& .MuiTabs-flexContainer': {
+                  flexWrap: 'wrap',
+                  justifyContent: 'space-evenly'
+                }
+              }}
+            >
+              <Tab label="Active" icon={<InsertInvitationRoundedIcon />} iconPosition="start" value="active" />
+              <Tab label="InActive" icon={<TodayRoundedIcon />} iconPosition="start" value="inActive" />
+            </Tabs>
+          </Box>
+          <Scrollbar>
+            <UserTable
+              allUserData={allUserData}
+              selectedTab={tabValue}
+              isUserDataLoading={isUserDataLoading}
+            />
+          </Scrollbar>
+        </Card>
+        <Card sx={{ borderTopLeftRadius: '0px', borderTopRightRadius: '0px' }}>
+          <ReactPaginate
+            previousLabel="<"
+            nextLabel=">"
+            breakLabel="..."
+            breakClassName="break-me"
+            pageCount={pageCount}
+            marginPagesDisplayed={2}
+            pageRangeDisplayed={3}
+            onPageChange={handlePageClick}
+            forcePage={forcePage} // Set the active page
+            containerClassName="pagination"
+            pageClassName="page-item"
+            pageLinkClassName="page-link"
+            previousClassName="page-item"
+            previousLinkClassName="page-link"
+            nextClassName="page-item"
+            nextLinkClassName="page-link"
+            breakLinkClassName="page-link"
+            activeClassName="active"
+            renderOnZeroPageCount={null}
+          />
+        </Card>
+      </div>
+    </>
   );
 }

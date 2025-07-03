@@ -7,10 +7,11 @@ const urls = {
   verifyOtp: 'auth/verifyOtp',
   getUserDataByUserName: 'auth/getUserDataByUserName',
   updateUserProfileByUserName: 'auth/updateUserProfileByUserName',
+  getAllUserCounts: 'auth/countAllUsers',
   getAllUserData: 'auth/getAllUserDetails',
   updateKycByUserName: 'auth/updateKycByUserName',
   uploadAadharCardImage: 'auth/uploadPanCardImage',
-  uploadCancelCheckImage: 'auth/uploadCancelCheckImage',
+  uploadCancelCheckImage: 'auth/uploadCancelCheckImage'
 };
 
 export const sendOtpApi = createAsyncThunk('store/sendOtpApi', async (params, thunkApi) => {
@@ -22,7 +23,7 @@ export const sendOtpApi = createAsyncThunk('store/sendOtpApi', async (params, th
     });
     const data = await response.data;
 
-    if(data?.message){
+    if (data?.message) {
       return data;
     }
 
@@ -45,7 +46,7 @@ export const verifyOtpApi = createAsyncThunk('store/verifyOtpApi', async (params
     });
     const data = await response.data;
 
-    if(data?.message){
+    if (data?.message) {
       return data;
     }
 
@@ -81,7 +82,7 @@ export const updateUserProfileByUserNameApi = createAsyncThunk('store/updateUser
     });
     const data = await response.data;
 
-    if(data?.message){
+    if (data?.message) {
       return data;
     }
 
@@ -103,9 +104,9 @@ export const updateKycByUserNameApi = createAsyncThunk('store/updateKycByUserNam
       data: params
     });
     const data = await response.data;
-    console.log(data,"demkdfme")
+    console.log(data, 'demkdfme');
 
-    if(data?.message){
+    if (data?.message) {
       return data;
     }
 
@@ -119,12 +120,23 @@ export const updateKycByUserNameApi = createAsyncThunk('store/updateKycByUserNam
   }
 });
 
+export const getAllUserCountsApi = createAsyncThunk('serviceplug/getAllUserCountsApi', async (params, thunkApi) => {
+  try {
+    const response = await axios.get(urls.getAllUserCounts);
+    if (response.data) {
+      return response.data;
+    }
+    return thunkApi.rejectWithValue('Something went wrong with this');
+  } catch (error) {
+    return thunkApi.rejectWithValue(error);
+  }
+});
+
 export const getAllUserDataApi = createAsyncThunk('serviceplug/getAllUserDataApi', async (params, thunkApi) => {
   try {
-    const response = await axios.get(`${urls.getAllUserData}`);
-    console.log(response?.data,"dmrkk")
+    const response = await axios.get(urls.getAllUserData, { params });
     if (response.data?.result) {
-      return response.data.result;
+      return response.data;
     }
     return thunkApi.rejectWithValue('Something went wrong with this');
   } catch (error) {

@@ -1,167 +1,125 @@
-import PropTypes from 'prop-types';
-// material-ui
-import Link from '@mui/material/Link';
-import Stack from '@mui/material/Stack';
-import Table from '@mui/material/Table';
-import TableBody from '@mui/material/TableBody';
-import TableCell from '@mui/material/TableCell';
-import TableContainer from '@mui/material/TableContainer';
-import TableHead from '@mui/material/TableHead';
-import TableRow from '@mui/material/TableRow';
-import Box from '@mui/material/Box';
+/* eslint-disable no-unused-vars */
+/* eslint-disable react-hooks/exhaustive-deps */
+/* eslint-disable react/prop-types */
+import React, { useCallback, useEffect, useState } from 'react';
+import { Box } from '@mui/material';
+import { useSnackbar } from 'notistack';
+import _ from 'lodash';
+import { Icon } from '@iconify/react';
+import closeFill from '@iconify/icons-eva/close-fill';
+import { useDispatch } from 'react-redux';
+import { AgGridReact } from 'ag-grid-react';
+import '@inovua/reactdatagrid-community/base.css';
+import 'ag-grid-community/styles/ag-grid.css';
+import 'ag-grid-community/styles/ag-theme-alpine.css';
+import { CustomLoadingCellRenderer } from '../../utils/constant';
+import { AllCommunityModule, ModuleRegistry } from 'ag-grid-community'; 
+import moment from 'moment';
 
-// project import
-import Dot from 'components/@extended/Dot';
-import { Button } from '@mui/material';
-import axios from 'axios';
-import { useSelector } from 'react-redux';
+// Register all Community features
+ModuleRegistry.registerModules([AllCommunityModule]);
 
-const headCells = [
-  {
-    id: 'name',
-    align: 'center',
-    disablePadding: false,
-    label: 'Name'
-  },
-  {
-    id: 'phoneNumber',
-    align: 'center',
-    disablePadding: true,
-    label: 'Phone Number'
-  },
-  {
-    id: 'email',
-    align: 'center',
-    disablePadding: false,
-    label: 'Email'
-  },
-  {
-    id: 'status',
-    align: 'center',
-    disablePadding: false,
-    label: 'Status'
+const gridStyle = { height: '100%', contain: 'none' };
+
+const createRowData = (data) => {
+  console.log(data,"sddkenkdk")
+  const result = {
+    id: data?._id,
+    userName: data?.userName,
+    createdAt: moment(data?.createdAt).format('DD-MMM-YYYY hh:mm:ss'),
   }
-];
-
-// ==============================|| ORDER TABLE - HEADER ||============================== //
-
-function OrderTableHead({ user, userPhoneNumber }) {
-  return (
-    <TableHead>
-      <TableRow>
-        {headCells.map((headCell) => (
-          <TableCell
-            key={headCell.id}
-            align={headCell.align}
-            padding={headCell.disablePadding ? 'none' : 'normal'}
-            sortDirection={userPhoneNumber === headCell.phoneNumber ? user : false}
-          >
-            {headCell.label}
-          </TableCell>
-        ))}
-      </TableRow>
-    </TableHead>
-  );
-}
-
-const handleUpateStatus = async (phoneNumber) => {
-  // Use the phoneNumber parameter directly
-  console.log('Phone Number:', phoneNumber);
-  const response = await axios.post('http://localhost:12000/auth/updateUserStatus', { phoneNumber: phoneNumber });
-  console.log(response, 'response');
-  // Add your logic here
+    // Add any other payment-related fields you need to display
+  return result;
 };
 
-function UserStatus({ status, phoneNumber }) {
-  let color;
-  let title;
-
-  switch (status) {
-    case 'INACTIVE':
-      color = 'error';
-      title = 'INACTIVE';
-      break;
-    case 'ACTIVE':
-      color = 'success';
-      title = 'ACTIVE';
-      break;
-    // case 2:
-    //   color = 'error';
-    //   title = 'Rejected';
-    //   break;
-    // default:
-    //   color = 'primary';
-    //   title = 'None';
-  }
-
-  return (
-    <Stack direction="row" spacing={1} alignItems="center" justifyContent="center">
-      <Dot color={color} />
-      <Button onClick={() => handleUpateStatus(phoneNumber)} color={color} >
-        {title}
-      </Button>
-    </Stack>
-  );
-}
-
-// ==============================|| ORDER TABLE ||============================== //
-
 export default function UserTable(props) {
-  const { allUserData  } = useSelector(({ authReducer }) => authReducer);
-  const user = 'asc';
-  const userPhoneNumber = 'phoneNumber';
+  const { allUserData = [], selectedTab, isUserDataLoading } = props;
+  const [gridApi, setGridApi] = useState(null);
+  const { enqueueSnackbar, closeSnackbar } = useSnackbar();
+  const dispatch = useDispatch();
+  const [rowData, setRowData] = useState([]);
 
-  console.log(allUserData,"allUserData")
+  const columns = [
+    {
+      field: 'userName',
+      headerName: 'UserName',
+      filter: 'agNumberColumnFilter',
+      minWidth: 120,
+      editable: false,
+    },
+    {
+      field: 'createdAt',
+      headerName: 'Date',
+      filter: 'agDateColumnFilter',
+      minWidth: 180,
+      editable: false,
+      sortable: true
+    }
+  ];
+  // if (selectedTab === 'manufacturer') {
+  //   columns.splice(1, 0, {
+  //     name: 'createdUser',
+  //     header: 'Created OEM User',
+  //     minWidth: 150,
+  //     editable: true
+  //   });
+  // }
+
+  useEffect(() => {
+    if (!_.isEmpty(allUserData)) {
+      const rowD = _.map(allUserData, (data) => createRowData(data));
+      setRowData(rowD || []);
+    } else {
+      setRowData([]);
+    }
+  }, [selectedTab, allUserData]);
+
+  const onGridReady = (params) => {
+    setGridApi(params.api);
+  };
+
+  const loadingCellRenderer = useCallback(CustomLoadingCellRenderer, []);
+
+  useEffect(() => {
+    if (!gridApi) return;
+
+    if (isUserDataLoading) {
+      gridApi.showLoadingOverlay();
+    } else {
+      gridApi.hideOverlay();
+    }
+  }, [isUserDataLoading, gridApi]);
 
   return (
-    <Box>
-      <TableContainer
-        sx={{
-          width: '100%',
-          overflowX: 'auto',
-          position: 'relative',
-          display: 'block',
-          maxWidth: '100%',
-          maxHeight: '60vh',
-          '& td, & th': { whiteSpace: 'nowrap' }
-        }}
-      >
-        <Table aria-labelledby="tableTitle">
-          <OrderTableHead user={user} userPhoneNumber={userPhoneNumber} />
-          <TableBody>
-            {allUserData.map((item, index) => {
-              const labelId = `enhanced-table-checkbox-${index}`;
-
-              return (
-                <TableRow
-                  hover
-                  role="checkbox"
-                  sx={{ '&:last-child td, &:last-child th': { border: 0 } }}
-                  tabIndex={-1}
-                  key={item.phoneNumber}
-                >
-                  <TableCell component="th" id={labelId} align="center" scope="row">
-                    <Link color="secondary"> {item.name}</Link>
-                  </TableCell>
-                  <TableCell align="center">{item.phoneNumber}</TableCell>
-                  <TableCell align="center">{item.email}</TableCell>
-                  {/* <TableCell align="center">{item.status}</TableCell> */}
-                  <TableCell align="center">
-                    <UserStatus status={item.status} phoneNumber={item?.phoneNumber} />
-                  </TableCell>
-                  {/* <TableCell align="right">
-                    <NumericFormat value={row.protein} displayType="text" thousandSeparator prefix="$" />
-                  </TableCell> */}
-                </TableRow>
-              );
-            })}
-          </TableBody>
-        </Table>
-      </TableContainer>
+    <Box sx={{ height: '65vh', width: '100%' }}>
+      <div className="ag-theme-alpine" style={gridStyle}>
+        <AgGridReact
+          idProperty="id"
+          columnDefs={columns}
+          rowData={rowData}
+          pagination={false}
+          paginationPageSize={10}
+          rowHeight={50}
+          headerHeight={50}
+          rowSelection="multiple"
+          onGridReady={onGridReady}
+          masterDetail={false}
+          loadingCellRenderer={loadingCellRenderer}
+          loadingOverlayComponent={isUserDataLoading ? CustomLoadingCellRenderer : undefined}
+          defaultColDef={{
+            resizable: true,
+            sortable: true,
+            filter: true,
+            flex: 1,
+            cellStyle: { 
+              borderBottom: '1px solid rgba(0, 0, 0, 0.1)',
+              display: 'flex',
+              alignItems: 'center'
+            },
+            headerClass: 'ag-header-cell-label',
+          }}
+        />
+      </div>
     </Box>
   );
 }
-
-OrderTableHead.propTypes = { order: PropTypes.any, orderBy: PropTypes.string };
-
-UserStatus.propTypes = { status: PropTypes.number };
