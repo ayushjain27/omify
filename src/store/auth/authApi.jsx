@@ -12,7 +12,8 @@ const urls = {
   getUserDataByUserId: 'auth/getUserDataByUserId',
   updateKycByUserName: 'auth/updateKycByUserName',
   uploadAadharCardImage: 'auth/uploadPanCardImage',
-  uploadCancelCheckImage: 'auth/uploadCancelCheckImage'
+  uploadCancelCheckImage: 'auth/uploadCancelCheckImage',
+  getPanCardImage: 'auth/getPanCardImage'
 };
 
 export const sendOtpApi = createAsyncThunk('store/sendOtpApi', async (params, thunkApi) => {
@@ -192,6 +193,24 @@ export const uploadCancelCheckImageApi = createAsyncThunk('store/uploadCancelChe
     const data = await response.data;
 
     if (data?.message) {
+      return data;
+    }
+    return thunkApi.rejectWithValue('Something went wrong');
+  } catch (err) {
+    // thunkApi.dispatch(showMessage({ message: 'Something went wrong. please try again!', variant: 'error' }));
+    return thunkApi.rejectWithValue('Something went wrong. Please try again!');
+  }
+});
+
+export const getPanCardImageApi = createAsyncThunk('store/getPanCardImageApi', async (params, thunkApi) => {
+  try {
+    console.log(params,"sdmek")
+    const fileName = params;
+    const response = await axios.get(`${urls.getPanCardImage}/${fileName}`, { responseType: 'blob' });
+    const data = await response.data;
+    console.log(data,"dennj")
+
+    if (data) {
       return data;
     }
     return thunkApi.rejectWithValue('Something went wrong');
