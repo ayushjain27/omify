@@ -9,6 +9,7 @@ const urls = {
   updateUserProfileByUserName: 'auth/updateUserProfileByUserName',
   getAllUserCounts: 'auth/countAllUsers',
   getAllUserData: 'auth/getAllUserDetails',
+  getUserDataByUserId: 'auth/getUserDataByUserId',
   updateKycByUserName: 'auth/updateKycByUserName',
   uploadAadharCardImage: 'auth/uploadPanCardImage',
   uploadCancelCheckImage: 'auth/uploadCancelCheckImage'
@@ -136,6 +137,18 @@ export const getAllUserDataApi = createAsyncThunk('serviceplug/getAllUserDataApi
   try {
     const response = await axios.get(urls.getAllUserData, { params });
     if (response.data?.result) {
+      return response.data?.result;
+    }
+    return thunkApi.rejectWithValue('Something went wrong with this');
+  } catch (error) {
+    return thunkApi.rejectWithValue(error);
+  }
+});
+
+export const getUserDataByUserIdApi = createAsyncThunk('serviceplug/getUserDataByUserIdApi', async (params, thunkApi) => {
+  try {
+    const response = await axios.get(urls.getUserDataByUserId, { params });
+    if (response.data) {
       return response.data;
     }
     return thunkApi.rejectWithValue('Something went wrong with this');

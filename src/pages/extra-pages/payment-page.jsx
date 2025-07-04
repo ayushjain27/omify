@@ -32,6 +32,8 @@ export default function PaymentPage() {
   const { countAllPaymentPage, isCountAllPaymentPageLoading, paymentList, isPaymentTablePaginatedLoading, paymentListPageSize } =
     useSelector(({ paymentPageReducer }) => paymentPageReducer);
 
+    console.log(selectedUserDetails,"fmdkem")
+
 
   const handleNavigation = () => {
     navigate('/createPayment');

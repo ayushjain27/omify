@@ -31,6 +31,8 @@ export default function DashboardDefault() {
   const { selectedUserDetails } = useSelector(({ authReducer }) => authReducer);
   const { allUsersCount, isCountUserLoading, allUserData, isUserDataLoading, userPageSize } = useSelector(({ authReducer }) => authReducer);
 
+  console.log(selectedUserDetails,"SDekjndj")
+
   const handleChange = (event, newValue) => {
     setValue(newValue);
   };

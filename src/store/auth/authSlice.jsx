@@ -1,5 +1,5 @@
 import { createSlice } from '@reduxjs/toolkit';
-import { getAllUserCountsApi, getAllUserDataApi, getUserDataByUserNameApi } from './authApi';
+import { getAllUserCountsApi, getAllUserDataApi, getUserDataByUserIdApi, getUserDataByUserNameApi } from './authApi';
 // import { sendOtpApi } from './authApi';
 
 // ----------------------------------------------------------------------
@@ -10,6 +10,7 @@ const initialState = {
   selectedUserDetails: {},
   allUsersCount: {},
   allUserData: [],
+  userData: {},
   isUserDataLoading: true,
   isCountUserLoading: true,
   userPageSize: 50
@@ -42,6 +43,9 @@ const slice = createSlice({
     });
     builder.addCase(getAllUserDataApi.rejected, (state, action) => {
       state.isUserDataLoading = false;
+    });
+    builder.addCase(getUserDataByUserIdApi.fulfilled, (state, action) => {
+      state.userData = action.payload;
     });
   }
 });

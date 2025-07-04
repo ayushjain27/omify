@@ -2,7 +2,7 @@
 /* eslint-disable react-hooks/exhaustive-deps */
 /* eslint-disable react/prop-types */
 import React, { useCallback, useEffect, useState } from 'react';
-import { Box } from '@mui/material';
+import { Box, Button, Chip, Dialog } from '@mui/material';
 import { useSnackbar } from 'notistack';
 import _ from 'lodash';
 import { Icon } from '@iconify/react';
@@ -13,28 +13,35 @@ import '@inovua/reactdatagrid-community/base.css';
 import 'ag-grid-community/styles/ag-grid.css';
 import 'ag-grid-community/styles/ag-theme-alpine.css';
 import { CustomLoadingCellRenderer } from '../../utils/constant';
-import { AllCommunityModule, ModuleRegistry } from 'ag-grid-community'; 
+import { AllCommunityModule, ModuleRegistry } from 'ag-grid-community';
 import moment from 'moment';
+import DialogData from './DialogData';
+import { getUserDataByUserIdApi } from '../../store/auth/authApi';
 
 // Register all Community features
 ModuleRegistry.registerModules([AllCommunityModule]);
 
 const gridStyle = { height: '100%', contain: 'none' };
 
-const createRowData = (data) => {
-  console.log(data,"sddkenkdk")
+const createRowData = (data, callBackFns) => {
   const result = {
     id: data?._id,
     userName: data?.userName,
+    name: data?.name,
+    phoneNumber: data?.phoneNumber,
+    socialLink: data?.socialLink,
+    socialLinkSelected: data?.socialLinkSelected,
     createdAt: moment(data?.createdAt).format('DD-MMM-YYYY hh:mm:ss'),
-  }
-    // Add any other payment-related fields you need to display
+    ...callBackFns
+  };
+  // Add any other payment-related fields you need to display
   return result;
 };
 
 export default function UserTable(props) {
-  const { allUserData = [], selectedTab, isUserDataLoading } = props;
+  const { allUserData = [], selectedTab, isPaymentTablePaginatedLoading } = props;
   const [gridApi, setGridApi] = useState(null);
+  const [openUserDialog, setUserDialog] = useState(false);
   const { enqueueSnackbar, closeSnackbar } = useSnackbar();
   const dispatch = useDispatch();
   const [rowData, setRowData] = useState([]);
@@ -42,10 +49,42 @@ export default function UserTable(props) {
   const columns = [
     {
       field: 'userName',
-      headerName: 'UserName',
+      headerName: 'User Id',
       filter: 'agNumberColumnFilter',
       minWidth: 120,
       editable: false,
+      cellRenderer: (params) => openUserDetails(params.data)
+    },
+    {
+      field: 'name',
+      headerName: 'Name',
+      filter: 'agTextColumnFilter',
+      minWidth: 150,
+      editable: false
+    },
+    {
+      field: 'phoneNumber',
+      headerName: 'PhoneNumber',
+      filter: 'agTextColumnFilter',
+      minWidth: 120,
+      editable: false
+      // valueFormatter: params => `Rs{params.value?.toFixed(2) || '0.00'}`
+    },
+    {
+      field: 'socialLinkSelected',
+      headerName: 'Social Link Type',
+      filter: 'agTextColumnFilter',
+      minWidth: 120,
+      editable: false
+      // valueFormatter: params => `Rs{params.value?.toFixed(2) || '0.00'}`
+    },
+    {
+      field: 'socialLink',
+      headerName: 'Social Link',
+      filter: 'agTextColumnFilter',
+      minWidth: 120,
+      editable: false
+      // valueFormatter: params => `Rs{params.value?.toFixed(2) || '0.00'}`
     },
     {
       field: 'createdAt',
@@ -56,23 +95,32 @@ export default function UserTable(props) {
       sortable: true
     }
   ];
-  // if (selectedTab === 'manufacturer') {
-  //   columns.splice(1, 0, {
-  //     name: 'createdUser',
-  //     header: 'Created OEM User',
-  //     minWidth: 150,
-  //     editable: true
-  //   });
-  // }
+
+  const openUserDetails = (data) =>
+    data?.userName && (
+      <Chip
+        label={data.userName} // Use the actual status from data
+        size="small"
+        color="success" // Example of conditional coloring
+        variant="outlined"
+        style={{ marginLeft: 4 }}
+        onClick={() => showUserDetails(data)}
+      />
+    );
 
   useEffect(() => {
     if (!_.isEmpty(allUserData)) {
-      const rowD = _.map(allUserData, (data) => createRowData(data));
+      const rowD = _.map(allUserData, (data) => createRowData(data, { showUserDetails }));
       setRowData(rowD || []);
     } else {
       setRowData([]);
     }
   }, [selectedTab, allUserData]);
+
+  const showUserDetails = async (data) => {
+    await dispatch(getUserDataByUserIdApi({ userName: data?.userName }));
+    setUserDialog(true);
+  };
 
   const onGridReady = (params) => {
     setGridApi(params.api);
@@ -83,15 +131,18 @@ export default function UserTable(props) {
   useEffect(() => {
     if (!gridApi) return;
 
-    if (isUserDataLoading) {
+    if (isPaymentTablePaginatedLoading) {
       gridApi.showLoadingOverlay();
     } else {
       gridApi.hideOverlay();
     }
-  }, [isUserDataLoading, gridApi]);
+  }, [isPaymentTablePaginatedLoading, gridApi]);
 
   return (
     <Box sx={{ height: '65vh', width: '100%' }}>
+      <Dialog fullScreen open={openUserDialog} onClose={() => setUserDialog(false)}>
+        <DialogData setUserDialog={setUserDialog} openUserDialog={openUserDialog} />
+      </Dialog>
       <div className="ag-theme-alpine" style={gridStyle}>
         <AgGridReact
           idProperty="id"
@@ -103,20 +154,23 @@ export default function UserTable(props) {
           headerHeight={50}
           rowSelection="multiple"
           onGridReady={onGridReady}
-          masterDetail={false}
+          masterDetail
+          context={{
+            showUserDetails
+          }}
           loadingCellRenderer={loadingCellRenderer}
-          loadingOverlayComponent={isUserDataLoading ? CustomLoadingCellRenderer : undefined}
+          loadingOverlayComponent={isPaymentTablePaginatedLoading ? CustomLoadingCellRenderer : undefined}
           defaultColDef={{
             resizable: true,
             sortable: true,
             filter: true,
             flex: 1,
-            cellStyle: { 
+            cellStyle: {
               borderBottom: '1px solid rgba(0, 0, 0, 0.1)',
               display: 'flex',
               alignItems: 'center'
             },
-            headerClass: 'ag-header-cell-label',
+            headerClass: 'ag-header-cell-label'
           }}
         />
       </div>
