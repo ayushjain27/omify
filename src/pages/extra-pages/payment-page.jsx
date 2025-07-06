@@ -17,6 +17,7 @@ import Scrollbar from '../../components/Scrollbar';
 import PaymentTable from '../dashboard/PaymentTable';
 import ReactPaginate from 'react-paginate';
 import { toUpper } from 'lodash';
+import AddCircleOutlineRoundedIcon from '@mui/icons-material/AddCircleOutlineRounded';
 
 // ==============================|| SAMPLE PAGE ||============================== //
 
@@ -24,6 +25,7 @@ export default function PaymentPage() {
   const navigate = useNavigate();
   const dispatch = useDispatch();
   const theme = useTheme();
+  const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
   const isDesktop = useMediaQuery(theme.breakpoints.down('sm'));
   const [tabValue, setValue] = useState('active');
   const [forcePage, setForcePage] = useState(0);
@@ -31,9 +33,6 @@ export default function PaymentPage() {
   const { selectedUserDetails } = useSelector(({ authReducer }) => authReducer);
   const { countAllPaymentPage, isCountAllPaymentPageLoading, paymentList, isPaymentTablePaginatedLoading, paymentListPageSize } =
     useSelector(({ paymentPageReducer }) => paymentPageReducer);
-
-    console.log(selectedUserDetails,"fmdkem")
-
 
   const handleNavigation = () => {
     navigate('/createPayment');
@@ -147,15 +146,28 @@ export default function PaymentPage() {
       <div style={{ margin: '0px' }}>
         <div style={{ display: 'flex', flexDirection: 'row', justifyContent: 'flex-end' }}>
           <AnimateButton>
-            <Button fullWidth size="large" type="submit" variant="contained" color="primary" onClick={handleUpdateKyc}>
+            {/* <Button fullWidth size="large" type="submit" variant="contained" color="primary" onClick={handleUpdateKyc}>
               Update Kyc
-            </Button>
-            <Button fullWidth size="large" type="submit" variant="contained" color="primary" onClick={handleNavigation}>
+            </Button> */}
+             <Button
+              variant="contained"
+              color="primary"
+              startIcon={<AddCircleOutlineRoundedIcon />}
+              onClick={handleNavigation}
+              size={isMobile ? 'medium' : 'large'}
+              sx={{
+                borderRadius: 2,
+                boxShadow: 'none',
+                '&:hover': {
+                  boxShadow: 'none'
+                }
+              }}
+            >
               Create Payment Page
             </Button>
           </AnimateButton>
         </div>
-        <Grid container rowSpacing={4.5} columnSpacing={2.75} mt={1}>
+        <Grid container rowSpacing={4.5} columnSpacing={2.75} mt={0.1}>
           <Grid item xs={12} sm={12} md={4} lg={4}>
             <AnalyticsEachNumberData
               title="Total Payment Pages"

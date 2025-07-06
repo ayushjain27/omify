@@ -4,8 +4,24 @@ import { useSnackbar } from 'notistack';
 import _ from 'lodash';
 import { useNavigate } from 'react-router-dom';
 import { useFormik, Form, FormikProvider } from 'formik';
-import { Stack, Alert, TextField, Typography } from '@mui/material';
-
+import { 
+  Stack, 
+  Alert, 
+  TextField, 
+  Typography,
+  Box,
+  InputAdornment,
+  IconButton,
+  useTheme,
+  useMediaQuery
+} from '@mui/material';
+import { 
+  Mail, 
+  User, 
+  Lock, 
+  ArrowRight,
+  RefreshCw
+} from 'lucide-react';
 import { LoadingButton } from '@mui/lab';
 import { useDispatch } from 'react-redux';
 import { getUserDataByUserNameApi, sendOtpApi, verifyOtpApi } from '../../store/auth/authApi';
@@ -14,11 +30,13 @@ import { useAuth } from '../../context/AuthContext';
 
 export default function LoginForm() {
   const navigate = useNavigate();
-  const { enqueueSnackbar, closeSnackbar } = useSnackbar();
+  const { enqueueSnackbar } = useSnackbar();
   const [loading, setLoading] = useState(false);
   const [otpLoading, setOtpLoading] = useState(false);
   const [otpVisible, setOtpVisible] = useState(false);
   const { setIsAuthenticated, setCheckUserProfile } = useAuth();
+  const theme = useTheme();
+  const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
 
   const LoginSchema = Yup.object().shape({
     email: Yup.string().required('Please enter a email').email('Please enter valid email')
@@ -42,7 +60,7 @@ export default function LoginForm() {
         let response = await dispatch(sendOtpApi(params));
         response = unwrapResult(response);
         if (response?.message === 'OTP sent successfully.') {
-          enqueueSnackbar('Otp sent successfully. Please check your email', {
+          enqueueSnackbar('OTP sent successfully. Please check your email', {
             variant: 'success'
           });
           setLoading(false);
@@ -65,7 +83,6 @@ export default function LoginForm() {
         setErrors({
           afterSubmit: error?.message || 'Something went wrong. Please check your credentials and try again.'
         });
-        // }
       }
     }
   });
@@ -105,8 +122,6 @@ export default function LoginForm() {
       setIsAuthenticated(true);
       setCheckUserProfile(false);
       navigate('/dashboard/default');
-      // setOtpLoading(false);
-      // setIsAuthenticated(true);
     } else {
       enqueueSnackbar('User Does not exists, Enter user Id to login', {
         variant: 'error'
@@ -118,28 +133,44 @@ export default function LoginForm() {
   const { errors, touched, values, isSubmitting, handleSubmit, getFieldProps } = formik;
 
   return (
-    <>
+    <Box sx={{ width: '100%' }}>
       <FormikProvider value={formik}>
         <Form autoComplete="off" noValidate onSubmit={handleSubmit}>
-          <Stack spacing={3}>
-            {errors.afterSubmit && <Alert severity="error">{errors.afterSubmit}</Alert>}
+          <Stack spacing={isMobile ? 2 : 3}>
+            {errors.afterSubmit && (
+              <Alert severity="error" sx={{ mb: 2 }}>
+                {errors.afterSubmit}
+              </Alert>
+            )}
 
             <TextField
               fullWidth
               autoComplete="email"
-              label="Enter Email"
+              label="Email Address"
               {...getFieldProps('email')}
               onChange={({ target: { value } }) => {
                 formik.setFieldValue('email', _.toLower(value));
               }}
               error={Boolean(touched.email && errors.email)}
               helperText={touched.email && errors.email}
+              InputProps={{
+                startAdornment: (
+                  <InputAdornment position="start">
+                    <Mail size={20} color={theme.palette.text.secondary} />
+                  </InputAdornment>
+                ),
+              }}
+              sx={{
+                '& .MuiInputBase-root': {
+                  height: isMobile ? 48 : 56,
+                }
+              }}
             />
+
             <TextField
               fullWidth
               autoComplete="userId"
-              // type="number"
-              label="Enter User Id"
+              label="User ID"
               disabled={otpVisible}
               {...getFieldProps('userId')}
               onChange={({ target: { value } }) => {
@@ -147,42 +178,86 @@ export default function LoginForm() {
               }}
               error={Boolean(touched.userId && errors.userId)}
               helperText={touched.userId && errors.userId}
-            />
-            <Typography
-              sx={{
-                color: 'red',
-                marginTop: '4px !important',
-                marginBottom: '-16px !important',
-                fontSize: '0.875rem',
-                lineHeight: 1.5
+              InputProps={{
+                startAdornment: (
+                  <InputAdornment position="start">
+                    <User size={20} color={theme.palette.text.secondary} />
+                  </InputAdornment>
+                ),
               }}
-            >
-              Enter userId if you are a new user
+              sx={{
+                '& .MuiInputBase-root': {
+                  height: isMobile ? 48 : 56,
+                }
+              }}
+            />
+
+            <Typography variant="caption" color="error" sx={{ mt: -1, mb: -1 }}>
+              Enter user ID if you are a new user
             </Typography>
+
             {otpVisible && (
               <TextField
                 fullWidth
                 autoComplete="otp"
                 type="number"
-                label="Enter Otp"
+                label="Verification Code"
                 {...getFieldProps('otp')}
                 error={Boolean(touched.otp && errors.otp)}
                 helperText={touched.otp && errors.otp}
+                InputProps={{
+                  startAdornment: (
+                    <InputAdornment position="start">
+                      <Lock size={20} color={theme.palette.text.secondary} />
+                    </InputAdornment>
+                  ),
+                }}
+                sx={{
+                  '& .MuiInputBase-root': {
+                    height: isMobile ? 48 : 56,
+                  }
+                }}
               />
             )}
           </Stack>
+
           {!otpVisible ? (
-            <LoadingButton variant="contained" type="submit" sx={{ mt: 4, width: '100%' }} color="success" loading={loading}>
-              {loading ? 'Logging in...' : 'Login'}
+            <LoadingButton
+              fullWidth
+              size={isMobile ? 'medium' : 'large'}
+              variant="contained"
+              type="submit"
+              sx={{ 
+                mt: 3,
+                py: isMobile ? 1 : 1.5,
+                borderRadius: 2
+              }}
+              loading={loading}
+              loadingPosition="end"
+              endIcon={<ArrowRight size={20} />}
+            >
+              {loading ? 'Sending OTP...' : 'Send OTP'}
             </LoadingButton>
           ) : (
-            <LoadingButton variant="contained" sx={{ mt: 2, width: '100%' }} onClick={verifyOtp} color="success" loading={otpLoading}>
-              {otpLoading ? 'Verifying OTP' : 'Verify OTP'}
+            <LoadingButton
+              fullWidth
+              size={isMobile ? 'medium' : 'large'}
+              variant="contained"
+              onClick={verifyOtp}
+              sx={{ 
+                mt: 2,
+                py: isMobile ? 1 : 1.5,
+                borderRadius: 2
+              }}
+              loading={otpLoading}
+              loadingPosition="end"
+              endIcon={<RefreshCw size={20} />}
+            >
+              {otpLoading ? 'Verifying...' : 'Verify OTP'}
             </LoadingButton>
           )}
-          {/* <Typography>{`v ${window?.env?.VERSION_NAME}(${window?.env?.VERSION_CODE})`}</Typography> */}
         </Form>
       </FormikProvider>
-    </>
+    </Box>
   );
 }

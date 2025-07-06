@@ -14,7 +14,8 @@ import {
   Stack,
   InputLabel,
   OutlinedInput,
-  Avatar
+  Avatar,
+  colors
 } from '@mui/material';
 import { CloudUpload } from '@mui/icons-material';
 import PictureAsPdfIcon from '@mui/icons-material/PictureAsPdf';
@@ -514,12 +515,12 @@ export default function SamplePage() {
               scrollbarWidth: 'none',
               '&::-webkit-scrollbar': {
                 display: 'none'
-              }
+              },
             }}
           >
-            <Box sx={{ backgroundColor: 'lightblue' }}>
-              <Typography variant="h3" sx={{ fontWeight: 'bold', pt: 3, pl: 3 }}>
-                Preview
+            <Box sx={{ background: 'linear-gradient(135deg, #0f2027 0%, #203a43 50%, #2c5364 100%)' }}>
+              <Typography variant="h3" sx={{ fontWeight: 'bold', pt: 3, pl: 3, color: 'white' }}>
+                Page Preview
               </Typography>
               <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', minHeight: '100vh', px: 2 }}>
                 <Grid container spacing={4} maxWidth="lg">

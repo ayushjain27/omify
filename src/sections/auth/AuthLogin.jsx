@@ -1,79 +1,140 @@
-// import { capitalCase } from 'change-case';
-import { Link as RouterLink } from 'react-router-dom';
-// material
 import { styled } from '@mui/material/styles';
-import { Box, Card, Stack, Link, Tooltip, Container, Typography } from '@mui/material';
+import { 
+  Box, 
+  Card, 
+  Container, 
+  Typography, 
+  Button, 
+  IconButton,
+  useTheme,
+  useMediaQuery
+} from '@mui/material';
+import { Lock } from 'lucide-react';
 import LoginForm from './LoginForm';
 import loginImage from 'assets/images/users/image.png';
-// import { MHidden } from '../../components/@extended/MHidden';
-// import Page from '../Page';
 
 // ----------------------------------------------------------------------
 
-// const RootStyle = styled(Page)(({ theme }) => ({
-//   [theme.breakpoints.up('md')]: {
-//     display: 'flex'
-//   }
-// }));
-
-
-const SectionStyle = styled(Card)(({ theme }) => ({
-  height: '100vh',
-  width: '100%',
-  maxWidth: '40%',
+const RootStyle = styled('div')(({ theme }) => ({
+  minHeight: '100vh',
   display: 'flex',
-  flexDirection: 'column',
+  alignItems: 'center',
   justifyContent: 'center',
-  alignItems: 'center'
-  // margin: theme.spacing(2, 0, 2, 2)
+  backgroundColor: theme.palette.background.default,
+  padding: theme.spacing(2)
 }));
 
-const ContentStyle = styled('div')(({ theme }) => ({
-  maxWidth: '50%',
-  width: '100%',
-  margin: 'auto',
+const AuthContainer = styled(Container)(({ theme }) => ({
   display: 'flex',
-  minHeight: '100vh',
+  justifyContent: 'center',
+  alignItems: 'center',
+  width: '100%'
+}));
+
+const AuthCard = styled(Card)(({ theme }) => ({
+  width: '100%',
+  maxWidth: 1200,
+  overflow: 'hidden',
+  boxShadow: theme.shadows[10],
+  borderRadius: theme.shape.borderRadius * 2,
+  display: 'flex',
+  flexDirection: 'row',
+  [theme.breakpoints.down('md')]: {
+    flexDirection: 'column',
+    maxWidth: 600
+  }
+}));
+
+const ImageSection = styled('div')(({ theme }) => ({
+  width: '45%',
+  background: theme.palette.primary.main,
+  display: 'flex',
   flexDirection: 'column',
   justifyContent: 'center',
-  // padding: theme.spacing(12, 0)
+  alignItems: 'center',
+  padding: theme.spacing(5),
+  color: theme.palette.common.white,
+  [theme.breakpoints.down('md')]: {
+    width: '100%',
+    padding: theme.spacing(4),
+    display: 'none' // Hide image section on mobile if desired
+    // Alternatively, you can keep it with adjusted padding:
+    // padding: theme.spacing(3)
+  }
+}));
+
+const ContentSection = styled('div')(({ theme }) => ({
+  width: '55%',
+  padding: theme.spacing(5),
+  display: 'flex',
+  flexDirection: 'column',
+  justifyContent: 'center',
+  [theme.breakpoints.down('md')]: {
+    width: '100%',
+    padding: theme.spacing(4)
+  },
+  [theme.breakpoints.down('sm')]: {
+    padding: theme.spacing(3)
+  }
+}));
+
+const SocialButton = styled(IconButton)(({ theme }) => ({
+  border: `1px solid ${theme.palette.divider}`,
+  margin: theme.spacing(0, 1),
+  '&:hover': {
+    backgroundColor: theme.palette.action.hover
+  }
 }));
 
 // ----------------------------------------------------------------------
 
 export default function AuthLogin() {
-  return (
-    <>
-     {/* <RootStyle title="Login | Serviceplug"> */}
-     {/* <MHidden width="mdDown"> */}
-     <Box display="flex" flexDirection="row" alignItems="center" justifyContent="space-between">
-      <SectionStyle>
-        <Typography variant="h3" sx={{ px: 5, mt: 10, mb: 5 }}>
-          Hi, Welcome Back
-        </Typography>
-        <img src={loginImage} alt="login" style={{ width: '100%' }} />
-      </SectionStyle>
-      {/* </MHidden> */}
+  const theme = useTheme();
+  const isMobile = useMediaQuery(theme.breakpoints.down('md'));
 
-      <Container>
-        <ContentStyle>
-          <Stack direction="row" alignItems="center" sx={{ mb: 5 }}>
-            <Box sx={{ flexGrow: 1 }}>
-              <Typography variant="h2" gutterBottom>
-                Sign in to your Dashboard
+  return (
+    <RootStyle>
+      <AuthContainer maxWidth="lg">
+        <AuthCard>
+          {!isMobile && (
+            <ImageSection>
+              <Box sx={{ textAlign: 'center', mb: 5 }}>
+                <Lock size={48} />
+                <Typography variant="h3" sx={{ mt: 3, mb: 2 }}>
+                  Welcome Back
+                </Typography>
+                <Typography variant="body1">
+                  Enter your credentials to access your account and manage your dashboard.
+                </Typography>
+              </Box>
+              <Box
+                component="img"
+                src={loginImage}
+                alt="login"
+                sx={{
+                  width: '100%',
+                  maxWidth: 300,
+                  borderRadius: 1
+                }}
+              />
+            </ImageSection>
+          )}
+
+          <ContentSection>
+            <Box sx={{ mb: 5, textAlign: isMobile ? 'center' : 'left' }}>
+              <Lock size={48} sx={{ display: isMobile ? 'block' : 'none', margin: '0 auto 20px' }} />
+              <Typography variant="h4" gutterBottom>
+                Sign In to your Dashboard
               </Typography>
-              <Typography variant="h5"  sx={{ color: 'text.secondary' }}>Enter your credentials.</Typography>
+              <Typography variant="body2" color="text.secondary">
+                Enter your credentials
+              </Typography>
             </Box>
 
-            {/* <Tooltip title={method}>
-              <Box component="img" src={`/static/auth/ic_${method}.png`} sx={{ width: 32, height: 32 }} />
-            </Tooltip> */}
-          </Stack>
-          <LoginForm />
-        </ContentStyle>
-      </Container>
-      </Box>
-      {/* </RootStyle> */}
-    </>
+            <LoginForm />
+          </ContentSection>
+        </AuthCard>
+      </AuthContainer>
+    </RootStyle>
   );
 }

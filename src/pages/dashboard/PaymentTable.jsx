@@ -66,13 +66,6 @@ export default function PaymentTable(props) {
       // valueFormatter: params => `Rs{params.value?.toFixed(2) || '0.00'}`
     },
     {
-      field: 'status',
-      headerName: 'Status',
-      filter: 'agTextColumnFilter',
-      minWidth: 120,
-      editable: false
-    },
-    {
       field: 'createdAt',
       headerName: 'Date',
       filter: 'agDateColumnFilter',
