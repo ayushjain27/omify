@@ -69,7 +69,7 @@ export default function UserProfile() {
   const handleUpload = async () => {
     const formData = new FormData();
     formData.append('userName', selectedUserDetails?.userName);
-    formData.append('file', file);
+    formData.append('image', file);
     try {
       await dispatch(uploadAadharCardImageApi(formData));
     } catch (error) {
@@ -104,7 +104,7 @@ export default function UserProfile() {
   const handleCancelCheckImageUpload = async () => {
     const formData = new FormData();
     formData.append('userName', selectedUserDetails?.userName);
-    formData.append('file', cancelCheckFile);
+    formData.append('image', cancelCheckFile);
 
     try {
       await dispatch(uploadCancelCheckImageApi(formData));

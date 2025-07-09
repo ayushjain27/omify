@@ -1,5 +1,5 @@
-import { useEffect } from 'react';
-import { DialogTitle, Card, IconButton, Typography } from '@mui/material';
+import { useEffect, useState } from 'react';
+import { DialogTitle, Card, IconButton, Typography, Box } from '@mui/material';
 import CloseIcon from '@mui/icons-material/Close';
 import { useDispatch, useSelector } from 'react-redux';
 import { getPanCardImageApi } from '../../store/auth/authApi';
@@ -10,27 +10,30 @@ const DialogData = ({ setUserDialog, openUserDialog }) => {
   console.log(userData, 'User Data');
   const dispatch = useDispatch();
 
-  // Uncommented and updated useEffect
-  useEffect(() => {
-    // Add any side effects here
-    const fetchData = async() => {
-    const filename = userData.panCardImage.split('/').pop();
-    await dispatch(getPanCardImageApi(filename));
-    }
-    fetchData();
-  }, [openUserDialog, userData]);
-
   return (
-    <Card sx={{ p: 2 }}>
+    <Card
+      sx={{
+        p: 2,
+        maxHeight: '100vh', // Set maximum height
+        overflow: 'auto' // Enable scrolling
+      }}
+    >
       <div
         style={{
           display: 'flex',
           flexDirection: 'row',
           justifyContent: 'space-between',
-          alignItems: 'center'
+          alignItems: 'center',
+          // position: 'sticky',
+          // top: 0,
+          backgroundColor: 'white',
+          zIndex: 1,
+          padding: '8px 0'
         }}
       >
-        <DialogTitle variant="h3">User Details</DialogTitle>
+        <DialogTitle variant="h3" sx={{ p: 0 }}>
+          User Details
+        </DialogTitle>
         <IconButton onClick={() => setUserDialog(false)} aria-label="close">
           <CloseIcon />
         </IconButton>
@@ -107,9 +110,51 @@ const DialogData = ({ setUserDialog, openUserDialog }) => {
           <div>No user data available</div>
         )}
       </Card>
+      <Card sx={{ p: 3, mt: 2 }}>
+        <Typography variant="h3" sx={{ mb: 2 }}>
+          Verification Images
+        </Typography>
+        <Box display="flex" flexDirection="row" alignItems="center">
+          {userData?.panCardImage && (
+            <Box sx={{ my: 2 }}>
+              <Typography variant="body1" sx={{ mb: 2 }}>
+                Pan Card Image
+              </Typography>
+              <img
+                src={userData?.panCardImage}
+                alt="PAN Card"
+                style={{
+                  maxWidth: '100%',
+                  borderRadius: 8,
+                  height: 'auto',
+                  maxHeight: '300px',
+                  objectFit: 'contain'
+                }}
+              />
+            </Box>
+          )}
+          {userData?.cancelCheckImage && (
+            <Box sx={{ my: 2 }}>
+              <Typography variant="body1" sx={{ mb: 2 }}>
+                Cancel Check Image
+              </Typography>
+              <img
+                src={userData?.cancelCheckImage}
+                alt="PAN Card"
+                style={{
+                  maxWidth: '100%',
+                  borderRadius: 8,
+                  height: 'auto',
+                  maxHeight: '300px',
+                  objectFit: 'contain'
+                }}
+              />
+            </Box>
+          )}
+        </Box>
+      </Card>
     </Card>
   );
 };
 
 export default DialogData;
-0;

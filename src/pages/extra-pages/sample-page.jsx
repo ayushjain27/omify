@@ -267,7 +267,7 @@ export default function SamplePage() {
 
     const formData = new FormData();
     formData.append('paymentPageId', paymentPageId);
-    formData.append('file', anyFile);
+    formData.append('image', anyFile);
     console.log(anyFile,"anyFile")
     try {
       await dispatch(uploadFileApi(formData));
