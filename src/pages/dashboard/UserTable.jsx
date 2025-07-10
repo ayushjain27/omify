@@ -39,7 +39,7 @@ const createRowData = (data, callBackFns) => {
 };
 
 export default function UserTable(props) {
-  const { allUserData = [], selectedTab, isPaymentTablePaginatedLoading } = props;
+  const { allUserData = [], selectedTab, isPaymentTablePaginatedLoading, setStatus } = props;
   const [gridApi, setGridApi] = useState(null);
   const [openUserDialog, setUserDialog] = useState(false);
   const { enqueueSnackbar, closeSnackbar } = useSnackbar();
@@ -141,7 +141,7 @@ export default function UserTable(props) {
   return (
     <Box sx={{ height: '65vh', width: '100%' }}>
       <Dialog fullScreen open={openUserDialog} onClose={() => setUserDialog(false)}>
-        <DialogData setUserDialog={setUserDialog} openUserDialog={openUserDialog} />
+        <DialogData setUserDialog={setUserDialog} setStatus={setStatus} />
       </Dialog>
       <div className="ag-theme-alpine" style={gridStyle}>
         <AgGridReact

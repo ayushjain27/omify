@@ -30,8 +30,7 @@ export default function DashboardDefault() {
   const [itemOffset, setItemOffset] = useState(0);
   const { selectedUserDetails } = useSelector(({ authReducer }) => authReducer);
   const { allUsersCount, isCountUserLoading, allUserData, isUserDataLoading, userPageSize } = useSelector(({ authReducer }) => authReducer);
-
-  console.log(selectedUserDetails,"SDekjndj")
+  const { status, setStatus } = useState(false);
 
   const handleChange = (event, newValue) => {
     setValue(newValue);
@@ -47,6 +46,19 @@ export default function DashboardDefault() {
     };
     fetchData();
   }, []);
+
+  useEffect(() => {
+    let fetchData = async () => {
+      addStyles();
+      if (selectedUserDetails?.role === 'ADMIN') {
+        await dispatch(getAllUserCountsApi());
+        await getAllUserDetailsPaginated();
+      }
+    };
+    if (status) {
+      fetchData();
+    }
+  }, [status]);
 
   useEffect(() => {
     setItemOffset(0);
@@ -147,7 +159,7 @@ export default function DashboardDefault() {
           </AnimateButton>
         </div> */}
         <Grid container rowSpacing={4.5} columnSpacing={2.75} mt={1}>
-          <Grid item xs={12} sm={12} md={4} lg={4}>
+          <Grid item xs={12} sm={12} md={3} lg={3}>
             <AnalyticsEachNumberData
               title="Total Users Pages"
               number={allUsersCount?.total}
@@ -155,7 +167,7 @@ export default function DashboardDefault() {
               sx={{ backgroundColor: '#74CAFF' }}
             />
           </Grid>
-          <Grid item xs={12} sm={12} md={4} lg={4}>
+          <Grid item xs={12} sm={12} md={3} lg={3}>
             <AnalyticsEachNumberData
               title="Total Active Users"
               number={allUsersCount?.active}
@@ -163,10 +175,18 @@ export default function DashboardDefault() {
               sx={{ backgroundColor: '#5BE584' }}
             />
           </Grid>
-          <Grid item xs={12} sm={12} md={4} lg={4}>
+          <Grid item xs={12} sm={12} md={3} lg={3}>
             <AnalyticsEachNumberData
               title="Total In-Active Users"
               number={allUsersCount?.inActive}
+              loading={isCountUserLoading}
+              sx={{ backgroundColor: '#ffe704' }}
+            />
+          </Grid>
+          <Grid item xs={12} sm={12} md={3} lg={3}>
+            <AnalyticsEachNumberData
+              title="Total Rejected Users"
+              number={allUsersCount?.rejected}
               loading={isCountUserLoading}
               sx={{ backgroundColor: '#ffe704' }}
             />
@@ -188,14 +208,11 @@ export default function DashboardDefault() {
             >
               <Tab label="Active" icon={<InsertInvitationRoundedIcon />} iconPosition="start" value="active" />
               <Tab label="InActive" icon={<TodayRoundedIcon />} iconPosition="start" value="inActive" />
+              <Tab label="Rejected" icon={<TodayRoundedIcon />} iconPosition="start" value="rejected" />
             </Tabs>
           </Box>
           <Scrollbar>
-            <UserTable
-              allUserData={allUserData}
-              selectedTab={tabValue}
-              isUserDataLoading={isUserDataLoading}
-            />
+            <UserTable allUserData={allUserData} selectedTab={tabValue} isUserDataLoading={isUserDataLoading} setStatus={setStatus} />
           </Scrollbar>
         </Card>
         <Card sx={{ borderTopLeftRadius: '0px', borderTopRightRadius: '0px' }}>

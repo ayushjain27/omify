@@ -13,7 +13,7 @@ const urls = {
   updateKycByUserName: 'auth/updateKycByUserName',
   uploadAadharCardImage: 'auth/uploadPanCardImage',
   uploadCancelCheckImage: 'auth/uploadCancelCheckImage',
-  getPanCardImage: 'auth/getPanCardImage'
+  updateUserStatus: 'auth/updateUserStatus'
 };
 
 export const sendOtpApi = createAsyncThunk('store/sendOtpApi', async (params, thunkApi) => {
@@ -106,7 +106,6 @@ export const updateKycByUserNameApi = createAsyncThunk('store/updateKycByUserNam
       data: params
     });
     const data = await response.data;
-    console.log(data, 'demkdfme');
 
     if (data?.message) {
       return data;
@@ -202,16 +201,23 @@ export const uploadCancelCheckImageApi = createAsyncThunk('store/uploadCancelChe
   }
 });
 
-export const getPanCardImageApi = createAsyncThunk('store/getPanCardImageApi', async (params, thunkApi) => {
+export const updateUserStatusApi = createAsyncThunk('store/updateUserStatusApi', async (params, thunkApi) => {
   try {
-    console.log(params,"sdmek")
-    const fileName = params;
-    const response = await axios.get(`${urls.getPanCardImage}/${fileName}`, { responseType: 'blob' });
+    console.log(params, 'DSlemk');
+    const response = await axios.post(`${urls.updateUserStatus}`, params, {
+      headers: {
+        'Content-Type': 'application/json'
+      }
+    });
     const data = await response.data;
-    console.log(data,"dennj")
+    console.log(data, 'Dlemk');
 
-    if (data) {
+    if (data?.message) {
       return data;
+    }
+
+    if (data && data.result) {
+      return data.result;
     }
     return thunkApi.rejectWithValue('Something went wrong');
   } catch (err) {

@@ -1,5 +1,5 @@
 import { createSlice } from '@reduxjs/toolkit';
-import { getAllUserCountsApi, getAllUserDataApi, getPanCardImageApi, getUserDataByUserIdApi, getUserDataByUserNameApi } from './authApi';
+import { getAllUserCountsApi, getAllUserDataApi, getUserDataByUserIdApi, getUserDataByUserNameApi } from './authApi';
 // import { sendOtpApi } from './authApi';
 
 // ----------------------------------------------------------------------
@@ -47,9 +47,6 @@ const slice = createSlice({
     });
     builder.addCase(getUserDataByUserIdApi.fulfilled, (state, action) => {
       state.userData = action.payload;
-    });
-    builder.addCase(getPanCardImageApi.fulfilled, (state, action) => {
-      state.panCardImage = action.payload;
     });
   }
 });
