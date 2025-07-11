@@ -203,7 +203,6 @@ export const uploadCancelCheckImageApi = createAsyncThunk('store/uploadCancelChe
 
 export const updateUserStatusApi = createAsyncThunk('store/updateUserStatusApi', async (params, thunkApi) => {
   try {
-    console.log(params, 'DSlemk');
     const response = await axios.post(`${urls.updateUserStatus}`, params, {
       headers: {
         'Content-Type': 'application/json'

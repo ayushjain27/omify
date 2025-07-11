@@ -1,22 +1,23 @@
-/* eslint-disable no-unused-vars */
 /* eslint-disable react-hooks/exhaustive-deps */
-/* eslint-disable react/prop-types */
+
 import React, { useCallback, useEffect, useState } from 'react';
-import { Box, Chip, Dialog } from '@mui/material';
+import { Box, Chip, Dialog, IconButton, Tooltip } from '@mui/material';
 import { useSnackbar } from 'notistack';
 import _ from 'lodash';
 import { Icon } from '@iconify/react';
 import closeFill from '@iconify/icons-eva/close-fill';
-import { useDispatch } from 'react-redux';
+import { useDispatch, useSelector } from 'react-redux';
 import { AgGridReact } from 'ag-grid-react';
 import '@inovua/reactdatagrid-community/base.css';
 import 'ag-grid-community/styles/ag-grid.css';
 import 'ag-grid-community/styles/ag-theme-alpine.css';
 import { CustomLoadingCellRenderer } from '../../utils/constant';
+import ContentCopyIcon from '@mui/icons-material/ContentCopy';
 import { AllCommunityModule, ModuleRegistry } from 'ag-grid-community';
 import moment from 'moment';
 import { getPaymentPageDetailByIdApi } from '../../store/payment-page/paymentPageApi';
 import DialogData from './DialogData';
+import { useNavigate } from 'react-router';
 
 // Register all Community features
 ModuleRegistry.registerModules([AllCommunityModule]);
@@ -40,12 +41,14 @@ const createRowData = (data, callBackFns) => {
 };
 
 export default function PaymentTable(props) {
-  const { paymentList = [], selectedTab, isPaymentTablePaginatedLoading } = props;
+  const { paymentList = [], selectedTab, isPaymentTablePaginatedLoading, setStatus } = props;
   const [gridApi, setGridApi] = useState(null);
   const [openPaymentDialog, setPaymentDialog] = useState(false);
   const { enqueueSnackbar, closeSnackbar } = useSnackbar();
   const dispatch = useDispatch();
   const [rowData, setRowData] = useState([]);
+  const { selectedUserDetails } = useSelector(({ authReducer }) => authReducer);
+  const navigate = useNavigate();
 
   const columns = [
     {
@@ -86,6 +89,14 @@ export default function PaymentTable(props) {
       minWidth: 180,
       editable: false,
       sortable: true
+    },
+    {
+      field: 'action',
+      headerName: 'Action',
+      description: 'This column has a value getter and is not sortable.',
+      sortable: false,
+      minWidth: 160,
+      cellRenderer: ({ data }) => actionCellRenderer(data)
     }
   ];
   // if (selectedTab === 'manufacturer') {
@@ -99,7 +110,7 @@ export default function PaymentTable(props) {
 
   useEffect(() => {
     if (!_.isEmpty(paymentList)) {
-      const rowD = _.map(paymentList, (data) => createRowData(data, { showPaymentDetails }));
+      const rowD = _.map(paymentList, (data) => createRowData(data, { showPaymentDetails, copyLink }));
       setRowData(rowD || []);
     } else {
       setRowData([]);
@@ -148,11 +159,53 @@ export default function PaymentTable(props) {
       />
     </div>
   );
+  const actionCellRenderer = (data) => {
+    if (data?.status === 'ACTIVE') {
+      return (
+        <Box sx={{ display: 'flex', flexDirection: 'row', justifyContent: 'space-evenly', alignItems: 'center' }}>
+          <Tooltip title="Copy Link">
+            <IconButton onClick={() => data?.copyLink(data)}>
+              <ContentCopyIcon fontSize="small" sx={{ color: '#05acc1' }} />
+            </IconButton>
+          </Tooltip>
+        </Box>
+      );
+    }
+    // Return null or an empty fragment if the condition isn't met
+    return null;
+  };
+
+  const copyLink = (data) => {
+    if (!selectedUserDetails?.adhaarCardNumber && selectedUserDetails?.role === 'USER') {
+      enqueueSnackbar('Please update your kyc Details', {
+        variant: 'error'
+      });
+      navigate('/userProfile', { replace: true }); // Add leading slash and replace option
+    } else {
+      // Construct the URL to copy
+      const linkToCopy = `http://localhost:3000/contentPage?id=${data?.id || 'dmkemkd'}`;
+
+      // Copy to clipboard
+      navigator.clipboard
+        .writeText(linkToCopy)
+        .then(() => {
+          enqueueSnackbar('Link copied to clipboard!', {
+            variant: 'success'
+          });
+        })
+        .catch((err) => {
+          enqueueSnackbar('Failed to copy link', {
+            variant: 'error'
+          });
+          console.error('Failed to copy link:', err);
+        });
+    }
+  };
 
   return (
     <Box sx={{ height: '65vh', width: '100%' }}>
-       <Dialog fullScreen open={openPaymentDialog} onClose={() => setPaymentDialog(false)}>
-        <DialogData setPaymentDialog={setPaymentDialog} />
+      <Dialog fullScreen open={openPaymentDialog} onClose={() => setPaymentDialog(false)}>
+        <DialogData setPaymentDialog={setPaymentDialog} setStatus={setStatus} />
       </Dialog>
       <div className="ag-theme-alpine" style={gridStyle}>
         <AgGridReact
@@ -164,10 +217,13 @@ export default function PaymentTable(props) {
           rowHeight={50}
           headerHeight={50}
           rowSelection="multiple"
+          suppressCellSelection={true}
+          suppressRowClickSelection={true}
           onGridReady={onGridReady}
           masterDetail={false}
           context={{
-            showPaymentDetails
+            showPaymentDetails,
+            copyLink
           }}
           loadingCellRenderer={loadingCellRenderer}
           loadingOverlayComponent={isPaymentTablePaginatedLoading ? CustomLoadingCellRenderer : undefined}

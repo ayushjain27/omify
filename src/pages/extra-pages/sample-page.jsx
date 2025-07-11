@@ -15,7 +15,10 @@ import {
   InputLabel,
   OutlinedInput,
   Avatar,
-  colors
+  colors,
+  Grow,
+  Fade,
+  Zoom
 } from '@mui/material';
 import { CloudUpload } from '@mui/icons-material';
 import PictureAsPdfIcon from '@mui/icons-material/PictureAsPdf';
@@ -93,11 +96,11 @@ export default function SamplePage() {
       userName: selectedUserDetails?.userName
     };
     let response = await dispatch(createPaymentApi(requestData));
-    response = unwrapResult(response)
+    response = unwrapResult(response);
     let paymentPageId = response?._id;
     await handleUpload(paymentPageId);
     if (anyFile) {
-      console.log("dmkeik")
+      console.log('dmkeik');
       await handleAnyFileUpload(paymentPageId);
     }
     navigate('/payment-page');
@@ -231,7 +234,7 @@ export default function SamplePage() {
     }
   };
 
-  console.log(anyFile,";fmkmekfke")
+  console.log(anyFile, ';fmkmekfke');
 
   const handleUpload = async (paymentPageId) => {
     const formData = new FormData();
@@ -268,7 +271,7 @@ export default function SamplePage() {
     const formData = new FormData();
     formData.append('paymentPageId', paymentPageId);
     formData.append('image', anyFile);
-    console.log(anyFile,"anyFile")
+    console.log(anyFile, 'anyFile');
     try {
       await dispatch(uploadFileApi(formData));
       enqueueSnackbar('File Uploaded successfully', {
@@ -447,7 +450,7 @@ export default function SamplePage() {
                     <MenuItem value="Education">Education</MenuItem>
                   </TextField>
 
-                    <Typography variant='h5'>Add Thumbnail for the page</Typography>
+                  <Typography variant="h5">Add Thumbnail for the page</Typography>
                   {/* Cover Image/Video */}
                   <Box border={1} borderColor="grey.400" borderRadius={1} p={2} textAlign="center" mt={1} mb={2}>
                     <IconButton color="primary" component="label">
@@ -515,84 +518,278 @@ export default function SamplePage() {
               scrollbarWidth: 'none',
               '&::-webkit-scrollbar': {
                 display: 'none'
-              },
+              }
             }}
           >
-            <Box sx={{ background: 'linear-gradient(135deg, #0f2027 0%, #203a43 50%, #2c5364 100%)' }}>
-              <Typography variant="h3" sx={{ fontWeight: 'bold', pt: 3, pl: 3, color: 'white' }}>
-                Page Preview
-              </Typography>
-              <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', minHeight: '100vh', px: 2 }}>
+            <Box
+              sx={{
+                background: 'linear-gradient(135deg, #0f2027 0%, #203a43 50%, #2c5364 100%)',
+                minHeight: '100vh',
+                py: 4
+              }}
+            >
+              {/* Hero Image Section */}
+              <Box
+                sx={{
+                  height: '200px',
+                  backgroundImage: !data?.imageUrl ? `url(${data.imageUrl})` : 'linear-gradient(to right, #4facfe 0%, #00f2fe 100%)',
+                  backgroundSize: 'cover',
+                  backgroundSize: 'cover',
+                  backgroundPosition: 'center',
+                  borderRadius: 2,
+                  mx: 4,
+                  mb: 4,
+                  boxShadow: 3,
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  position: 'relative',
+                  '&::before': {
+                    content: '""',
+                    position: 'absolute',
+                    top: 0,
+                    left: 0,
+                    right: 0,
+                    bottom: 0,
+                    backgroundColor: 'rgba(0,0,0,0.3)',
+                    borderRadius: 2
+                  }
+                }}
+              >
+                <Typography
+                  variant="h3"
+                  component="h1"
+                  sx={{
+                    color: 'white',
+                    zIndex: 1,
+                    fontWeight: 'bold',
+                    textShadow: '2px 2px 4px rgba(0,0,0,0.5)'
+                  }}
+                >
+                  {data?.pageTitle || 'Payment Page'}
+                </Typography>
+              </Box>
+
+              <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', px: 2 }}>
                 <Grid container spacing={4} maxWidth="lg">
                   {/* Left Section */}
                   <Grid item xs={12} md={7}>
-                    <Paper sx={{ p: 4, borderRadius: 2 }}>
-                      <Avatar sx={{ bgcolor: 'orange' }}>{selectedUserDetails?.name?.slice(0, 1)}</Avatar>
-                      <Typography variant="body1" color="black">
-                        {selectedUserDetails?.name || 'N/A'}
-                      </Typography>
-                      <Divider sx={{ my: 2 }} />
-
-                      <Typography variant="h5" fontWeight="bold">
-                        Title
-                      </Typography>
-                      <Typography variant="body1" color="textSecondary">
-                        {data?.pageTitle?.slice(0, 50) || '-'}
-                      </Typography>
-
-                      <Typography variant="h5" fontWeight="bold" sx={{ mt: 2 }}>
-                        Description
-                      </Typography>
-                      <Typography variant="body1" color="textSecondary">
-                        {data?.description?.slice(0, 80) || '-'}
-                      </Typography>
-
-                      <Divider sx={{ my: 2 }} />
-                      {preview && (
-                        <Box sx={{ my: 2 }}>
-                          <img src={preview} alt="Uploaded" style={{ maxWidth: '100%', borderRadius: 8, height: 150 }} />
+                    <Grow in={true} timeout={800}>
+                      <Paper
+                        sx={{
+                          p: 4,
+                          borderRadius: 4,
+                          background: 'white',
+                          boxShadow: '0 10px 30px rgba(0,0,0,0.1)',
+                          transition: 'transform 0.3s',
+                          '&:hover': {
+                            transform: 'translateY(-5px)'
+                          }
+                        }}
+                      >
+                        <Box sx={{ display: 'flex', alignItems: 'center', mb: 3 }}>
+                          <Avatar
+                            sx={{
+                              bgcolor: 'primary.main',
+                              width: 56,
+                              height: 56,
+                              mr: 2
+                            }}
+                          >
+                            {selectedUserDetails?.name?.slice(0, 1) || 'P'}
+                          </Avatar>
+                          <Typography variant="h5" fontWeight="bold" color="primary">
+                            {selectedUserDetails?.name || 'Payment Request'}
+                          </Typography>
                         </Box>
-                      )}
-                    </Paper>
+
+                        <Divider sx={{ my: 2, borderColor: 'rgba(0,0,0,0.1)' }} />
+
+                        <Typography variant="h6" fontWeight="bold" color="text.primary" gutterBottom>
+                          About This Payment
+                        </Typography>
+
+                        {preview && (
+                          <Zoom in={true} timeout={1000}>
+                            <Box
+                              sx={{
+                                my: 3,
+                                borderRadius: 2,
+                                overflow: 'hidden',
+                                boxShadow: 2
+                              }}
+                            >
+                              <img
+                                src={preview}
+                                alt="Payment"
+                                style={{
+                                  width: '100%',
+                                  height: 'auto',
+                                  display: 'block'
+                                }}
+                              />
+                            </Box>
+                          </Zoom>
+                        )}
+
+                        <Typography variant="body1" color="text.secondary" paragraph>
+                          {data?.description || 'Please complete your payment using the form on the right.'}
+                        </Typography>
+
+                        <Box
+                          sx={{
+                            mt: 3,
+                            p: 3,
+                            backgroundColor: 'rgba(74, 144, 226, 0.1)',
+                            borderRadius: 2,
+                            borderLeft: '4px solid',
+                            borderColor: 'primary.main'
+                          }}
+                        >
+                          <Typography variant="body2" color="text.secondary">
+                            Your payment will be processed securely. Please ensure all details are correct before submitting.
+                          </Typography>
+                        </Box>
+                      </Paper>
+                    </Grow>
                   </Grid>
 
                   {/* Right Section - Form */}
                   <Grid item xs={12} md={5}>
-                    <Paper sx={{ p: 4, borderRadius: 2 }} elevation={3}>
-                      <div>
-                        <Typography variant="h6" fontWeight="bold" gutterBottom>
-                          Enter Your Details
+                    <Fade in={true} timeout={1200}>
+                      <Paper
+                        sx={{
+                          p: 4,
+                          borderRadius: 4,
+                          background: 'white',
+                          boxShadow: '0 10px 30px rgba(0,0,0,0.1)',
+                          position: 'relative',
+                          overflow: 'hidden',
+                          '&::before': {
+                            content: '""',
+                            position: 'absolute',
+                            top: 0,
+                            left: 0,
+                            right: 0,
+                            height: '6px',
+                            background: 'linear-gradient(to right, #4facfe 0%, #00f2fe 100%)'
+                          }
+                        }}
+                        elevation={3}
+                      >
+                        <Typography variant="h5" fontWeight="bold" gutterBottom color="primary">
+                          Complete Your Payment
+                        </Typography>
+                        <Typography variant="body2" color="text.secondary" mb={3}>
+                          Please fill in your details to proceed
                         </Typography>
 
+                        <Divider sx={{ my: 2, borderColor: 'rgba(0,0,0,0.1)' }} />
+
                         {/* Name Field */}
-                        <Stack spacing={1} mb={2}>
-                          <InputLabel htmlFor="name">Name*</InputLabel>
-                          <OutlinedInput id="name" name="name" placeholder="Enter your name" fullWidth />
+                        <Stack spacing={1} mb={3}>
+                          <InputLabel htmlFor="name" sx={{ fontWeight: 'medium', color: 'text.primary' }}>
+                            Full Name*
+                          </InputLabel>
+                          <OutlinedInput
+                            id="name"
+                            name="name"
+                            placeholder="Enter your name"
+                            fullWidth
+                            sx={{
+                              borderRadius: 2,
+                              '& .MuiOutlinedInput-notchedOutline': {
+                                borderColor: 'rgba(0,0,0,0.1)'
+                              }
+                            }}
+                          />
                         </Stack>
 
                         {/* Email Field */}
-                        <Stack spacing={1} mb={2}>
-                          <InputLabel htmlFor="email">Email Address*</InputLabel>
-                          <OutlinedInput id="email" name="email" placeholder="Enter your email" fullWidth />
+                        <Stack spacing={1} mb={3}>
+                          <InputLabel htmlFor="email" sx={{ fontWeight: 'medium', color: 'text.primary' }}>
+                            Email Address*
+                          </InputLabel>
+                          <OutlinedInput
+                            id="email"
+                            name="email"
+                            placeholder="Enter your email"
+                            fullWidth
+                            sx={{
+                              borderRadius: 2,
+                              '& .MuiOutlinedInput-notchedOutline': {
+                                borderColor: 'rgba(0,0,0,0.1)'
+                              }
+                            }}
+                          />
                         </Stack>
 
                         {/* Phone Number Field */}
-                        <Stack spacing={1} mb={2}>
-                          <InputLabel htmlFor="phoneNumber">Phone Number*</InputLabel>
-                          <OutlinedInput id="phoneNumber" name="phoneNumber" placeholder="Enter your phone number" fullWidth type="tel" />
+                        <Stack spacing={1} mb={3}>
+                          <InputLabel htmlFor="phoneNumber" sx={{ fontWeight: 'medium', color: 'text.primary' }}>
+                            Phone Number*
+                          </InputLabel>
+                          <OutlinedInput
+                            id="phoneNumber"
+                            name="phoneNumber"
+                            placeholder="Enter your phone number"
+                            fullWidth
+                            type="tel"
+                            sx={{
+                              borderRadius: 2,
+                              '& .MuiOutlinedInput-notchedOutline': {
+                                borderColor: 'rgba(0,0,0,0.1)'
+                              }
+                            }}
+                          />
                         </Stack>
 
-                        {/* Payment Button */}
-                        <Button variant="contained" color="success" fullWidth sx={{ mb: 2, py: 1.5 }}>
-                          Payment Amount: ₹ {data?.price}
-                        </Button>
+                        {/* Payment Amount */}
+                        <Box
+                          sx={{
+                            backgroundColor: 'rgba(46, 125, 50, 0.1)',
+                            borderRadius: 2,
+                            p: 2,
+                            mb: 3,
+                            textAlign: 'center'
+                          }}
+                        >
+                          <Typography variant="body2" color="text.secondary" mb={1}>
+                            Payment Amount
+                          </Typography>
+                          <Typography variant="h4" fontWeight="bold" color="success.dark">
+                            ₹ {data?.price || '0.00'}
+                          </Typography>
+                        </Box>
 
                         {/* Submit Button */}
-                        <Button variant="contained" color="primary" fullWidth type="submit" sx={{ py: 1.5 }}>
-                          {data?.buttonText}
+                        <Button
+                          variant="contained"
+                          color="primary"
+                          fullWidth
+                          type="submit"
+                          sx={{
+                            py: 1.5,
+                            borderRadius: 2,
+                            fontWeight: 'bold',
+                            fontSize: '1rem',
+                            textTransform: 'none',
+                            boxShadow: '0 4px 6px rgba(0,0,0,0.1)',
+                            '&:hover': {
+                              boxShadow: '0 6px 8px rgba(0,0,0,0.15)',
+                              transform: 'translateY(-1px)'
+                            },
+                            transition: 'all 0.3s'
+                          }}
+                        >
+                          {data?.buttonText || 'Pay Now'} →
                         </Button>
-                      </div>
-                    </Paper>
+
+                        <Typography variant="body2" color="text.secondary" mt={2} textAlign="center">
+                          Secure payment powered by your platform
+                        </Typography>
+                      </Paper>
+                    </Fade>
                   </Grid>
                 </Grid>
               </Box>

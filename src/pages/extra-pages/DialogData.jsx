@@ -20,6 +20,7 @@ import {
 import CloseIcon from '@mui/icons-material/Close';
 import { useDispatch, useSelector } from 'react-redux';
 import { updateUserStatusApi } from '../../store/auth/authApi';
+import { updatePaymentPageStatusApi } from '../../store/payment-page/paymentPageApi';
 
 const statusColors = {
   ACTIVE: 'success',
@@ -38,25 +39,25 @@ const DialogData = ({ setPaymentDialog, setStatus }) => {
     setSelectedStatus(event.target.value);
   };
 
-  // const handleSubmitStatus = async () => {
-  //   try {
-  //     // Here you would typically dispatch an action to update the status
-  //     // For example:
-  //     const data = {
-  //       userName: userData.userName,
-  //       status: selectedStatus
-  //     };
-  //     await dispatch(updateUserStatusApi(data));
+  const handleSubmitStatus = async () => {
+    try {
+      // Here you would typically dispatch an action to update the status
+      // For example:
+      const data = {
+        paymentId: paymentPageDetail?._id,
+        status: selectedStatus
+      };
+      await dispatch(updatePaymentPageStatusApi(data));
 
-  //     console.log(`Updating status to: ${selectedStatus}`);
-  //     setOpenStatusModal(false);
-  //     setUserDialog(false);
-  //     setStatus(true);
-  //     // Optionally refresh user data or show success message
-  //   } catch (error) {
-  //     console.error('Error updating status:', error);
-  //   }
-  // };
+      console.log(`Updating status to: ${selectedStatus}`);
+      setOpenStatusModal(false);
+      setPaymentDialog(false);
+      setStatus(true);
+      // Optionally refresh user data or show success message
+    } catch (error) {
+      console.error('Error updating status:', error);
+    }
+  };
 
   return (
     <>
@@ -155,25 +156,30 @@ const DialogData = ({ setPaymentDialog, setStatus }) => {
             </Card>
 
             {/* Verification Images Section */}
-            {/* <Card sx={{ p: 3, borderRadius: '8px' }}>
+            <Card sx={{ p: 3, borderRadius: '8px' }}>
               <Typography variant="h6" sx={{ mb: 2, fontWeight: 600, color: 'primary.main' }}>
-                Verification Documents
+                 Documents
               </Typography>
               <Divider sx={{ mb: 3 }} />
 
               <Grid container spacing={3}>
-                {userData?.panCardImage && (
+                {paymentPageDetail?.imageUrl && (
                   <Grid item xs={6}>
-                    <DocumentImage label="PAN Card" src={userData.panCardImage} />
+                    <DocumentImage label="Thumbnail" src={paymentPageDetail.imageUrl} />
                   </Grid>
                 )}
-                {userData?.cancelCheckImage && (
+                {paymentPageDetail?.file && (
+                  <Grid item xs={6}>
+                    <DocumentImage label="PAN Card" src={paymentPageDetail.file} />
+                  </Grid>
+                )}
+                {/* {userData?.cancelCheckImage && (
                   <Grid item xs={6}>
                     <DocumentImage label="Cancelled Check" src={userData.cancelCheckImage} />
                   </Grid>
-                )}
+                )} */}
               </Grid>
-            </Card> */}
+            </Card>
           </>
         )}
       </Paper>
@@ -199,7 +205,7 @@ const DialogData = ({ setPaymentDialog, setStatus }) => {
           }}
         >
           <Typography variant="h6" component="h2" sx={{ mb: 2 }}>
-            Update User Status
+            Update Payment Status
           </Typography>
 
           <FormControl component="fieldset" sx={{ width: '100%', mb: 3 }}>
@@ -215,9 +221,9 @@ const DialogData = ({ setPaymentDialog, setStatus }) => {
             <Button variant="outlined" onClick={() => setOpenStatusModal(false)}>
               Cancel
             </Button>
-            {/* <Button variant="contained" onClick={handleSubmitStatus} color="primary">
+            <Button variant="contained" onClick={handleSubmitStatus} color="primary">
               Update Status
-            </Button> */}
+            </Button>
           </Box>
         </Box>
       </Modal>

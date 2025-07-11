@@ -8,7 +8,8 @@ const urls = {
   uploadFile: '/paymentPage/uploadAnything',
   countAllPaymentPageByUserName: '/paymentPage/countAllPaymentPagesByUserName',
   getPaymentTablePaginated: '/paymentPage/getAllPaymentPagesPaginated',
-  getPaymentPageDetailById: '/paymentPage/getPaymentPageDetailById'
+  getPaymentPageDetailById: '/paymentPage/getPaymentPageDetailById',
+  updatePaymentPageStatus: '/paymentPage/updatePaymentStatus'
 };
 
 export const createPaymentApi = createAsyncThunk('store/createPaymentApi', async (params, thunkApi) => {
@@ -95,6 +96,7 @@ export const countAllPaymentPageByUserNameApi = createAsyncThunk(
 
 export const getPaymentPageDetailByIdApi = createAsyncThunk('serviceplug/getPaymentPageDetailByIdApi', async (params, thunkApi) => {
   try {
+    console.log(params,"dmek")
     const response = await axios.get(`${urls.getPaymentPageDetailById}`, { params });
     if (response.data) {
       return response.data;
@@ -119,5 +121,29 @@ export const getPaymentTablePaginatedApi = createAsyncThunk('serviceplug/getPaym
     return [];
   } catch (err) {
     return thunkApi.rejectWithValue(`Something went wrong. Please try again!, ${err}`);
+  }
+});
+
+export const updatePaymentPageStatusApi = createAsyncThunk('store/updatePaymentPageStatusApi', async (params, thunkApi) => {
+  try {
+    const response = await axios.post(`${urls.updatePaymentPageStatus}`, params, {
+      headers: {
+        'Content-Type': 'application/json'
+      }
+    });
+    const data = await response.data;
+    console.log(data, 'Dlemk');
+
+    if (data?.message) {
+      return data;
+    }
+
+    if (data && data.result) {
+      return data.result;
+    }
+    return thunkApi.rejectWithValue('Something went wrong');
+  } catch (err) {
+    // thunkApi.dispatch(showMessage({ message: 'Something went wrong. please try again!', variant: 'error' }));
+    return thunkApi.rejectWithValue('Something went wrong. Please try again!');
   }
 });

@@ -31,6 +31,7 @@ export default function PaymentPage() {
   const [forcePage, setForcePage] = useState(0);
   const [itemOffset, setItemOffset] = useState(0);
   const { selectedUserDetails } = useSelector(({ authReducer }) => authReducer);
+  const [status, setStatus] = useState(false);
   const { countAllPaymentPage, isCountAllPaymentPageLoading, paymentList, isPaymentTablePaginatedLoading, paymentListPageSize } =
     useSelector(({ paymentPageReducer }) => paymentPageReducer);
 
@@ -54,6 +55,18 @@ export default function PaymentPage() {
     };
     fetchData();
   }, []);
+
+  useEffect(() => {
+    let fetchData = async () => {
+      addStyles();
+      await dispatch(countAllPaymentPageByUserNameApi({ userName: selectedUserDetails?.userName }));
+      await getAllPaymentPagePaginated();
+      setStatus(false);
+    };
+    if (status) {
+      fetchData();
+    }
+  }, [status]);
 
   useEffect(() => {
     setItemOffset(0);
@@ -149,7 +162,7 @@ export default function PaymentPage() {
             {/* <Button fullWidth size="large" type="submit" variant="contained" color="primary" onClick={handleUpdateKyc}>
               Update Kyc
             </Button> */}
-             <Button
+            <Button
               variant="contained"
               color="primary"
               startIcon={<AddCircleOutlineRoundedIcon />}
@@ -168,7 +181,7 @@ export default function PaymentPage() {
           </AnimateButton>
         </div>
         <Grid container rowSpacing={4.5} columnSpacing={2.75} mt={0.1}>
-          <Grid item xs={12} sm={12} md={4} lg={4}>
+          <Grid item xs={12} sm={12} md={3} lg={3}>
             <AnalyticsEachNumberData
               title="Total Payment Pages"
               number={countAllPaymentPage?.total}
@@ -176,7 +189,7 @@ export default function PaymentPage() {
               sx={{ backgroundColor: '#74CAFF' }}
             />
           </Grid>
-          <Grid item xs={12} sm={12} md={4} lg={4}>
+          <Grid item xs={12} sm={12} md={3} lg={3}>
             <AnalyticsEachNumberData
               title="Total Active Payment Pages"
               number={countAllPaymentPage?.active}
@@ -184,10 +197,18 @@ export default function PaymentPage() {
               sx={{ backgroundColor: '#5BE584' }}
             />
           </Grid>
-          <Grid item xs={12} sm={12} md={4} lg={4}>
+          <Grid item xs={12} sm={12} md={3} lg={3}>
             <AnalyticsEachNumberData
               title="Total In-Active Payment Pages"
               number={countAllPaymentPage?.inActive}
+              loading={isCountAllPaymentPageLoading}
+              sx={{ backgroundColor: '#ffe704' }}
+            />
+          </Grid>
+          <Grid item xs={12} sm={12} md={3} lg={3}>
+            <AnalyticsEachNumberData
+              title="Total Rejected Users"
+              number={countAllPaymentPage?.rejected}
               loading={isCountAllPaymentPageLoading}
               sx={{ backgroundColor: '#ffe704' }}
             />
@@ -209,6 +230,7 @@ export default function PaymentPage() {
             >
               <Tab label="Active" icon={<InsertInvitationRoundedIcon />} iconPosition="start" value="active" />
               <Tab label="InActive" icon={<TodayRoundedIcon />} iconPosition="start" value="inActive" />
+              <Tab label="Rejected" icon={<TodayRoundedIcon />} iconPosition="start" value="rejected" />
             </Tabs>
           </Box>
           <Scrollbar>
@@ -216,6 +238,7 @@ export default function PaymentPage() {
               paymentList={paymentList}
               selectedTab={tabValue}
               isPaymentTablePaginatedLoading={isPaymentTablePaginatedLoading}
+              setStatus={setStatus}
             />
           </Scrollbar>
         </Card>

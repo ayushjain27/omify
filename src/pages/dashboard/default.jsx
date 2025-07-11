@@ -30,7 +30,7 @@ export default function DashboardDefault() {
   const [itemOffset, setItemOffset] = useState(0);
   const { selectedUserDetails } = useSelector(({ authReducer }) => authReducer);
   const { allUsersCount, isCountUserLoading, allUserData, isUserDataLoading, userPageSize } = useSelector(({ authReducer }) => authReducer);
-  const { status, setStatus } = useState(false);
+  const [status, setStatus] = useState(false);
 
   const handleChange = (event, newValue) => {
     setValue(newValue);
@@ -49,10 +49,10 @@ export default function DashboardDefault() {
 
   useEffect(() => {
     let fetchData = async () => {
-      addStyles();
       if (selectedUserDetails?.role === 'ADMIN') {
         await dispatch(getAllUserCountsApi());
         await getAllUserDetailsPaginated();
+        setStatus(false);
       }
     };
     if (status) {
@@ -63,11 +63,15 @@ export default function DashboardDefault() {
   useEffect(() => {
     setItemOffset(0);
     setForcePage(0);
-    getAllUserDetailsPaginated();
+    if (selectedUserDetails?.role === 'ADMIN') {
+      getAllUserDetailsPaginated();
+    }
   }, [tabValue]);
 
   useEffect(() => {
-    getAllUserDetailsPaginated();
+    if (selectedUserDetails?.role === 'ADMIN') {
+      getAllUserDetailsPaginated();
+    }
   }, [itemOffset]);
 
   const handlePageClick = (event) => {
