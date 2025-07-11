@@ -7,7 +7,8 @@ const urls = {
   uploadThumbnail: '/paymentPage/upload',
   uploadFile: '/paymentPage/uploadAnything',
   countAllPaymentPageByUserName: '/paymentPage/countAllPaymentPagesByUserName',
-  getPaymentTablePaginated: '/paymentPage/getAllPaymentPagesPaginated'
+  getPaymentTablePaginated: '/paymentPage/getAllPaymentPagesPaginated',
+  getPaymentPageDetailById: '/paymentPage/getPaymentPageDetailById'
 };
 
 export const createPaymentApi = createAsyncThunk('store/createPaymentApi', async (params, thunkApi) => {
@@ -91,6 +92,18 @@ export const countAllPaymentPageByUserNameApi = createAsyncThunk(
     }
   }
 );
+
+export const getPaymentPageDetailByIdApi = createAsyncThunk('serviceplug/getPaymentPageDetailByIdApi', async (params, thunkApi) => {
+  try {
+    const response = await axios.get(`${urls.getPaymentPageDetailById}`, { params });
+    if (response.data) {
+      return response.data;
+    }
+    return thunkApi.rejectWithValue('Something went wrong with this');
+  } catch (error) {
+    return thunkApi.rejectWithValue(error);
+  }
+});
 
 export const getPaymentTablePaginatedApi = createAsyncThunk('serviceplug/getPaymentTablePaginatedApi', async (params, thunkApi) => {
   try {

@@ -1,5 +1,5 @@
 import { createSlice } from '@reduxjs/toolkit';
-import { countAllPaymentPageByUserNameApi, getPaymentTablePaginatedApi } from './paymentPageApi';
+import { countAllPaymentPageByUserNameApi, getPaymentPageDetailByIdApi, getPaymentTablePaginatedApi } from './paymentPageApi';
 // import { sendOtpApi } from './authApi';
 
 // ----------------------------------------------------------------------
@@ -9,7 +9,8 @@ const initialState = {
   isCountAllPaymentPageLoading: true,
   isPaymentTablePaginatedLoading: true,
   paymentList: [],
-  paymentListPageSize: 50
+  paymentListPageSize: 50,
+  paymentPageDetail: {}
 };
 
 const slice = createSlice({
@@ -36,6 +37,9 @@ const slice = createSlice({
     });
     builder.addCase(getPaymentTablePaginatedApi.rejected, (state, action) => {
       state.isPaymentTablePaginatedLoading = false;
+    });
+    builder.addCase(getPaymentPageDetailByIdApi.fulfilled, (state, action) => {
+      state.paymentPageDetail = action.payload;
     });
   }
 });

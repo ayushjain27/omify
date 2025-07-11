@@ -27,35 +27,36 @@ const statusColors = {
   REJECTED: 'warning'
 };
 
-const DialogData = ({ setUserDialog, setStatus }) => {
-  const { userData } = useSelector(({ authReducer }) => authReducer);
+const DialogData = ({ setPaymentDialog, setStatus }) => {
+  const { paymentPageDetail } = useSelector(({ paymentPageReducer }) => paymentPageReducer);
   const [openStatusModal, setOpenStatusModal] = useState(false);
-  const [selectedStatus, setSelectedStatus] = useState(userData?.status || 'PENDING');
+  const [selectedStatus, setSelectedStatus] = useState(paymentPageDetail?.status || 'PENDING');
   const dispatch = useDispatch();
+  const { selectedUserDetails } = useSelector(({ authReducer }) => authReducer);
 
   const handleStatusChange = (event) => {
     setSelectedStatus(event.target.value);
   };
 
-  const handleSubmitStatus = async () => {
-    try {
-      // Here you would typically dispatch an action to update the status
-      // For example:
-      const data = {
-        userName: userData.userName,
-        status: selectedStatus
-      }
-      await dispatch(updateUserStatusApi(data));
+  // const handleSubmitStatus = async () => {
+  //   try {
+  //     // Here you would typically dispatch an action to update the status
+  //     // For example:
+  //     const data = {
+  //       userName: userData.userName,
+  //       status: selectedStatus
+  //     };
+  //     await dispatch(updateUserStatusApi(data));
 
-      console.log(`Updating status to: ${selectedStatus}`);
-      setOpenStatusModal(false);
-      setUserDialog(false);
-      setStatus(true);
-      // Optionally refresh user data or show success message
-    } catch (error) {
-      console.error('Error updating status:', error);
-    }
-  };
+  //     console.log(`Updating status to: ${selectedStatus}`);
+  //     setOpenStatusModal(false);
+  //     setUserDialog(false);
+  //     setStatus(true);
+  //     // Optionally refresh user data or show success message
+  //   } catch (error) {
+  //     console.error('Error updating status:', error);
+  //   }
+  // };
 
   return (
     <>
@@ -81,19 +82,21 @@ const DialogData = ({ setUserDialog, setStatus }) => {
         >
           <Box sx={{ display: 'flex', alignItems: 'center' }}>
             <DialogTitle variant="h5" sx={{ p: 0, fontWeight: 600 }}>
-              User Details
+              Payment Page Details
             </DialogTitle>
-            <Chip
-              onClick={() => setOpenStatusModal(true)}
-              sx={{ mx: 2, cursor: 'pointer' }}
-              label="Update Status"
-              color="primary"
-              size="medium"
-            />
+            {selectedUserDetails?.role === 'ADMIN' && (
+              <Chip
+                onClick={() => setOpenStatusModal(true)}
+                sx={{ mx: 2, cursor: 'pointer' }}
+                label="Update Status"
+                color="primary"
+                size="medium"
+              />
+            )}
           </Box>
 
           <IconButton
-            onClick={() => setUserDialog(false)}
+            onClick={() => setPaymentDialog(false)}
             aria-label="close"
             sx={{
               color: 'text.secondary',
@@ -106,9 +109,9 @@ const DialogData = ({ setUserDialog, setStatus }) => {
           </IconButton>
         </Box>
 
-        {!userData ? (
+        {!paymentPageDetail ? (
           <Typography variant="body1" color="text.secondary" textAlign="center" py={4}>
-            No user data available
+            No payment data available
           </Typography>
         ) : (
           <>
@@ -121,43 +124,38 @@ const DialogData = ({ setUserDialog, setStatus }) => {
 
               <Grid container spacing={2}>
                 <Grid item xs={6}>
-                  <DetailRow label="User Name" value={userData.userName} />
-                  <DetailRow label="Email" value={userData.email} />
-                  <DetailRow label="Phone Number" value={userData.phoneNumber} />
+                  <DetailRow label="Title" value={paymentPageDetail.pageTitle} />
+                  <DetailRow label="Category" value={paymentPageDetail.category} />
+                  <DetailRow label="Description" value={paymentPageDetail.description} />
+                  <DetailRow label="Price" value={paymentPageDetail.price} />
                 </Grid>
                 <Grid item xs={6}>
                   <DetailRow
                     label="Status"
-                    value={<Chip label={userData.status || 'N/A'} color={statusColors[userData.status] || 'default'} size="small" />}
+                    value={
+                      <Chip
+                        label={paymentPageDetail.status || 'N/A'}
+                        color={statusColors[paymentPageDetail.status] || 'default'}
+                        size="small"
+                      />
+                    }
                   />
-                  <DetailRow label="Social Media" value={`${userData.socialLinkSelected}`} />
-                  <DetailRow label="Created At" value={userData.createdAt ? new Date(userData.createdAt).toLocaleString() : 'N/A'} />
-                  <DetailRow label="Updated At" value={userData.updatedAt ? new Date(userData.updatedAt).toLocaleString() : 'N/A'} />
-                </Grid>
-              </Grid>
-            </Card>
-
-            {/* Verification Details Section */}
-            <Card sx={{ p: 3, mb: 3, borderRadius: '8px' }}>
-              <Typography variant="h6" sx={{ mb: 2, fontWeight: 600, color: 'primary.main' }}>
-                Verification Details
-              </Typography>
-              <Divider sx={{ mb: 2 }} />
-
-              <Grid container spacing={2}>
-                <Grid item xs={6}>
-                  <DetailRow label="Account Holder" value={userData.accountHolderName} />
-                  <DetailRow label="Account Number" value={userData.accountNumber} />
-                </Grid>
-                <Grid item xs={6}>
-                  <DetailRow label="Aadhar Card" value={userData.adhaarCardNumber} />
-                  <DetailRow label="IFSC Code" value={userData.ifscCode} />
+                  <DetailRow label="Button Text" value={paymentPageDetail.buttonText} />
+                  <DetailRow label="Social Media" value={`${paymentPageDetail.link}`} />
+                  <DetailRow
+                    label="Created At"
+                    value={paymentPageDetail.createdAt ? new Date(paymentPageDetail.createdAt).toLocaleString() : 'N/A'}
+                  />
+                  <DetailRow
+                    label="Updated At"
+                    value={paymentPageDetail.updatedAt ? new Date(paymentPageDetail.updatedAt).toLocaleString() : 'N/A'}
+                  />
                 </Grid>
               </Grid>
             </Card>
 
             {/* Verification Images Section */}
-            <Card sx={{ p: 3, borderRadius: '8px' }}>
+            {/* <Card sx={{ p: 3, borderRadius: '8px' }}>
               <Typography variant="h6" sx={{ mb: 2, fontWeight: 600, color: 'primary.main' }}>
                 Verification Documents
               </Typography>
@@ -175,7 +173,7 @@ const DialogData = ({ setUserDialog, setStatus }) => {
                   </Grid>
                 )}
               </Grid>
-            </Card>
+            </Card> */}
           </>
         )}
       </Paper>
@@ -217,9 +215,9 @@ const DialogData = ({ setUserDialog, setStatus }) => {
             <Button variant="outlined" onClick={() => setOpenStatusModal(false)}>
               Cancel
             </Button>
-            <Button variant="contained" onClick={handleSubmitStatus} color="primary">
+            {/* <Button variant="contained" onClick={handleSubmitStatus} color="primary">
               Update Status
-            </Button>
+            </Button> */}
           </Box>
         </Box>
       </Modal>

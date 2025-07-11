@@ -14,10 +14,10 @@ import TodayRoundedIcon from '@mui/icons-material/TodayRounded';
 import { useDispatch, useSelector } from 'react-redux';
 import { countAllPaymentPageByUserNameApi, getPaymentTablePaginatedApi } from '../../store/payment-page/paymentPageApi';
 import Scrollbar from '../../components/Scrollbar';
-import PaymentTable from '../dashboard/PaymentTable';
 import ReactPaginate from 'react-paginate';
 import { toUpper } from 'lodash';
 import AddCircleOutlineRoundedIcon from '@mui/icons-material/AddCircleOutlineRounded';
+import PaymentTable from './PaymentTable';
 
 // ==============================|| SAMPLE PAGE ||============================== //
 
