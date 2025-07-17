@@ -9,7 +9,10 @@ const urls = {
   countAllPaymentPageByUserName: '/paymentPage/countAllPaymentPagesByUserName',
   getPaymentTablePaginated: '/paymentPage/getAllPaymentPagesPaginated',
   getPaymentPageDetailById: '/paymentPage/getPaymentPageDetailById',
-  updatePaymentPageStatus: '/paymentPage/updatePaymentStatus'
+  updatePaymentPageStatus: '/paymentPage/updatePaymentStatus',
+  createUserPaymentDetails: '/paymentPage/createUserPaymentDetails',
+  countAllUsersDataByUserName: '/paymentPage/countAllUsersDataByUserName',
+  getAllUsersDataByUserName: '/paymentPage/getAllUsersDataByUserName'
 };
 
 export const createPaymentApi = createAsyncThunk('store/createPaymentApi', async (params, thunkApi) => {
@@ -96,7 +99,7 @@ export const countAllPaymentPageByUserNameApi = createAsyncThunk(
 
 export const getPaymentPageDetailByIdApi = createAsyncThunk('serviceplug/getPaymentPageDetailByIdApi', async (params, thunkApi) => {
   try {
-    console.log(params,"dmek")
+    console.log(params, 'dmek');
     const response = await axios.get(`${urls.getPaymentPageDetailById}`, { params });
     if (response.data) {
       return response.data;
@@ -111,6 +114,23 @@ export const getPaymentTablePaginatedApi = createAsyncThunk('serviceplug/getPaym
   try {
     const response = await axios.request({
       url: `${urls.getPaymentTablePaginated}`,
+      method: 'post',
+      data: params
+    });
+    const data = await response.data;
+    if (data) {
+      return data;
+    }
+    return [];
+  } catch (err) {
+    return thunkApi.rejectWithValue(`Something went wrong. Please try again!, ${err}`);
+  }
+});
+
+export const createUserPaymentDetailsApi = createAsyncThunk('serviceplug/createUserPaymentDetailsApi', async (params, thunkApi) => {
+  try {
+    const response = await axios.request({
+      url: `${urls.createUserPaymentDetails}`,
       method: 'post',
       data: params
     });
@@ -145,5 +165,29 @@ export const updatePaymentPageStatusApi = createAsyncThunk('store/updatePaymentP
   } catch (err) {
     // thunkApi.dispatch(showMessage({ message: 'Something went wrong. please try again!', variant: 'error' }));
     return thunkApi.rejectWithValue('Something went wrong. Please try again!');
+  }
+});
+
+export const countAllUsersDataByUserNameApi = createAsyncThunk('serviceplug/countAllUsersDataByUserNameApi', async (params, thunkApi) => {
+  try {
+    const response = await axios.get(`${urls.countAllUsersDataByUserName}`, { params });
+    if (response.data) {
+      return response.data;
+    }
+    return thunkApi.rejectWithValue('Something went wrong with this');
+  } catch (error) {
+    return thunkApi.rejectWithValue(error);
+  }
+});
+
+export const getAllUsersDataByUserNameApi = createAsyncThunk('serviceplug/getAllUsersDataByUserNameApi', async (params, thunkApi) => {
+  try {
+    const response = await axios.get(`${urls.getAllUsersDataByUserName}`, { params });
+    if (response.data?.result) {
+      return response.data.result;
+    }
+    return thunkApi.rejectWithValue('Something went wrong with this');
+  } catch (error) {
+    return thunkApi.rejectWithValue(error);
   }
 });

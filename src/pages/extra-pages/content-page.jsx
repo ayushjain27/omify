@@ -21,7 +21,16 @@ import axios from 'axios';
 import * as Yup from 'yup';
 import { Formik } from 'formik';
 import { useDispatch, useSelector } from 'react-redux';
-import { getPaymentPageDetailByIdApi } from '../../store/payment-page/paymentPageApi';
+import { createUserPaymentDetailsApi, getPaymentPageDetailByIdApi } from '../../store/payment-page/paymentPageApi';
+
+// Validation Schema
+const validationSchema = Yup.object().shape({
+  name: Yup.string().required('Full name is required').min(3, 'Name must be at least 3 characters'),
+  email: Yup.string().required('Email is required').email('Invalid email format'),
+  phoneNumber: Yup.string()
+    .required('Phone number is required')
+    .matches(/^[0-9]{10}$/, 'Phone number must be 10 digits')
+});
 
 export default function ContentPage() {
   const location = useLocation();
@@ -42,6 +51,18 @@ export default function ContentPage() {
       fetchData();
     }
   }, [id]);
+
+  const handleSubmit = async (values, { setSubmitting }) => {
+    // Handle form submission
+    console.log('Form submitted:', values);
+    let reqBody = {...values};
+    reqBody.paymentAmount = paymentPageDetail?.price;
+    reqBody.paymentId = paymentPageDetail?._id;
+    reqBody.userName = paymentPageDetail?.userName;
+    await dispatch(createUserPaymentDetailsApi(reqBody));
+    // Add your payment processing logic here
+    setSubmitting(false);
+  };
 
   return (
     <Box
@@ -121,10 +142,10 @@ export default function ContentPage() {
                       mr: 2
                     }}
                   >
-                    {paymentPageDetail?.pageTitle?.slice(0, 1) || 'P'}
+                    {paymentPageDetail?.userDetails?.name?.slice(0, 1) || 'P'}
                   </Avatar>
                   <Typography variant="h5" fontWeight="bold" color="primary">
-                    {paymentPageDetail?.pageTitle || 'Payment Request'}
+                    {paymentPageDetail?.userDetails?.name || 'Payment Request'}
                   </Typography>
                 </Box>
 
@@ -202,117 +223,161 @@ export default function ContentPage() {
                 }}
                 elevation={3}
               >
-                <Typography variant="h5" fontWeight="bold" gutterBottom color="primary">
-                  Complete Your Payment
-                </Typography>
-                <Typography variant="body2" color="text.secondary" mb={3}>
-                  Please fill in your details to proceed
-                </Typography>
-
-                <Divider sx={{ my: 2, borderColor: 'rgba(0,0,0,0.1)' }} />
-
-                {/* Name Field */}
-                <Stack spacing={1} mb={3}>
-                  <InputLabel htmlFor="name" sx={{ fontWeight: 'medium', color: 'text.primary' }}>
-                    Full Name*
-                  </InputLabel>
-                  <OutlinedInput
-                    id="name"
-                    name="name"
-                    placeholder="Enter your name"
-                    fullWidth
-                    sx={{
-                      borderRadius: 2,
-                      '& .MuiOutlinedInput-notchedOutline': {
-                        borderColor: 'rgba(0,0,0,0.1)'
-                      }
-                    }}
-                  />
-                </Stack>
-
-                {/* Email Field */}
-                <Stack spacing={1} mb={3}>
-                  <InputLabel htmlFor="email" sx={{ fontWeight: 'medium', color: 'text.primary' }}>
-                    Email Address*
-                  </InputLabel>
-                  <OutlinedInput
-                    id="email"
-                    name="email"
-                    placeholder="Enter your email"
-                    fullWidth
-                    sx={{
-                      borderRadius: 2,
-                      '& .MuiOutlinedInput-notchedOutline': {
-                        borderColor: 'rgba(0,0,0,0.1)'
-                      }
-                    }}
-                  />
-                </Stack>
-
-                {/* Phone Number Field */}
-                <Stack spacing={1} mb={3}>
-                  <InputLabel htmlFor="phoneNumber" sx={{ fontWeight: 'medium', color: 'text.primary' }}>
-                    Phone Number*
-                  </InputLabel>
-                  <OutlinedInput
-                    id="phoneNumber"
-                    name="phoneNumber"
-                    placeholder="Enter your phone number"
-                    fullWidth
-                    type="tel"
-                    sx={{
-                      borderRadius: 2,
-                      '& .MuiOutlinedInput-notchedOutline': {
-                        borderColor: 'rgba(0,0,0,0.1)'
-                      }
-                    }}
-                  />
-                </Stack>
-
-                {/* Payment Amount */}
-                <Box
-                  sx={{
-                    backgroundColor: 'rgba(46, 125, 50, 0.1)',
-                    borderRadius: 2,
-                    p: 2,
-                    mb: 3,
-                    textAlign: 'center'
+                <Formik
+                  initialValues={{
+                    name: '',
+                    email: '',
+                    phoneNumber: ''
                   }}
+                  validationSchema={validationSchema}
+                  onSubmit={handleSubmit}
                 >
-                  <Typography variant="body2" color="text.secondary" mb={1}>
-                    Payment Amount
-                  </Typography>
-                  <Typography variant="h4" fontWeight="bold" color="success.dark">
-                    ₹ {paymentPageDetail?.price || '0.00'}
-                  </Typography>
-                </Box>
+                  {({ values, errors, touched, handleChange, handleBlur, handleSubmit, isSubmitting }) => (
+                    <form onSubmit={handleSubmit}>
+                      <Typography variant="h5" fontWeight="bold" gutterBottom color="primary">
+                        Complete Your Payment
+                      </Typography>
+                      <Typography variant="body2" color="text.secondary" mb={3}>
+                        Please fill in your details to proceed
+                      </Typography>
 
-                {/* Submit Button */}
-                <Button
-                  variant="contained"
-                  color="primary"
-                  fullWidth
-                  type="submit"
-                  sx={{
-                    py: 1.5,
-                    borderRadius: 2,
-                    fontWeight: 'bold',
-                    fontSize: '1rem',
-                    textTransform: 'none',
-                    boxShadow: '0 4px 6px rgba(0,0,0,0.1)',
-                    '&:hover': {
-                      boxShadow: '0 6px 8px rgba(0,0,0,0.15)',
-                      transform: 'translateY(-1px)'
-                    },
-                    transition: 'all 0.3s'
-                  }}
-                >
-                  {paymentPageDetail?.buttonText || 'Pay Now'} →
-                </Button>
+                      <Divider sx={{ my: 2, borderColor: 'rgba(0,0,0,0.1)' }} />
 
-                <Typography variant="body2" color="text.secondary" mt={2} textAlign="center">
-                  Secure payment powered by your platform
-                </Typography>
+                      {/* Name Field */}
+                      <Stack spacing={1} mb={3}>
+                        <InputLabel htmlFor="name" sx={{ fontWeight: 'medium', color: 'text.primary' }}>
+                          Full Name*
+                        </InputLabel>
+                        <OutlinedInput
+                          id="name"
+                          name="name"
+                          placeholder="Enter your name"
+                          fullWidth
+                          value={values.name}
+                          onChange={handleChange}
+                          onBlur={handleBlur}
+                          error={touched.name && Boolean(errors.name)}
+                          sx={{
+                            borderRadius: 2,
+                            '& .MuiOutlinedInput-notchedOutline': {
+                              borderColor: 'rgba(0,0,0,0.1)'
+                            }
+                          }}
+                        />
+                        {touched.name && errors.name && <FormHelperText error>{errors.name}</FormHelperText>}
+                      </Stack>
+
+                      {/* Email Field */}
+                      <Stack spacing={1} mb={3}>
+                        <InputLabel htmlFor="email" sx={{ fontWeight: 'medium', color: 'text.primary' }}>
+                          Email Address*
+                        </InputLabel>
+                        <OutlinedInput
+                          id="email"
+                          name="email"
+                          placeholder="Enter your email"
+                          fullWidth
+                          value={values.email}
+                          onChange={handleChange}
+                          onBlur={handleBlur}
+                          error={touched.email && Boolean(errors.email)}
+                          sx={{
+                            borderRadius: 2,
+                            '& .MuiOutlinedInput-notchedOutline': {
+                              borderColor: 'rgba(0,0,0,0.1)'
+                            }
+                          }}
+                        />
+                        {touched.email && errors.email && <FormHelperText error>{errors.email}</FormHelperText>}
+                      </Stack>
+
+                      {/* Phone Number Field */}
+                      <Stack spacing={1} mb={3}>
+                        <InputLabel htmlFor="phoneNumber" sx={{ fontWeight: 'medium', color: 'text.primary' }}>
+                          Phone Number*
+                        </InputLabel>
+                        <OutlinedInput
+                          id="phoneNumber"
+                          name="phoneNumber"
+                          placeholder="Enter your phone number"
+                          fullWidth
+                          type="tel" // Changed back to 'tel' for better mobile keyboard
+                          value={values.phoneNumber}
+                          onChange={(e) => {
+                            // Only allow numbers and limit to 10 digits
+                            const value = e.target.value.replace(/\D/g, '').slice(0, 10);
+                            handleChange({
+                              target: {
+                                name: 'phoneNumber',
+                                value: value
+                              }
+                            });
+                          }}
+                          onBlur={handleBlur}
+                          error={touched.phoneNumber && Boolean(errors.phoneNumber)}
+                          inputProps={{
+                            inputMode: 'numeric', // Shows numeric keyboard on mobile
+                            pattern: '[0-9]*', // Ensures only numbers can be entered
+                            maxLength: 10 // Physical limit
+                          }}
+                          sx={{
+                            borderRadius: 2,
+                            '& .MuiOutlinedInput-notchedOutline': {
+                              borderColor: 'rgba(0,0,0,0.1)'
+                            }
+                          }}
+                        />
+                        {touched.phoneNumber && errors.phoneNumber && <FormHelperText error>{errors.phoneNumber}</FormHelperText>}
+                      </Stack>
+
+                      {/* Payment Amount */}
+                      <Box
+                        sx={{
+                          backgroundColor: 'rgba(46, 125, 50, 0.1)',
+                          borderRadius: 2,
+                          p: 2,
+                          mb: 3,
+                          textAlign: 'center'
+                        }}
+                      >
+                        <Typography variant="body2" color="text.secondary" mb={1}>
+                          Payment Amount
+                        </Typography>
+                        <Typography variant="h4" fontWeight="bold" color="success.dark">
+                          ₹ {paymentPageDetail?.price || '0.00'}
+                        </Typography>
+                      </Box>
+
+                      {/* Submit Button */}
+                      <Button
+                        variant="contained"
+                        color="primary"
+                        fullWidth
+                        type="submit"
+                        disabled={isSubmitting}
+                        sx={{
+                          py: 1.5,
+                          borderRadius: 2,
+                          fontWeight: 'bold',
+                          fontSize: '1rem',
+                          textTransform: 'none',
+                          boxShadow: '0 4px 6px rgba(0,0,0,0.1)',
+                          '&:hover': {
+                            boxShadow: '0 6px 8px rgba(0,0,0,0.15)',
+                            transform: 'translateY(-1px)'
+                          },
+                          transition: 'all 0.3s'
+                        }}
+                      >
+                        {paymentPageDetail?.buttonText || 'Pay Now'} →
+                      </Button>
+
+                      <Typography variant="body2" color="text.secondary" mt={2} textAlign="center">
+                        Secure payment powered by your platform
+                      </Typography>
+                    </form>
+                  )}
+                </Formik>
               </Paper>
             </Fade>
           </Grid>

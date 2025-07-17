@@ -1,5 +1,5 @@
 import { createSlice } from '@reduxjs/toolkit';
-import { countAllPaymentPageByUserNameApi, getPaymentPageDetailByIdApi, getPaymentTablePaginatedApi } from './paymentPageApi';
+import { countAllPaymentPageByUserNameApi, countAllUsersDataByUserNameApi, getAllUsersDataByUserNameApi, getPaymentPageDetailByIdApi, getPaymentTablePaginatedApi } from './paymentPageApi';
 // import { sendOtpApi } from './authApi';
 
 // ----------------------------------------------------------------------
@@ -10,7 +10,12 @@ const initialState = {
   isPaymentTablePaginatedLoading: true,
   paymentList: [],
   paymentListPageSize: 50,
-  paymentPageDetail: {}
+  paymentPageDetail: {},
+  countAllUserData: {},
+  isCountAllUserDataLoading: true,
+  isUserDataPaginatedLoading: true,
+  userDataList: [],
+  userDataListPageSize: 50,
 };
 
 const slice = createSlice({
@@ -40,6 +45,26 @@ const slice = createSlice({
     });
     builder.addCase(getPaymentPageDetailByIdApi.fulfilled, (state, action) => {
       state.paymentPageDetail = action.payload;
+    });
+    builder.addCase(countAllUsersDataByUserNameApi.pending, (state, action) => {
+      state.isCountAllUserDataLoading = true;
+    });
+    builder.addCase(countAllUsersDataByUserNameApi.fulfilled, (state, action) => {
+      state.isCountAllUserDataLoading = false;
+      state.countAllUserData = action.payload;
+    });
+    builder.addCase(countAllUsersDataByUserNameApi.rejected, (state, action) => {
+      state.isCountAllUserDataLoading = false;
+    });
+    builder.addCase(getAllUsersDataByUserNameApi.pending, (state, action) => {
+      state.isUserDataPaginatedLoading = false;
+    });
+    builder.addCase(getAllUsersDataByUserNameApi.fulfilled, (state, action) => {
+      state.isUserDataPaginatedLoading = true;
+      state.userDataList = action.payload;
+    });
+    builder.addCase(getAllUsersDataByUserNameApi.rejected, (state, action) => {
+      state.isUserDataPaginatedLoading = false;
     });
   }
 });

@@ -17,6 +17,8 @@ import UserTable from '../dashboard/UserTable';
 import ReactPaginate from 'react-paginate';
 import { toUpper } from 'lodash';
 import { getAllUserCountsApi, getAllUserDataApi } from '../../store/auth/authApi';
+import { countAllUsersDataByUserNameApi, getAllUsersDataByUserNameApi } from '../../store/payment-page/paymentPageApi';
+import UserDataTable from './UserDataTable';
 
 // ==============================|| SAMPLE PAGE ||============================== //
 
@@ -28,8 +30,12 @@ export default function DashboardDefault() {
   const [tabValue, setValue] = useState('active');
   const [forcePage, setForcePage] = useState(0);
   const [itemOffset, setItemOffset] = useState(0);
-  const { selectedUserDetails } = useSelector(({ authReducer }) => authReducer);
-  const { allUsersCount, isCountUserLoading, allUserData, isUserDataLoading, userPageSize } = useSelector(({ authReducer }) => authReducer);
+  const { selectedUserDetails, allUsersCount, isCountUserLoading, allUserData, isUserDataLoading, userPageSize } = useSelector(
+    ({ authReducer }) => authReducer
+  );
+  const { isCountAllUserDataLoading, countAllUserData, userDataList, isUserDataPaginatedLoading, userDataListPageSize } = useSelector(
+    ({ paymentPageReducer }) => paymentPageReducer
+  );
   const [status, setStatus] = useState(false);
 
   const handleChange = (event, newValue) => {
@@ -42,6 +48,10 @@ export default function DashboardDefault() {
       if (selectedUserDetails?.role === 'ADMIN') {
         await dispatch(getAllUserCountsApi());
         await getAllUserDetailsPaginated();
+      } else {
+        console.log('asfmkewmnk');
+        await dispatch(countAllUsersDataByUserNameApi({ userName: selectedUserDetails?.userName }));
+        await getAllUserDataPaginated();
       }
     };
     fetchData();
@@ -71,6 +81,8 @@ export default function DashboardDefault() {
   useEffect(() => {
     if (selectedUserDetails?.role === 'ADMIN') {
       getAllUserDetailsPaginated();
+    } else {
+      getAllUserDataPaginated();
     }
   }, [itemOffset]);
 
@@ -88,6 +100,19 @@ export default function DashboardDefault() {
     };
     try {
       await dispatch(getAllUserDataApi(data));
+    } catch (error) {
+      console.log(error);
+    }
+  };
+
+  const getAllUserDataPaginated = async () => {
+    const data = {
+      pageNo: itemOffset,
+      pageSize: userDataListPageSize,
+      userName: selectedUserDetails?.userName
+    };
+    try {
+      await dispatch(getAllUsersDataByUserNameApi(data));
     } catch (error) {
       console.log(error);
     }
@@ -162,16 +187,52 @@ export default function DashboardDefault() {
             </Button>
           </AnimateButton>
         </div> */}
-        <Grid container rowSpacing={4.5} columnSpacing={2.75} mt={1}>
-          <Grid item xs={12} sm={12} md={3} lg={3}>
-            <AnalyticsEachNumberData
-              title="Total Users Pages"
-              number={allUsersCount?.total}
-              loading={isCountUserLoading}
-              sx={{ backgroundColor: '#74CAFF' }}
-            />
+        {selectedUserDetails?.role === 'ADMIN' ? (
+          <Grid container rowSpacing={4.5} columnSpacing={2.75} mt={1}>
+            <Grid item xs={12} sm={12} md={3} lg={3}>
+              <AnalyticsEachNumberData
+                title="Total Users Pages"
+                number={allUsersCount?.total}
+                loading={isCountUserLoading}
+                sx={{ backgroundColor: '#74CAFF' }}
+              />
+            </Grid>
+            <Grid item xs={12} sm={12} md={3} lg={3}>
+              <AnalyticsEachNumberData
+                title="Total Active Users"
+                number={allUsersCount?.active}
+                loading={isCountUserLoading}
+                sx={{ backgroundColor: '#5BE584' }}
+              />
+            </Grid>
+            <Grid item xs={12} sm={12} md={3} lg={3}>
+              <AnalyticsEachNumberData
+                title="Total In-Active Users"
+                number={allUsersCount?.inActive}
+                loading={isCountUserLoading}
+                sx={{ backgroundColor: '#ffe704' }}
+              />
+            </Grid>
+            <Grid item xs={12} sm={12} md={3} lg={3}>
+              <AnalyticsEachNumberData
+                title="Total Rejected Users"
+                number={allUsersCount?.rejected}
+                loading={isCountUserLoading}
+                sx={{ backgroundColor: '#ffe704' }}
+              />
+            </Grid>
           </Grid>
-          <Grid item xs={12} sm={12} md={3} lg={3}>
+        ) : (
+          <Grid container rowSpacing={4.5} columnSpacing={2.75} mt={1}>
+            <Grid item xs={12} sm={12} md={12} lg={12}>
+              <AnalyticsEachNumberData
+                title="Total Users"
+                number={countAllUserData?.total}
+                loading={isCountAllUserDataLoading}
+                sx={{ backgroundColor: '#74CAFF' }}
+              />
+            </Grid>
+            {/* <Grid item xs={12} sm={12} md={3} lg={3}>
             <AnalyticsEachNumberData
               title="Total Active Users"
               number={allUsersCount?.active}
@@ -194,30 +255,39 @@ export default function DashboardDefault() {
               loading={isCountUserLoading}
               sx={{ backgroundColor: '#ffe704' }}
             />
+          </Grid> */}
           </Grid>
-        </Grid>
+        )}
         <Card sx={{ marginTop: '16px' }}>
-          <Box sx={{ borderBottom: 1, borderColor: 'divider' }}>
-            <Tabs
-              value={tabValue}
-              onChange={handleChange}
-              variant={isDesktop ? 'fullWidth' : 'scrollable'}
-              scrollButtons="auto"
-              sx={{
-                '& .MuiTabs-flexContainer': {
-                  flexWrap: 'wrap',
-                  justifyContent: 'space-evenly'
-                }
-              }}
-            >
-              <Tab label="Active" icon={<InsertInvitationRoundedIcon />} iconPosition="start" value="active" />
-              <Tab label="InActive" icon={<TodayRoundedIcon />} iconPosition="start" value="inActive" />
-              <Tab label="Rejected" icon={<TodayRoundedIcon />} iconPosition="start" value="rejected" />
-            </Tabs>
-          </Box>
-          <Scrollbar>
-            <UserTable allUserData={allUserData} selectedTab={tabValue} isUserDataLoading={isUserDataLoading} setStatus={setStatus} />
-          </Scrollbar>
+          {selectedUserDetails?.role === 'ADMIN' ? (
+            <>
+              <Box sx={{ borderBottom: 1, borderColor: 'divider' }}>
+                <Tabs
+                  value={tabValue}
+                  onChange={handleChange}
+                  variant={isDesktop ? 'fullWidth' : 'scrollable'}
+                  scrollButtons="auto"
+                  sx={{
+                    '& .MuiTabs-flexContainer': {
+                      flexWrap: 'wrap',
+                      justifyContent: 'space-evenly'
+                    }
+                  }}
+                >
+                  <Tab label="Active" icon={<InsertInvitationRoundedIcon />} iconPosition="start" value="active" />
+                  <Tab label="InActive" icon={<TodayRoundedIcon />} iconPosition="start" value="inActive" />
+                  <Tab label="Rejected" icon={<TodayRoundedIcon />} iconPosition="start" value="rejected" />
+                </Tabs>
+              </Box>
+              <Scrollbar>
+                <UserTable allUserData={allUserData} selectedTab={tabValue} isUserDataLoading={isUserDataLoading} setStatus={setStatus} />
+              </Scrollbar>
+            </>
+          ) : (
+            <Scrollbar>
+              <UserDataTable userDataList={userDataList} isUserDataPaginatedLoading={isUserDataPaginatedLoading} />
+            </Scrollbar>
+          )}
         </Card>
         <Card sx={{ borderTopLeftRadius: '0px', borderTopRightRadius: '0px' }}>
           <ReactPaginate
