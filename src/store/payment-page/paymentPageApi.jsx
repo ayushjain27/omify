@@ -40,6 +40,7 @@ export const createPaymentApi = createAsyncThunk('store/createPaymentApi', async
 
 export const uploadThumbnailApi = createAsyncThunk('store/uploadThumbnailApi', async (params, thunkApi) => {
   try {
+    console.log(params,"Dwlkmfkl")
     const response = await axios.request({
       url: `${urls.uploadThumbnail}`,
       method: 'post',
@@ -49,6 +50,7 @@ export const uploadThumbnailApi = createAsyncThunk('store/uploadThumbnailApi', a
       }
     });
     const data = await response.data;
+    console.log(response.data,"dweklmlk")
 
     if (data?.message) {
       return data;
