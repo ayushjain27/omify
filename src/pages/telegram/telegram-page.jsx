@@ -14,7 +14,6 @@ import TodayRoundedIcon from '@mui/icons-material/TodayRounded';
 import { useDispatch, useSelector } from 'react-redux';
 import { countAllPaymentPageByUserNameApi, getPaymentTablePaginatedApi } from '../../store/payment-page/paymentPageApi';
 import Scrollbar from '../../components/Scrollbar';
-import PaymentTable from '../dashboard/PaymentTable';
 import ReactPaginate from 'react-paginate';
 import { toUpper } from 'lodash';
 
@@ -194,13 +193,13 @@ export default function TelegramPage() {
               <Tab label="InActive" icon={<TodayRoundedIcon />} iconPosition="start" value="inActive" />
             </Tabs>
           </Box>
-          <Scrollbar>
+          {/* <Scrollbar>
             <PaymentTable
               paymentList={paymentList}
               selectedTab={tabValue}
               isPaymentTablePaginatedLoading={isPaymentTablePaginatedLoading}
             />
-          </Scrollbar>
+          </Scrollbar> */}
         </Card>
         <Card sx={{ borderTopLeftRadius: '0px', borderTopRightRadius: '0px' }}>
           <ReactPaginate
