@@ -193,7 +193,8 @@ export default function PaymentTable(props) {
       navigate('/userProfile', { replace: true }); // Add leading slash and replace option
     } else {
       // Construct the URL to copy
-      const linkToCopy = `http://localhost:3000/contentPage?id=${data?.id || 'dmkemkd'}`;
+      // const linkToCopy = `http://localhost:3000/contentPage?id=${data?.id || 'dmkemkd'}`;
+      const linkToCopy = `https://omify.vercel.app/contentPage?id=${data?.id || 'dmkemkd'}`;
 
       // Copy to clipboard
       navigator.clipboard
