@@ -160,25 +160,35 @@ export default function PaymentTable(props) {
     </div>
   );
   const actionCellRenderer = (data) => {
-    if (data?.status === 'ACTIVE') {
-      return (
-        <Box sx={{ display: 'flex', flexDirection: 'row', justifyContent: 'space-evenly', alignItems: 'center' }}>
-          <Tooltip title="Copy Link">
-            <IconButton onClick={() => data?.copyLink(data)}>
-              <ContentCopyIcon fontSize="small" sx={{ color: '#05acc1' }} />
-            </IconButton>
-          </Tooltip>
-        </Box>
-      );
-    }
+    return (
+      <Box sx={{ display: 'flex', flexDirection: 'row', justifyContent: 'space-evenly', alignItems: 'center' }}>
+        <Tooltip title="Copy Link">
+          <IconButton
+            onClick={() => {
+              if (data?.accountNumber) {
+                navigate('/userProfile');
+              } else if(data?.status === "INACTIVE") {
+                enqueueSnackbar('Payment Page is Inactive', {
+                  variant: 'error'
+                });
+              } else{
+                data?.copyLink(data);
+              }
+            }}
+          >
+            <ContentCopyIcon fontSize="small" sx={{ color: '#05acc1' }} />
+          </IconButton>
+        </Tooltip>
+      </Box>
+    );
     // Return null or an empty fragment if the condition isn't met
-    return null;
+    // return null;
   };
 
   const copyLink = (data) => {
     if (!selectedUserDetails?.adhaarCardNumber && selectedUserDetails?.role === 'USER') {
       enqueueSnackbar('Please update your kyc Details', {
-        variant: 'error'
+        variant: 'success'
       });
       navigate('/userProfile', { replace: true }); // Add leading slash and replace option
     } else {

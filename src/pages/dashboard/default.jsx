@@ -49,7 +49,6 @@ export default function DashboardDefault() {
         await dispatch(getAllUserCountsApi());
         await getAllUserDetailsPaginated();
       } else {
-        console.log('asfmkewmnk');
         await dispatch(countAllUsersDataByUserNameApi({ userName: selectedUserDetails?.userName }));
         await getAllUserDataPaginated();
       }

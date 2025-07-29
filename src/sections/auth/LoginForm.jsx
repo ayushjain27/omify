@@ -1,7 +1,7 @@
 import * as Yup from 'yup';
 import { useState } from 'react';
 import { useSnackbar } from 'notistack';
-import _ from 'lodash';
+import _, { isEmpty } from 'lodash';
 import { useNavigate } from 'react-router-dom';
 import { useFormik, Form, FormikProvider } from 'formik';
 import { 
@@ -105,23 +105,28 @@ export default function LoginForm() {
       let token = localStorage.setItem('accessToken', response.token);
       let result = await dispatch(getUserDataByUserNameApi({ token: response.token }));
       result = unwrapResult(result);
+      console.log(result,"result")
       setOtpLoading(false);
       if (result?.role === 'USER') {
-        if (result?.name) {
+        console.log(result?.name,"dwmekf")
+        if (result?.name && result?.name.trim() !== '') {
+          console.log("mskdfmer")
           setIsAuthenticated(true);
           setCheckUserProfile(false);
           navigate('/dashboard/default');
         } else {
+          console.log("fmkejwnj")
           setCheckUserProfile(true);
+          setIsAuthenticated(false);
           navigate('/userLoginProfile');
           enqueueSnackbar('Please complete your profile', {
             variant: 'success'
           });
         }
       }
-      setIsAuthenticated(true);
-      setCheckUserProfile(false);
-      navigate('/dashboard/default');
+      // setIsAuthenticated(true);
+      // setCheckUserProfile(false);
+      // navigate('/dashboard/default');
     } else {
       enqueueSnackbar('User Does not exists, Enter user Id to login', {
         variant: 'error'

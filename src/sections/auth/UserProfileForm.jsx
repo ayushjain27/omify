@@ -11,6 +11,7 @@ import { unwrapResult } from '@reduxjs/toolkit';
 import { useAuth } from '../../context/AuthContext';
 import { nameSalOpts, socialLinkOpts } from '../../utils/constant';
 import { CheckCircleOutline, Person, Phone, Link as LinkIcon } from '@mui/icons-material';
+import { useNavigate } from 'react-router';
 
 export default function UserProfileForm() {
   const theme = useTheme();
@@ -19,6 +20,8 @@ export default function UserProfileForm() {
   const [socialLinkVisible, setSocialLinkVisible] = useState(true);
   const { selectedUserDetails } = useSelector(({ authReducer }) => authReducer);
   const { setIsAuthenticated, setCheckUserProfile } = useAuth();
+  const dispatch = useDispatch();
+  const navigate = useNavigate();
 
   const UserProfileSchema = Yup.object().shape({
     name: Yup.string().required('Please enter a name'),

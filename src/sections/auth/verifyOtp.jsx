@@ -62,7 +62,6 @@ export default function VerifyOtp() {
               console.log('API request successful:', response.data);
               const omifyPhoneNumber = await localStorage.setItem('omifyUserPhoneNumber', response.data.phoneNumber)
               setIsAuthenticated(true);
-              navigate('/dashboard/default');
             } else {
               console.error('API request failed with status:', response.status);
             }
