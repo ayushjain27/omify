@@ -16,6 +16,7 @@ import { countAllPaymentPageByUserNameApi, getPaymentTablePaginatedApi } from '.
 import Scrollbar from '../../components/Scrollbar';
 import ReactPaginate from 'react-paginate';
 import { toUpper } from 'lodash';
+import TelegramVerificationModal from './telegram-verification-modal';
 
 // ==============================|| SAMPLE PAGE ||============================== //
 
@@ -31,9 +32,27 @@ export default function TelegramPage() {
   const { countAllPaymentPage, isCountAllPaymentPageLoading, paymentList, isPaymentTablePaginatedLoading, paymentListPageSize } =
     useSelector(({ paymentPageReducer }) => paymentPageReducer);
 
+  const [showVerificationModal, setShowVerificationModal] = useState(false);
 
   const handleNavigation = () => {
-    navigate('/create-telegram-page');
+    // Check if user is already verified with Telegram
+    checkTelegramVerification();
+  };
+
+  const checkTelegramVerification = async () => {
+    try {
+      const response = await axios.get(`/api/telegram/groups/${selectedUserDetails?.id}`);
+      if (response.data.success) {
+        // User is already verified, navigate to create page
+        navigate('/create-telegram-page');
+      } else {
+        // User needs to verify Telegram
+        setShowVerificationModal(true);
+      }
+    } catch (error) {
+      // Assume user needs verification if API fails
+      setShowVerificationModal(true);
+    }
   };
 
   const handleUpdateKyc = () => {
@@ -139,6 +158,11 @@ export default function TelegramPage() {
     document.head.appendChild(style);
   };
 
+  const handleVerificationComplete = (groups) => {
+    setShowVerificationModal(false);
+    navigate('/create-telegram-page');
+  };
+
   return (
     <>
       <div style={{ margin: '0px' }}>
@@ -149,6 +173,11 @@ export default function TelegramPage() {
             </Button>
           </AnimateButton>
         </div>
+        <TelegramVerificationModal
+          open={showVerificationModal}
+          onClose={() => setShowVerificationModal(false)}
+          onVerificationComplete={handleVerificationComplete}
+        />
         <Grid container rowSpacing={4.5} columnSpacing={2.75} mt={1}>
           <Grid item xs={12} sm={12} md={4} lg={4}>
             <AnalyticsEachNumberData
