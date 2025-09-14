@@ -16,24 +16,32 @@ import {
   Grid,
   Card,
   CardContent,
-  Alert
+  Alert,
+  MenuItem,
+  Select,
+  FormControl,
+  InputLabel
 } from '@mui/material';
 import { useDispatch } from 'react-redux';
-import { telegramSendOtpApi, telegramVerifyOtpApi, telegramVerify2FAApi } from '../../store/telegram/telegramApi';
+import { telegramSendOtpApi, telegramVerifyOtpApi, telegramCreateChannelApi } from '../../store/telegram/telegramApi';
 import { unwrapResult } from '@reduxjs/toolkit';
+import { useNavigate } from 'react-router-dom';
 
 const TelegramVerificationModal = ({ open, onClose, onVerificationComplete }) => {
   const [activeStep, setActiveStep] = useState(0);
   const [phoneNumber, setPhoneNumber] = useState('');
   const [otp, setOtp] = useState('');
-  const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
-  const [requires2FA, setRequires2FA] = useState(false);
   const [channels, setChannels] = useState([]);
   const [verified, setVerified] = useState(false);
+  const [selectedChannel, setSelectedChannel] = useState('');
+  const [newChannelName, setNewChannelName] = useState('');
+  const [newChannelDescription, setNewChannelDescription] = useState('');
+  const [creatingChannel, setCreatingChannel] = useState(false);
   const dispatch = useDispatch();
+  const navigate = useNavigate();
 
   useEffect(() => {
     if (!open) {
@@ -41,13 +49,15 @@ const TelegramVerificationModal = ({ open, onClose, onVerificationComplete }) =>
       setActiveStep(0);
       setPhoneNumber('');
       setOtp('');
-      setPassword('');
       setLoading(false);
       setError('');
       setSuccess('');
-      setRequires2FA(false);
       setChannels([]);
       setVerified(false);
+      setSelectedChannel('');
+      setNewChannelName('');
+      setNewChannelDescription('');
+      setCreatingChannel(false);
     }
   }, [open]);
 
@@ -56,17 +66,17 @@ const TelegramVerificationModal = ({ open, onClose, onVerificationComplete }) =>
       setLoading(true);
       setError('');
       setSuccess('');
-      
+
       const data = { phoneNumber };
       const response = await dispatch(telegramSendOtpApi(data));
       const result = unwrapResult(response);
-      
+
       if (result.success) {
         if (result.verified && result.hasSession) {
           // User already has an active session
           setVerified(true);
           setChannels(result.channels || []);
-          setActiveStep(2);
+          setActiveStep(2); // Skip to channel selection step
           setSuccess('Welcome back! You are already logged in.');
         } else {
           // New OTP sent
@@ -88,24 +98,17 @@ const TelegramVerificationModal = ({ open, onClose, onVerificationComplete }) =>
       setLoading(true);
       setError('');
       setSuccess('');
-      
+
       const data = { phoneNumber, otp };
       const response = await dispatch(telegramVerifyOtpApi(data));
       const result = unwrapResult(response);
-      
+
       if (result.success) {
         // Successful verification
         setVerified(true);
         setChannels(result.channels || []);
-        setActiveStep(2);
+        setActiveStep(2); // Move to channel selection step
         setSuccess('Login successful!');
-        if (onVerificationComplete) {
-          onVerificationComplete(result.channels || []);
-        }
-      } else if (result.requires2FA) {
-        // 2FA required
-        setRequires2FA(true);
-        setSuccess('Two-factor authentication is enabled. Please provide your password.');
       } else {
         setError(result.message || 'Failed to verify OTP');
       }
@@ -116,36 +119,72 @@ const TelegramVerificationModal = ({ open, onClose, onVerificationComplete }) =>
     }
   };
 
-  const handleVerify2FA = async () => {
+  const handleCreateChannel = async () => {
     try {
       setLoading(true);
       setError('');
       setSuccess('');
+
+      const data = { 
+        phoneNumber, 
+        channelName: newChannelName, 
+        channelDescription: newChannelDescription,
+        isPublic: true
+      };
+
+      console.log(data,"d;lwekm")
       
-      const data = { phoneNumber, password };
-      const response = await dispatch(telegramVerify2FAApi(data));
+      const response = await dispatch(telegramCreateChannelApi(data));
       const result = unwrapResult(response);
-      
+
       if (result.success) {
-        // Successful 2FA verification
-        setVerified(true);
-        setChannels(result.channels || []);
-        setActiveStep(2);
-        setSuccess('Login successful!');
-        if (onVerificationComplete) {
-          onVerificationComplete(result.channels || []);
-        }
+        setSuccess('Channel created successfully!');
+        
+        // Add the new channel to the channels list
+        const updatedChannels = [...channels, result.channel];
+        setChannels(updatedChannels);
+        
+        // Select the newly created channel
+        setSelectedChannel(result.channel.id);
+        
+        // Navigate to telegram page with the new channel
+        navigateToTelegramPage(result.channel);
       } else {
-        setError(result.message || 'Failed to verify password');
+        setError(result.message || 'Failed to create channel');
       }
     } catch (error) {
-      setError(error.message || 'Failed to verify password');
+      setError(error.message || 'Failed to create channel');
     } finally {
       setLoading(false);
     }
   };
 
-  const steps = ['Enter Phone Number', 'Verify Authentication', 'Your Channels'];
+  const handleSelectChannel = () => {
+    if (!selectedChannel) {
+      setError('Please select a channel');
+      return;
+    }
+    
+    const channel = channels.find(c => c.id === selectedChannel);
+    if (channel) {
+      navigateToTelegramPage(channel);
+    }
+  };
+
+  const navigateToTelegramPage = (channel) => {
+    // Close the modal
+    onClose();
+    
+    // Navigate to telegram page with channel data
+    navigate('/telegram', { state: { channel } });
+    
+    // Call the completion callback if provided
+    if (onVerificationComplete) {
+      onVerificationComplete(channel);
+    }
+  };
+
+  const steps = ['Enter Phone Number', 'Verify Authentication', 'Select Channel'];
 
   const renderStepContent = () => {
     switch (activeStep) {
@@ -166,84 +205,94 @@ const TelegramVerificationModal = ({ open, onClose, onVerificationComplete }) =>
             />
           </Box>
         );
-      
+
       case 1:
-        if (requires2FA) {
-          return (
-            <Box>
-              <Typography variant="body2" sx={{ mb: 2 }}>
-                Two-factor authentication is enabled. Please enter your password.
-              </Typography>
-              <TextField
-                fullWidth
-                label="Password"
-                type="password"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                disabled={loading}
-                sx={{ mb: 2 }}
-              />
-            </Box>
-          );
-        } else {
-          return (
-            <Box>
-              <Typography variant="body2" sx={{ mb: 2 }}>
-                Enter the OTP sent to your Telegram account
-              </Typography>
-              <TextField
-                fullWidth
-                label="OTP"
-                value={otp}
-                onChange={(e) => setOtp(e.target.value)}
-                disabled={loading}
-                sx={{ mb: 2 }}
-              />
-            </Box>
-          );
-        }
-      
-      case 2:
         return (
           <Box>
             <Typography variant="body2" sx={{ mb: 2 }}>
-              Your Telegram channels and groups:
+              Enter the OTP sent to your Telegram account
+            </Typography>
+            <TextField 
+              fullWidth 
+              label="OTP" 
+              value={otp} 
+              onChange={(e) => setOtp(e.target.value)} 
+              disabled={loading} 
+              sx={{ mb: 2 }} 
+            />
+          </Box>
+        );
+
+      case 2:
+        return (
+          <Box>
+            <Typography variant="h6" sx={{ mb: 2 }}>
+              {creatingChannel ? 'Create New Channel' : 'Select a Channel'}
             </Typography>
 
-            {channels.length > 0 ? (
-              <Grid container spacing={2}>
-                {channels.map((channel) => (
-                  <Grid item xs={12} sm={6} key={channel.id}>
-                    <Card variant="outlined">
-                      <CardContent>
-                        <Typography variant="h6">{channel.title}</Typography>
-                        <Typography variant="body2" color="textSecondary">
-                          Type: {channel.type}
-                        </Typography>
-                        <Typography variant="body2" color="textSecondary">
-                          Members: {channel.memberCount}
-                        </Typography>
-                        <Typography variant="body2" color="textSecondary">
-                          {channel.isAdmin ? (channel.isCreator ? 'Creator' : 'Admin') : 'Member'}
-                        </Typography>
-                        {channel.username && (
-                          <Typography variant="body2" color="textSecondary">
-                            @{channel.username}
-                          </Typography>
-                        )}
-                      </CardContent>
-                    </Card>
-                  </Grid>
-                ))}
-              </Grid>
+            {!creatingChannel ? (
+              <>
+                {channels.length > 0 ? (
+                  <FormControl fullWidth sx={{ mb: 2 }}>
+                    <InputLabel>Select Channel</InputLabel>
+                    <Select
+                      value={selectedChannel}
+                      onChange={(e) => setSelectedChannel(e.target.value)}
+                      label="Select Channel"
+                    >
+                      {channels.map((channel) => (
+                        <MenuItem key={channel.id} value={channel.id}>
+                          {channel.title} ({channel.memberCount} members)
+                        </MenuItem>
+                      ))}
+                    </Select>
+                  </FormControl>
+                ) : (
+                  <Typography variant="body2" color="textSecondary" sx={{ mb: 2 }}>
+                    No channels found. Please create a new channel.
+                  </Typography>
+                )}
+                
+                <Button 
+                  variant="outlined" 
+                  onClick={() => setCreatingChannel(true)}
+                  sx={{ mb: 2 }}
+                >
+                  Create New Channel
+                </Button>
+              </>
             ) : (
-              <Typography variant="body2" color="textSecondary">
-                No channels or groups found.
-              </Typography>
+              <>
+                <TextField
+                  fullWidth
+                  label="Channel Name"
+                  value={newChannelName}
+                  onChange={(e) => setNewChannelName(e.target.value)}
+                  disabled={loading}
+                  sx={{ mb: 2 }}
+                />
+                <TextField
+                  fullWidth
+                  label="Channel Description"
+                  value={newChannelDescription}
+                  onChange={(e) => setNewChannelDescription(e.target.value)}
+                  disabled={loading}
+                  multiline
+                  rows={3}
+                  sx={{ mb: 2 }}
+                />
+                <Button 
+                  variant="outlined" 
+                  onClick={() => setCreatingChannel(false)}
+                  sx={{ mr: 1 }}
+                >
+                  Back to Channel Selection
+                </Button>
+              </>
             )}
           </Box>
         );
-      
+
       default:
         return null;
     }
@@ -253,45 +302,41 @@ const TelegramVerificationModal = ({ open, onClose, onVerificationComplete }) =>
     switch (activeStep) {
       case 0:
         return (
-          <Button 
-            onClick={handleSendOtp} 
-            variant="contained" 
-            disabled={!phoneNumber || loading}
-          >
+          <Button onClick={handleSendOtp} variant="contained" disabled={!phoneNumber || loading}>
             {loading ? <CircularProgress size={24} /> : 'Send OTP'}
           </Button>
         );
-      
+
       case 1:
-        if (requires2FA) {
-          return (
-            <Button 
-              onClick={handleVerify2FA} 
-              variant="contained" 
-              disabled={!password || loading}
-            >
-              {loading ? <CircularProgress size={24} /> : 'Verify Password'}
-            </Button>
-          );
-        } else {
-          return (
-            <Button 
-              onClick={handleVerifyOtp} 
-              variant="contained" 
-              disabled={!otp || loading}
-            >
-              {loading ? <CircularProgress size={24} /> : 'Verify OTP'}
-            </Button>
-          );
-        }
-      
-      case 2:
         return (
-          <Button onClick={onClose} variant="contained">
-            Done
+          <Button onClick={handleVerifyOtp} variant="contained" disabled={!otp || loading}>
+            {loading ? <CircularProgress size={24} /> : 'Verify OTP'}
           </Button>
         );
-      
+
+      case 2:
+        return (
+          <Box sx={{ display: 'flex', gap: 1 }}>
+            {creatingChannel ? (
+              <Button 
+                onClick={handleCreateChannel} 
+                variant="contained" 
+                disabled={!newChannelName || loading}
+              >
+                {loading ? <CircularProgress size={24} /> : 'Create Channel'}
+              </Button>
+            ) : (
+              <Button 
+                onClick={handleSelectChannel} 
+                variant="contained" 
+                disabled={!selectedChannel || loading}
+              >
+                Select Channel
+              </Button>
+            )}
+          </Box>
+        );
+
       default:
         return null;
     }
