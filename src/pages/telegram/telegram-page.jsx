@@ -160,7 +160,9 @@ export default function TelegramPage() {
 
   const handleVerificationComplete = (groups) => {
     setShowVerificationModal(false);
-    navigate('/create-telegram-page');
+    console.log(groups,"De;lkm")
+    navigate('/create-telegram-page', { state: { channel: groups } }); // Note: channel is inside an object
+    // navigate('/create-telegram-page');
   };
 
   return (

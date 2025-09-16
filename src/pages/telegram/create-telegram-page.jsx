@@ -1,5 +1,5 @@
 // material-ui
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   Box,
   Typography,
@@ -14,14 +14,20 @@ import {
   Stack,
   InputLabel,
   OutlinedInput,
-  Avatar
+  Avatar,
+  FormControl,
+  Select,
+  Chip,
+  Radio,
+  RadioGroup,
+  FormControlLabel
 } from '@mui/material';
-import { CloudUpload } from '@mui/icons-material';
+import { CloudUpload, Add, Delete } from '@mui/icons-material';
 import PictureAsPdfIcon from '@mui/icons-material/PictureAsPdf';
 import DescriptionIcon from '@mui/icons-material/Description';
 import TableChartIcon from '@mui/icons-material/TableChart';
 import axios from 'axios';
-import { useNavigate } from 'react-router';
+import { useLocation, useNavigate } from 'react-router';
 
 // project imports
 import { useDispatch, useSelector } from 'react-redux';
@@ -40,6 +46,7 @@ export default function CreateTelegramPage() {
   const [anyPreview, setAnyPreview] = useState(null);
   const [fileType, setFileType] = useState('');
   const [uploading, setUploading] = useState(false);
+  const [selectedPlan, setSelectedPlan] = useState('');
   const { enqueueSnackbar, closeSnackbar } = useSnackbar();
 
   const handlePriceTypeChange = (event) => {
@@ -53,14 +60,97 @@ export default function CreateTelegramPage() {
     pageTitle: '',
     category: 'Finance',
     description: '',
-    buttonText: 'Make Payment',
+    buttonText: 'Join Now',
     phoneNumber: '',
-    link: ''
+    link: '',
+    plans: []
+  });
+
+  // Plan management state
+  const [newPlan, setNewPlan] = useState({
+    duration: 1,
+    durationType: 'day',
+    price: '',
+    discount: 0
   });
 
   const dispatch = useDispatch();
-
   const navigate = useNavigate();
+  const location = useLocation();
+  
+  // Get channel data from navigation state
+  console.log(location,"locarion")
+  const channel = location.state?.channel;
+  
+  // Log channel data for debugging
+  useEffect(() => {
+    console.log("Channel data received:", channel);
+    
+    // If channel data is available, pre-fill the form
+    if (channel) {
+      setData(prevData => ({
+        ...prevData,
+        pageTitle: channel.title || channel.name || '',
+        description: `Join ${channel.title || channel.name} for exclusive content`
+      }));
+    }
+  }, [channel]);
+
+  const handleAddPlan = () => {
+    if (!newPlan.price) {
+      enqueueSnackbar('Please enter a price for the plan', { variant: 'error' });
+      return;
+    }
+
+    const planId = Date.now();
+    const plan = {
+      id: planId,
+      duration: newPlan.duration,
+      durationType: newPlan.durationType,
+      price: parseFloat(newPlan.price),
+      discount: parseFloat(newPlan.discount) || 0
+    };
+
+    setData((prevData) => ({
+      ...prevData,
+      plans: [...prevData.plans, plan]
+    }));
+
+    // Reset new plan form
+    setNewPlan({
+      duration: 1,
+      durationType: 'day',
+      price: '',
+      discount: 0
+    });
+
+    enqueueSnackbar('Plan added successfully', { variant: 'success' });
+  };
+
+  const handleRemovePlan = (planId) => {
+    setData((prevData) => ({
+      ...prevData,
+      plans: prevData.plans.filter((plan) => plan.id !== planId)
+    }));
+
+    // If the removed plan was selected, clear selection
+    if (selectedPlan === planId.toString()) {
+      setSelectedPlan('');
+    }
+  };
+
+  const calculateFinalPrice = (price, discount) => {
+    return price - (price * discount) / 100;
+  };
+
+  const formatPlanLabel = (plan) => {
+    const durationText =
+      plan.duration === 1
+        ? plan.durationType.toUpperCase()
+        : `${plan.duration} ${plan.durationType.toUpperCase()}${plan.duration > 1 ? 'S' : ''}`;
+
+    return durationText;
+  };
 
   const handleSubmit = async () => {
     if (!file) {
@@ -76,20 +166,23 @@ export default function CreateTelegramPage() {
       return;
     }
     if (!data?.description) {
-      enqueueSnackbar('Please select a Page Desciption.', {
+      enqueueSnackbar('Please select a Page Description.', {
         variant: 'error'
       });
       return;
     }
-    if (!data?.price) {
-      enqueueSnackbar('Please select a Price.', {
+    if (data.plans.length === 0) {
+      enqueueSnackbar('Please add at least one plan.', {
         variant: 'error'
       });
       return;
     }
+
     const requestData = {
       ...data,
-      userName: selectedUserDetails?.userName
+      userName: selectedUserDetails?.userName,
+      channelId: channel?.id, // Include channel ID if available
+      channelName: channel?.title || channel?.name // Include channel name
     };
     let response = await dispatch(createPaymentApi(requestData));
     response = unwrapResult(response);
@@ -127,8 +220,6 @@ export default function CreateTelegramPage() {
     }
     setAnyFile(selectedFile);
     setFileType(fileExt);
-
-    // handleUpload(file);
 
     // Create a preview
     if (fileType.startsWith('image/') || fileExt === 'mp4') {
@@ -230,8 +321,6 @@ export default function CreateTelegramPage() {
     }
   };
 
-  console.log(anyFile, ';fmkmekfke');
-
   const handleUpload = async (paymentPageId) => {
     const formData = new FormData();
     formData.append('paymentPageId', paymentPageId);
@@ -288,18 +377,17 @@ export default function CreateTelegramPage() {
       <Box
         sx={{
           height: '100vh',
-          overflow: 'hidden', // Prevent scrolling
+          overflow: 'hidden',
           display: 'flex',
           flexDirection: 'column'
         }}
       >
-        {/* Header */}
         <Grid
           container
           spacing={2}
           sx={{
-            flex: 1, // Takes remaining space
-            overflow: 'hidden' // Prevent scrolling
+            flex: 1,
+            overflow: 'hidden'
           }}
         >
           <Grid
@@ -308,51 +396,37 @@ export default function CreateTelegramPage() {
             md={4}
             sx={{
               height: '100%',
-              overflow: 'auto', // Enable scrolling only inside this column
+              overflow: 'auto',
               scrollbarWidth: 'none',
               '&::-webkit-scrollbar': {
                 display: 'none'
               },
-              pb: 2 // Add some padding at bottom
+              pb: 2
             }}
           >
             <Box sx={{ backgroundColor: 'white', p: 2 }}>
               <Typography variant="h3" sx={{ fontWeight: 'bold', mb: 3, textAlign: 'center' }}>
                 Create Telegram Page
               </Typography>
-              <Typography variant="h5" sx={{ fontWeight: 'bold', mb: 3 }}>
-                Upload your Digital Files
-              </Typography>
+              
+              {channel && (
+                <Box sx={{ mb: 2, p: 1, backgroundColor: '#f5f5f5', borderRadius: 1 }}>
+                  <Typography variant="subtitle1" sx={{ fontWeight: 'bold' }}>
+                    Creating page for: {channel.title || channel.name}
+                  </Typography>
+                  <Typography variant="body2">
+                    Channel ID: {channel.id}
+                  </Typography>
+                </Box>
+              )}
 
-              {/* File Upload Section */}
-              <Card
-                variant="outlined"
-                sx={{
-                  borderStyle: 'dashed',
-                  textAlign: 'center',
-                  padding: '20px',
-                  borderRadius: '10px',
-                  borderColor: '#E0E0E0'
-                }}
-              >
-                <IconButton color="primary" component="label">
-                  <CloudUpload />
-                  <input hidden accept=".pdf,.doc,.docx,.xls,.xlsx,.mp4,.jpg,.jpeg,.png" type="file" onChange={handleAnyfileChange} />
-                </IconButton>
-                <Typography variant="body1" sx={{ color: '#E91E63', fontWeight: 'bold', mb: 1 }}>
-                  Upload files from your system
-                </Typography>
-                <Button component="label" sx={{ display: 'none' }} aria-label="Browse files">
-                  <input type="file" hidden />
-                </Button>
-              </Card>
-              {renderPreview()}
               <TextField
                 label="Page Title"
                 placeholder="Add Title"
                 variant="outlined"
                 fullWidth
                 margin="normal"
+                value={data.pageTitle}
                 inputProps={{ maxLength: 50 }}
                 helperText={data?.pageTitle?.length > 0 ? `${data?.pageTitle?.length}/50` : `0/50`}
                 onChange={(event) =>
@@ -362,6 +436,7 @@ export default function CreateTelegramPage() {
                   }))
                 }
               />
+
               <TextField
                 label="Description"
                 variant="outlined"
@@ -369,6 +444,7 @@ export default function CreateTelegramPage() {
                 multiline
                 rows={4}
                 margin="normal"
+                value={data.description}
                 onChange={(event) =>
                   setData((prevData) => ({
                     ...prevData,
@@ -377,117 +453,144 @@ export default function CreateTelegramPage() {
                 }
                 sx={{ mt: 0 }}
               />
+
+              {/* Plan Management Section */}
+              <Typography variant="h5" sx={{ fontWeight: 'bold', mb: 2 }}>
+                Create Subscription Plans
+              </Typography>
+
+              {/* Add New Plan */}
+              <Card variant="outlined" sx={{ p: 2, mb: 2 }}>
+                <Typography variant="h6" sx={{ mb: 2 }}>
+                  Add New Plan
+                </Typography>
+
+                <Grid container spacing={2}>
+                  <Grid item xs={6}>
+                    <TextField
+                      fullWidth
+                      type="number"
+                      label="Duration"
+                      value={newPlan.duration}
+                      onChange={(e) => setNewPlan((prev) => ({ ...prev, duration: parseInt(e.target.value) || 1 }))}
+                      inputProps={{ min: 1 }}
+                      size="small"
+                    />
+                  </Grid>
+                  <Grid item xs={6}>
+                    <FormControl fullWidth size="small">
+                      <InputLabel>Type</InputLabel>
+                      <Select
+                        value={newPlan.durationType}
+                        label="Type"
+                        onChange={(e) => setNewPlan((prev) => ({ ...prev, durationType: e.target.value }))}
+                      >
+                        <MenuItem value="day">Day</MenuItem>
+                        <MenuItem value="week">Week</MenuItem>
+                        <MenuItem value="month">Month</MenuItem>
+                        <MenuItem value="year">Year</MenuItem>
+                      </Select>
+                    </FormControl>
+                  </Grid>
+                  <Grid item xs={6}>
+                    <TextField
+                      fullWidth
+                      type="number"
+                      label="Price (₹)"
+                      value={newPlan.price}
+                      onChange={(e) => setNewPlan((prev) => ({ ...prev, price: e.target.value }))}
+                      size="small"
+                    />
+                  </Grid>
+                  <Grid item xs={6}>
+                    <TextField
+                      fullWidth
+                      type="number"
+                      label="Discount (%)"
+                      value={newPlan.discount}
+                      onChange={(e) => setNewPlan((prev) => ({ ...prev, discount: e.target.value }))}
+                      inputProps={{ min: 0, max: 100 }}
+                      size="small"
+                    />
+                  </Grid>
+                </Grid>
+
+                <Button variant="contained" onClick={handleAddPlan} startIcon={<Add />} sx={{ mt: 2 }} size="small">
+                  Add Plan
+                </Button>
+              </Card>
+
+              {/* Display Added Plans */}
+              {data.plans.length > 0 && (
+                <Box sx={{ mb: 2 }}>
+                  <Typography variant="h6" sx={{ mb: 1 }}>
+                    Added Plans:
+                  </Typography>
+                  {data.plans.map((plan) => (
+                    <Chip
+                      key={plan.id}
+                      label={`${formatPlanLabel(plan)} - ₹${calculateFinalPrice(plan.price, plan.discount)} ${plan.discount > 0 ? `(${plan.discount}% off)` : ''}`}
+                      onDelete={() => handleRemovePlan(plan.id)}
+                      deleteIcon={<Delete />}
+                      sx={{ mr: 1, mb: 1 }}
+                      variant="outlined"
+                    />
+                  ))}
+                </Box>
+              )}
+
               <TextField
-                onChange={(event) =>
-                  setData((prevData) => ({
-                    ...prevData,
-                    link: event.target.value
-                  }))
-                }
-                label="Add YouTube/Google Drive Link"
+                select
+                label="Category"
                 variant="outlined"
                 fullWidth
                 margin="normal"
-                placeholder="Add link to your files"
-                sx={{ mt: 0 }}
+                value={data.category}
+                onChange={(event) =>
+                  setData((prevData) => ({
+                    ...prevData,
+                    category: event.target.value
+                  }))
+                }
+                sx={{ mt: 2 }}
+              >
+                <MenuItem value="Finance">Finance</MenuItem>
+                <MenuItem value="Health">Health</MenuItem>
+                <MenuItem value="Education">Education</MenuItem>
+              </TextField>
+
+              <Typography variant="h5" sx={{ mt: 2 }}>
+                Add Thumbnail for the page
+              </Typography>
+              <Box border={1} borderColor="grey.400" borderRadius={1} p={2} textAlign="center" mt={1} mb={2}>
+                <IconButton color="primary" component="label">
+                  <CloudUpload />
+                  <input hidden accept=".jpg,.jpeg,.png" type="file" onChange={handleFileChange} />
+                </IconButton>
+                <Typography variant="body2" color="textSecondary">
+                  Browse files from your system
+                </Typography>
+                <Typography variant="caption" color="textSecondary">
+                  1280 x 720 (16:9) recommended
+                </Typography>
+              </Box>
+
+              <TextField
+                label="Button Text"
+                variant="outlined"
+                fullWidth
+                margin="normal"
+                value={data.buttonText}
+                inputProps={{ maxLength: 15 }}
+                helperText={`${data.buttonText.length}/15`}
+                onChange={(event) =>
+                  setData((prevData) => ({
+                    ...prevData,
+                    buttonText: event.target.value
+                  }))
+                }
               />
 
-              {/* Pricing Section */}
-              <Typography variant="h5" sx={{ fontWeight: 'bold', mb: 2 }}>
-                Set Pricing
-              </Typography>
-              <Box>
-                <TextField
-                  fullWidth
-                  type="number"
-                  label="Price"
-                  // value={price}
-                  onChange={(event) =>
-                    setData((prevData) => ({
-                      ...prevData,
-                      price: event.target.value
-                    }))
-                  }
-                  InputProps={{
-                    startAdornment: <Typography sx={{ color: '#000', pr: 1 }}>₹</Typography>
-                  }}
-                  size="small"
-                  sx={{
-                    mb: 2,
-                    '& .MuiOutlinedInput-root': {
-                      borderColor: '#B0B0B0'
-                    }
-                  }}
-                />
-              </Box>
-
-              <Box>
-                <Box component="form" noValidate autoComplete="off">
-                  {/* Page Title */}
-
-                  {/* Category Dropdown */}
-                  <TextField
-                    select
-                    label="Category"
-                    variant="outlined"
-                    fullWidth
-                    margin="normal"
-                    defaultValue="Finance"
-                    onChange={(event) =>
-                      setData((prevData) => ({
-                        ...prevData,
-                        category: event.target.value
-                      }))
-                    }
-                    sx={{ mt: 0 }}
-                  >
-                    <MenuItem value="Finance">Finance</MenuItem>
-                    <MenuItem value="Health">Health</MenuItem>
-                    <MenuItem value="Education">Education</MenuItem>
-                  </TextField>
-
-                  <Typography variant="h5">Add Thumbnail for the page</Typography>
-                  {/* Cover Image/Video */}
-                  <Box border={1} borderColor="grey.400" borderRadius={1} p={2} textAlign="center" mt={1} mb={2}>
-                    <IconButton color="primary" component="label">
-                      <CloudUpload />
-                      <input hidden accept=".jpg,.jpeg,.png" type="file" onChange={handleFileChange} />
-                    </IconButton>
-                    {/* <Typography></Typography> */}
-                    <Typography variant="body2" color="textSecondary">
-                      Browse files from your system
-                    </Typography>
-                    <Typography variant="caption" color="textSecondary">
-                      1280 x 720 (16:9) recommended
-                    </Typography>
-                  </Box>
-                  {/* {preview && (
-                    <div>
-                      <h3>Uploaded Image:</h3>
-                      <img src={preview} alt="Uploaded" style={{ maxWidth: '300px' }} />
-                    </div>
-                  )} */}
-
-                  {/* Description */}
-
-                  {/* Button Text */}
-                  <TextField
-                    label="Button Text"
-                    variant="outlined"
-                    fullWidth
-                    margin="normal"
-                    defaultValue="Make Payment"
-                    inputProps={{ maxLength: 15 }}
-                    helperText="12/15"
-                    onChange={(event) =>
-                      setData((prevData) => ({
-                        ...prevData,
-                        buttonText: event.target.value
-                      }))
-                    }
-                  />
-                </Box>
-              </Box>
               <Button
                 variant="contained"
                 fullWidth
@@ -504,13 +607,14 @@ export default function CreateTelegramPage() {
               </Button>
             </Box>
           </Grid>
+
           <Grid
             item
             xs={12}
             md={8}
             sx={{
               height: '100%',
-              overflow: 'auto', // Enable scrolling only inside this column
+              overflow: 'auto',
               scrollbarWidth: 'none',
               '&::-webkit-scrollbar': {
                 display: 'none'
@@ -519,84 +623,228 @@ export default function CreateTelegramPage() {
           >
             <Box
               sx={{
-                backgroundColor: '#0F0F23', // Deep space blue
+                backgroundColor: '#0F0F23',
                 backgroundImage: 'linear-gradient(to bottom, #0F0F23 0%, #1A1A2E 100%)',
-                color: 'white'
+                color: 'white',
+                minHeight: '100vh'
               }}
             >
               <Typography variant="h3" sx={{ fontWeight: 'bold', pt: 3, pl: 3 }}>
                 Preview
               </Typography>
-              <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', minHeight: '100vh', px: 2 }}>
+              <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', minHeight: '90vh', px: 2 }}>
                 <Grid container spacing={4} maxWidth="lg">
                   {/* Left Section */}
-                  <Grid item xs={12} md={7}>
-                    <Paper sx={{ p: 4, borderRadius: 2 }}>
-                      <Avatar sx={{ bgcolor: 'orange' }}>{selectedUserDetails?.name?.slice(0, 1)}</Avatar>
-                      <Typography variant="body1" color="black">
-                        {selectedUserDetails?.name || 'N/A'}
-                      </Typography>
-                      <Divider sx={{ my: 2 }} />
+                  <Grid item xs={12} md={6}>
+                    <Paper sx={{ p: 4, borderRadius: 3, backgroundColor: '#2A2A2A', color: 'white' }}>
+                      <Box sx={{ display: 'flex', alignItems: 'center', mb: 2 }}>
+                        <Avatar sx={{ bgcolor: 'orange', mr: 2 }}>{selectedUserDetails?.name?.slice(0, 1) || 'U'}</Avatar>
+                        <Box>
+                          <Typography variant="body2" color="grey.400">
+                            Created by
+                          </Typography>
+                          <Typography variant="h6" color="white">
+                            {selectedUserDetails?.name || 'User Name'}
+                          </Typography>
+                        </Box>
+                      </Box>
 
-                      <Typography variant="h5" fontWeight="bold">
-                        Title
-                      </Typography>
-                      <Typography variant="body1" color="textSecondary">
-                        {data?.pageTitle?.slice(0, 50) || '-'}
-                      </Typography>
-
-                      <Typography variant="h5" fontWeight="bold" sx={{ mt: 2 }}>
-                        Description
-                      </Typography>
-                      <Typography variant="body1" color="textSecondary">
-                        {data?.description?.slice(0, 80) || '-'}
+                      <Typography variant="h5" color="grey.400" sx={{ mb: 1 }}>
+                        About the offering
                       </Typography>
 
-                      <Divider sx={{ my: 2 }} />
+                      <Box sx={{ display: 'flex', alignItems: 'center', mb: 2 }}>
+                        <Chip
+                          label={data.category}
+                          size="small"
+                          sx={{
+                            backgroundColor: 'rgba(255, 193, 7, 0.2)',
+                            color: '#FFC107',
+                            mr: 1
+                          }}
+                        />
+                        <Chip
+                          label={`${data.plans.length} Plans`}
+                          size="small"
+                          sx={{
+                            backgroundColor: 'rgba(76, 175, 80, 0.2)',
+                            color: '#4CAF50'
+                          }}
+                        />
+                      </Box>
+
+                      <Typography variant="h4" fontWeight="bold" sx={{ mb: 2 }}>
+                        {data?.pageTitle || 'Your Page Title'}
+                      </Typography>
+
+                      <Typography variant="body1" color="grey.300" sx={{ mb: 3 }}>
+                        {data?.description || 'Your page description will appear here...'}
+                      </Typography>
+
                       {preview && (
-                        <Box sx={{ my: 2 }}>
-                          <img src={preview} alt="Uploaded" style={{ maxWidth: '100%', borderRadius: 8, height: 150 }} />
+                        <Box sx={{ mb: 3 }}>
+                          <img
+                            src={preview}
+                            alt="Thumbnail"
+                            style={{
+                              width: '100%',
+                              borderRadius: 8,
+                              maxHeight: 200,
+                              objectFit: 'cover'
+                            }}
+                          />
                         </Box>
                       )}
+
+                      <Typography variant="body2" color="grey.400" sx={{ mt: 3 }}>
+                        Disclaimer
+                      </Typography>
+                      <Typography variant="caption" color="grey.500">
+                        By using our services, you agree to our terms and conditions. Content is for educational purposes only.
+                      </Typography>
                     </Paper>
                   </Grid>
 
-                  {/* Right Section - Form */}
-                  <Grid item xs={12} md={5}>
-                    <Paper sx={{ p: 4, borderRadius: 2 }} elevation={3}>
-                      <div>
-                        <Typography variant="h6" fontWeight="bold" gutterBottom>
-                          Enter Your Details
+                  {/* Right Section - Plan Selection */}
+                  <Grid item xs={12} md={6}>
+                    <Paper sx={{ p: 4, borderRadius: 3 }} elevation={3}>
+                      <Box sx={{ textAlign: 'center', mb: 3 }}>
+                        <Box
+                          sx={{
+                            width: 80,
+                            height: 80,
+                            borderRadius: '50%',
+                            background: 'linear-gradient(45deg, #FF6B35 30%, #F7931E 90%)',
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'center',
+                            mx: 'auto',
+                            mb: 2,
+                            position: 'relative'
+                          }}
+                        >
+                          <Typography variant="h6" color="white" fontWeight="bold">
+                            VIP
+                          </Typography>
+                          <Box
+                            component="span"
+                            sx={{
+                              position: 'absolute',
+                              top: -5,
+                              right: -5,
+                              backgroundColor: '#FFC107',
+                              borderRadius: '50%',
+                              width: 20,
+                              height: 20,
+                              display: 'flex',
+                              alignItems: 'center',
+                              justifyContent: 'center'
+                            }}
+                          >
+                            👑
+                          </Box>
+                        </Box>
+                        <Typography variant="h5" fontWeight="bold">
+                          {data?.pageTitle || 'VIP GROUP'} 🔥
                         </Typography>
+                      </Box>
 
-                        {/* Name Field */}
-                        <Stack spacing={1} mb={2}>
-                          <InputLabel htmlFor="name">Name*</InputLabel>
-                          <OutlinedInput id="name" name="name" placeholder="Enter your name" fullWidth />
-                        </Stack>
+                      <Typography variant="h6" sx={{ mb: 2 }}>
+                        Select a plan and continue
+                      </Typography>
 
-                        {/* Email Field */}
-                        <Stack spacing={1} mb={2}>
-                          <InputLabel htmlFor="email">Email Address*</InputLabel>
-                          <OutlinedInput id="email" name="email" placeholder="Enter your email" fullWidth />
-                        </Stack>
+                      {data.plans.length > 0 ? (
+                        <RadioGroup value={selectedPlan} onChange={(e) => setSelectedPlan(e.target.value)}>
+                          {data.plans.map((plan) => {
+                            const finalPrice = calculateFinalPrice(plan.price, plan.discount);
+                            const hasDiscount = plan.discount > 0;
 
-                        {/* Phone Number Field */}
-                        <Stack spacing={1} mb={2}>
-                          <InputLabel htmlFor="phoneNumber">Phone Number*</InputLabel>
-                          <OutlinedInput id="phoneNumber" name="phoneNumber" placeholder="Enter your phone number" fullWidth type="tel" />
-                        </Stack>
+                            return (
+                              <Paper
+                                key={plan.id}
+                                sx={{
+                                  p: 2,
+                                  mb: 2,
+                                  background:
+                                    selectedPlan === plan.id.toString()
+                                      ? 'linear-gradient(90deg, #4A90E2 0%, #357ABD 100%)'
+                                      : 'linear-gradient(90deg, #6C7B8B 0%, #4F5F6F 100%)',
+                                  color: 'white',
+                                  borderRadius: 3,
+                                  cursor: 'pointer',
+                                  border: selectedPlan === plan.id.toString() ? '2px solid #FFD700' : 'none',
+                                  transition: 'all 0.3s ease'
+                                }}
+                                onClick={() => setSelectedPlan(plan.id.toString())}
+                              >
+                                <FormControlLabel
+                                  value={plan.id.toString()}
+                                  control={<Radio sx={{ color: 'white' }} />}
+                                  label={
+                                    <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', width: '100%' }}>
+                                      <Typography variant="h6" fontWeight="bold">
+                                        {formatPlanLabel(plan)}
+                                      </Typography>
+                                      <Box sx={{ textAlign: 'right' }}>
+                                        {hasDiscount && (
+                                          <Typography
+                                            variant="body2"
+                                            sx={{
+                                              textDecoration: 'line-through',
+                                              color: 'rgba(255,255,255,0.7)',
+                                              fontSize: '0.9rem'
+                                            }}
+                                          >
+                                            ₹{plan.price}
+                                          </Typography>
+                                        )}
+                                        <Typography variant="h6" fontWeight="bold">
+                                          ₹{finalPrice}
+                                        </Typography>
+                                      </Box>
+                                    </Box>
+                                  }
+                                  sx={{ margin: 0, width: '100%' }}
+                                />
+                              </Paper>
+                            );
+                          })}
+                        </RadioGroup>
+                      ) : (
+                        <Paper
+                          sx={{
+                            p: 3,
+                            textAlign: 'center',
+                            backgroundColor: '#f5f5f5',
+                            borderRadius: 3
+                          }}
+                        >
+                          <Typography color="textSecondary">No plans available. Please add some plans first.</Typography>
+                        </Paper>
+                      )}
 
-                        {/* Payment Button */}
-                        <Button variant="contained" color="success" fullWidth sx={{ mb: 2, py: 1.5 }}>
-                          Payment Amount: ₹ {data?.price}
+                      {data.plans.length > 0 && (
+                        <Button
+                          variant="contained"
+                          fullWidth
+                          disabled={!selectedPlan}
+                          sx={{
+                            mt: 3,
+                            py: 1.5,
+                            background: selectedPlan ? 'linear-gradient(45deg, #4CAF50 30%, #45a049 90%)' : 'grey',
+                            '&:hover': {
+                              background: selectedPlan ? 'linear-gradient(45deg, #45a049 30%, #4CAF50 90%)' : 'grey'
+                            },
+                            fontWeight: 'bold'
+                          }}
+                        >
+                          {data?.buttonText || 'Join Now'}
                         </Button>
+                      )}
 
-                        {/* Submit Button */}
-                        <Button variant="contained" color="primary" fullWidth type="submit" sx={{ py: 1.5 }}>
-                          {data?.buttonText}
-                        </Button>
-                      </div>
+                      <Typography variant="caption" color="textSecondary" sx={{ display: 'block', textAlign: 'center', mt: 2 }}>
+                        Guaranteed safe & secure payment
+                      </Typography>
                     </Paper>
                   </Grid>
                 </Grid>
@@ -606,13 +854,5 @@ export default function CreateTelegramPage() {
         </Grid>
       </Box>
     </>
-    // <MainCard title="Sample Card">
-    //   <Typography variant="body2">
-    //     Lorem ipsum dolor sit amen, consenter nipissing eli, sed do elusion tempos incident ut laborers et doolie magna alissa. Ut enif ad
-    //     minim venice, quin nostrum exercitation illampu laborings nisi ut liquid ex ea commons construal. Duos aube grue dolor in
-    //     reprehended in voltage veil esse colum doolie eu fujian bulla parian. Exceptive sin ocean cuspidate non president, sunk in culpa qui
-    //     officiate descent molls anim id est labours.
-    //   </Typography>
-    // </MainCard>
   );
 }

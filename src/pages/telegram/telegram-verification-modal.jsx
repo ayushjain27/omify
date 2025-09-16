@@ -129,7 +129,7 @@ const TelegramVerificationModal = ({ open, onClose, onVerificationComplete }) =>
         phoneNumber, 
         channelName: newChannelName, 
         channelDescription: newChannelDescription,
-        isPublic: true
+        isPublic: false
       };
 
       console.log(data,"d;lwekm")
@@ -164,8 +164,9 @@ const TelegramVerificationModal = ({ open, onClose, onVerificationComplete }) =>
       setError('Please select a channel');
       return;
     }
-    
+    console.log(channels,"Dewkfnj")
     const channel = channels.find(c => c.id === selectedChannel);
+    console.log(channel,"Dwel;k")
     if (channel) {
       navigateToTelegramPage(channel);
     }
@@ -174,14 +175,15 @@ const TelegramVerificationModal = ({ open, onClose, onVerificationComplete }) =>
   const navigateToTelegramPage = (channel) => {
     // Close the modal
     onClose();
+    console.log("Navigating with channel:", channel); // Debug log
     
-    // Navigate to telegram page with channel data
-    navigate('/telegram', { state: { channel } });
+    // Navigate to telegram page with channel data - make sure this is correct
+    // navigate('/create-telegram-page', { state: { channel } }); // Note: channel is inside an object
     
     // Call the completion callback if provided
-    if (onVerificationComplete) {
+    // if (onVerificationComplete) {
       onVerificationComplete(channel);
-    }
+    // }
   };
 
   const steps = ['Enter Phone Number', 'Verify Authentication', 'Select Channel'];
