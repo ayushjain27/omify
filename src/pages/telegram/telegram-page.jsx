@@ -12,11 +12,12 @@ import AnalyticsEachNumberData from '../../components/Analytics/AnalyticsEachNum
 import InsertInvitationRoundedIcon from '@mui/icons-material/InsertInvitationRounded';
 import TodayRoundedIcon from '@mui/icons-material/TodayRounded';
 import { useDispatch, useSelector } from 'react-redux';
-import { countAllPaymentPageByUserNameApi, getPaymentTablePaginatedApi } from '../../store/payment-page/paymentPageApi';
 import Scrollbar from '../../components/Scrollbar';
 import ReactPaginate from 'react-paginate';
 import { toUpper } from 'lodash';
 import TelegramVerificationModal from './telegram-verification-modal';
+import TelegramTable from './TelegramTable';
+import { countAllTelegramPagesByUserNameApi, getTelegramPagePaginatedApi } from '../../store/telegram/telegramApi';
 
 // ==============================|| SAMPLE PAGE ||============================== //
 
@@ -29,8 +30,8 @@ export default function TelegramPage() {
   const [forcePage, setForcePage] = useState(0);
   const [itemOffset, setItemOffset] = useState(0);
   const { selectedUserDetails } = useSelector(({ authReducer }) => authReducer);
-  const { countAllPaymentPage, isCountAllPaymentPageLoading, paymentList, isPaymentTablePaginatedLoading, paymentListPageSize } =
-    useSelector(({ paymentPageReducer }) => paymentPageReducer);
+  const { countAllTelegramPage, isCountAllTelegramPageLoading, telegramList, isTelegramTablePaginatedLoading, telegramListPageSize } =
+    useSelector(({ telegramReducer }) => telegramReducer);
 
   const [showVerificationModal, setShowVerificationModal] = useState(false);
 
@@ -66,8 +67,8 @@ export default function TelegramPage() {
   useEffect(() => {
     let fetchData = async () => {
       addStyles();
-      await dispatch(countAllPaymentPageByUserNameApi({ userName: selectedUserDetails?.userName }));
-      await getAllPaymentPagePaginated();
+      await dispatch(countAllTelegramPagesByUserNameApi({ userName: selectedUserDetails?.userName }));
+      await getAllTelegramPagePaginated();
     };
     fetchData();
   }, []);
@@ -75,11 +76,11 @@ export default function TelegramPage() {
   useEffect(() => {
     setItemOffset(0);
     setForcePage(0);
-    getAllPaymentPagePaginated();
+    getAllTelegramPagePaginated();
   }, [tabValue]);
 
   useEffect(() => {
-    getAllPaymentPagePaginated();
+    getAllTelegramPagePaginated();
   }, [itemOffset]);
 
   const handlePageClick = (event) => {
@@ -88,15 +89,15 @@ export default function TelegramPage() {
     setForcePage(event.selected);
   };
 
-  const getAllPaymentPagePaginated = async () => {
+  const getAllTelegramPagePaginated = async () => {
     const data = {
       pageNo: itemOffset,
-      pageSize: paymentListPageSize,
+      pageSize: telegramListPageSize,
       status: toUpper(tabValue),
       userName: selectedUserDetails?.userName
     };
     try {
-      await dispatch(getPaymentTablePaginatedApi(data));
+      await dispatch(getTelegramPagePaginatedApi(data));
     } catch (error) {
       console.log(error);
     }
@@ -104,9 +105,9 @@ export default function TelegramPage() {
 
   let length = 0;
   if (tabValue === 'active') {
-    length = Math.ceil(countAllPaymentPage?.active / 50);
+    length = Math.ceil(countAllTelegramPage?.active / 50);
   } else if (tabValue === 'inActive') {
-    length = Math.ceil(countAllPaymentPage?.inActive / 50);
+    length = Math.ceil(countAllTelegramPage?.inActive / 50);
   }
   const items = Array.from({ length }, (_, index) => index + 1);
   const pageCount = Math.ceil(items.length / 1);
@@ -160,7 +161,6 @@ export default function TelegramPage() {
 
   const handleVerificationComplete = (groups) => {
     setShowVerificationModal(false);
-    console.log(groups,"De;lkm")
     navigate('/create-telegram-page', { state: { channel: groups } }); // Note: channel is inside an object
     // navigate('/create-telegram-page');
   };
@@ -184,24 +184,24 @@ export default function TelegramPage() {
           <Grid item xs={12} sm={12} md={4} lg={4}>
             <AnalyticsEachNumberData
               title="Total Telegram Pages"
-              number={countAllPaymentPage?.total}
-              loading={isCountAllPaymentPageLoading}
+              number={countAllTelegramPage?.total}
+              loading={isCountAllTelegramPageLoading}
               sx={{ backgroundColor: '#74CAFF' }}
             />
           </Grid>
           <Grid item xs={12} sm={12} md={4} lg={4}>
             <AnalyticsEachNumberData
               title="Total Active Telegram Pages"
-              number={countAllPaymentPage?.active}
-              loading={isCountAllPaymentPageLoading}
+              number={countAllTelegramPage?.active}
+              loading={isCountAllTelegramPageLoading}
               sx={{ backgroundColor: '#5BE584' }}
             />
           </Grid>
           <Grid item xs={12} sm={12} md={4} lg={4}>
             <AnalyticsEachNumberData
               title="Total In-Active Telegram Pages"
-              number={countAllPaymentPage?.inActive}
-              loading={isCountAllPaymentPageLoading}
+              number={countAllTelegramPage?.inActive}
+              loading={isCountAllTelegramPageLoading}
               sx={{ backgroundColor: '#ffe704' }}
             />
           </Grid>
@@ -224,13 +224,13 @@ export default function TelegramPage() {
               <Tab label="InActive" icon={<TodayRoundedIcon />} iconPosition="start" value="inActive" />
             </Tabs>
           </Box>
-          {/* <Scrollbar>
-            <PaymentTable
-              paymentList={paymentList}
+          <Scrollbar>
+            <TelegramTable
+              telegramList={telegramList}
               selectedTab={tabValue}
-              isPaymentTablePaginatedLoading={isPaymentTablePaginatedLoading}
+              isTelegramTablePaginatedLoading={isTelegramTablePaginatedLoading}
             />
-          </Scrollbar> */}
+          </Scrollbar>
         </Card>
         <Card sx={{ borderTopLeftRadius: '0px', borderTopRightRadius: '0px' }}>
           <ReactPaginate

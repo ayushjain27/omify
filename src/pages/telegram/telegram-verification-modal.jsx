@@ -22,7 +22,7 @@ import {
   FormControl,
   InputLabel
 } from '@mui/material';
-import { useDispatch } from 'react-redux';
+import { useDispatch, useSelector } from 'react-redux';
 import { telegramSendOtpApi, telegramVerifyOtpApi, telegramCreateChannelApi } from '../../store/telegram/telegramApi';
 import { unwrapResult } from '@reduxjs/toolkit';
 import { useNavigate } from 'react-router-dom';
@@ -40,6 +40,7 @@ const TelegramVerificationModal = ({ open, onClose, onVerificationComplete }) =>
   const [newChannelName, setNewChannelName] = useState('');
   const [newChannelDescription, setNewChannelDescription] = useState('');
   const [creatingChannel, setCreatingChannel] = useState(false);
+  const { selectedUserDetails } = useSelector(({ authReducer }) => authReducer);
   const dispatch = useDispatch();
   const navigate = useNavigate();
 
@@ -67,7 +68,7 @@ const TelegramVerificationModal = ({ open, onClose, onVerificationComplete }) =>
       setError('');
       setSuccess('');
 
-      const data = { phoneNumber };
+      const data = { phoneNumber, userName: selectedUserDetails?.userName };
       const response = await dispatch(telegramSendOtpApi(data));
       const result = unwrapResult(response);
 
@@ -99,7 +100,7 @@ const TelegramVerificationModal = ({ open, onClose, onVerificationComplete }) =>
       setError('');
       setSuccess('');
 
-      const data = { phoneNumber, otp };
+      const data = { phoneNumber, otp, userName: selectedUserDetails?.userName };
       const response = await dispatch(telegramVerifyOtpApi(data));
       const result = unwrapResult(response);
 
@@ -125,28 +126,28 @@ const TelegramVerificationModal = ({ open, onClose, onVerificationComplete }) =>
       setError('');
       setSuccess('');
 
-      const data = { 
-        phoneNumber, 
-        channelName: newChannelName, 
+      const data = {
+        phoneNumber,
+        channelName: newChannelName,
         channelDescription: newChannelDescription,
         isPublic: false
       };
 
-      console.log(data,"d;lwekm")
-      
+      console.log(data, 'd;lwekm');
+
       const response = await dispatch(telegramCreateChannelApi(data));
       const result = unwrapResult(response);
 
       if (result.success) {
         setSuccess('Channel created successfully!');
-        
+
         // Add the new channel to the channels list
         const updatedChannels = [...channels, result.channel];
         setChannels(updatedChannels);
-        
+
         // Select the newly created channel
         setSelectedChannel(result.channel.id);
-        
+
         // Navigate to telegram page with the new channel
         navigateToTelegramPage(result.channel);
       } else {
@@ -164,9 +165,9 @@ const TelegramVerificationModal = ({ open, onClose, onVerificationComplete }) =>
       setError('Please select a channel');
       return;
     }
-    console.log(channels,"Dewkfnj")
-    const channel = channels.find(c => c.id === selectedChannel);
-    console.log(channel,"Dwel;k")
+    console.log(channels, 'Dewkfnj');
+    const channel = channels.find((c) => c.id === selectedChannel);
+    console.log(channel, 'Dwel;k');
     if (channel) {
       navigateToTelegramPage(channel);
     }
@@ -175,14 +176,14 @@ const TelegramVerificationModal = ({ open, onClose, onVerificationComplete }) =>
   const navigateToTelegramPage = (channel) => {
     // Close the modal
     onClose();
-    console.log("Navigating with channel:", channel); // Debug log
-    
+    console.log('Navigating with channel:', channel); // Debug log
+
     // Navigate to telegram page with channel data - make sure this is correct
     // navigate('/create-telegram-page', { state: { channel } }); // Note: channel is inside an object
-    
+
     // Call the completion callback if provided
     // if (onVerificationComplete) {
-      onVerificationComplete(channel);
+    onVerificationComplete(channel);
     // }
   };
 
@@ -214,14 +215,7 @@ const TelegramVerificationModal = ({ open, onClose, onVerificationComplete }) =>
             <Typography variant="body2" sx={{ mb: 2 }}>
               Enter the OTP sent to your Telegram account
             </Typography>
-            <TextField 
-              fullWidth 
-              label="OTP" 
-              value={otp} 
-              onChange={(e) => setOtp(e.target.value)} 
-              disabled={loading} 
-              sx={{ mb: 2 }} 
-            />
+            <TextField fullWidth label="OTP" value={otp} onChange={(e) => setOtp(e.target.value)} disabled={loading} sx={{ mb: 2 }} />
           </Box>
         );
 
@@ -237,11 +231,7 @@ const TelegramVerificationModal = ({ open, onClose, onVerificationComplete }) =>
                 {channels.length > 0 ? (
                   <FormControl fullWidth sx={{ mb: 2 }}>
                     <InputLabel>Select Channel</InputLabel>
-                    <Select
-                      value={selectedChannel}
-                      onChange={(e) => setSelectedChannel(e.target.value)}
-                      label="Select Channel"
-                    >
+                    <Select value={selectedChannel} onChange={(e) => setSelectedChannel(e.target.value)} label="Select Channel">
                       {channels.map((channel) => (
                         <MenuItem key={channel.id} value={channel.id}>
                           {channel.title} ({channel.memberCount} members)
@@ -254,12 +244,8 @@ const TelegramVerificationModal = ({ open, onClose, onVerificationComplete }) =>
                     No channels found. Please create a new channel.
                   </Typography>
                 )}
-                
-                <Button 
-                  variant="outlined" 
-                  onClick={() => setCreatingChannel(true)}
-                  sx={{ mb: 2 }}
-                >
+
+                <Button variant="outlined" onClick={() => setCreatingChannel(true)} sx={{ mb: 2 }}>
                   Create New Channel
                 </Button>
               </>
@@ -283,11 +269,7 @@ const TelegramVerificationModal = ({ open, onClose, onVerificationComplete }) =>
                   rows={3}
                   sx={{ mb: 2 }}
                 />
-                <Button 
-                  variant="outlined" 
-                  onClick={() => setCreatingChannel(false)}
-                  sx={{ mr: 1 }}
-                >
+                <Button variant="outlined" onClick={() => setCreatingChannel(false)} sx={{ mr: 1 }}>
                   Back to Channel Selection
                 </Button>
               </>
@@ -320,19 +302,11 @@ const TelegramVerificationModal = ({ open, onClose, onVerificationComplete }) =>
         return (
           <Box sx={{ display: 'flex', gap: 1 }}>
             {creatingChannel ? (
-              <Button 
-                onClick={handleCreateChannel} 
-                variant="contained" 
-                disabled={!newChannelName || loading}
-              >
+              <Button onClick={handleCreateChannel} variant="contained" disabled={!newChannelName || loading}>
                 {loading ? <CircularProgress size={24} /> : 'Create Channel'}
               </Button>
             ) : (
-              <Button 
-                onClick={handleSelectChannel} 
-                variant="contained" 
-                disabled={!selectedChannel || loading}
-              >
+              <Button onClick={handleSelectChannel} variant="contained" disabled={!selectedChannel || loading}>
                 Select Channel
               </Button>
             )}

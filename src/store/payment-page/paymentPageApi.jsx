@@ -40,7 +40,6 @@ export const createPaymentApi = createAsyncThunk('store/createPaymentApi', async
 
 export const uploadThumbnailApi = createAsyncThunk('store/uploadThumbnailApi', async (params, thunkApi) => {
   try {
-    console.log(params,"Dwlkmfkl")
     const response = await axios.request({
       url: `${urls.uploadThumbnail}`,
       method: 'post',
@@ -50,7 +49,6 @@ export const uploadThumbnailApi = createAsyncThunk('store/uploadThumbnailApi', a
       }
     });
     const data = await response.data;
-    console.log(response.data,"dweklmlk")
 
     if (data?.message) {
       return data;
@@ -101,7 +99,6 @@ export const countAllPaymentPageByUserNameApi = createAsyncThunk(
 
 export const getPaymentPageDetailByIdApi = createAsyncThunk('serviceplug/getPaymentPageDetailByIdApi', async (params, thunkApi) => {
   try {
-    console.log(params, 'dmek');
     const response = await axios.get(`${urls.getPaymentPageDetailById}`, { params });
     if (response.data) {
       return response.data;
@@ -154,7 +151,6 @@ export const updatePaymentPageStatusApi = createAsyncThunk('store/updatePaymentP
       }
     });
     const data = await response.data;
-    console.log(data, 'Dlemk');
 
     if (data?.message) {
       return data;
