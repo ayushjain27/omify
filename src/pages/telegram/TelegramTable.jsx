@@ -28,9 +28,9 @@ const createRowData = (data, callBackFns) => {
   const result = {
     id: data?._id,
     image: data?.imageUrl,
-    title: data?.pageTitle,
+    title: data?.title,
     description: data?.description,
-    price: `Rs ${data?.price}`,
+    category: data?.category,
     status: data?.status,
     createdAt: moment(data?.createdAt).format('DD-MMM-YYYY hh:mm:ss'),
     userId: data?.userName,
@@ -75,8 +75,8 @@ export default function TelegramTable(props) {
       editable: false
     },
     {
-      field: 'price',
-      headerName: 'Price',
+      field: 'category',
+      headerName: 'Category',
       filter: 'agTextColumnFilter',
       minWidth: 120,
       editable: false
@@ -165,15 +165,15 @@ export default function TelegramTable(props) {
         <Tooltip title="Copy Link">
           <IconButton
             onClick={() => {
-              if (data?.accountNumber) {
-                navigate('/userProfile');
-              } else if(data?.status === "INACTIVE") {
-                enqueueSnackbar('Payment Page is Inactive', {
-                  variant: 'error'
-                });
-              } else{
+              // if (data?.accountNumber) {
+              //   navigate('/userProfile');
+              // } else if(data?.status === "INACTIVE") {
+              //   enqueueSnackbar('Payment Page is Inactive', {
+              //     variant: 'error'
+              //   });
+              // } else{
                 data?.copyLink(data);
-              }
+              // }
             }}
           >
             <ContentCopyIcon fontSize="small" sx={{ color: '#05acc1' }} />
@@ -186,15 +186,15 @@ export default function TelegramTable(props) {
   };
 
   const copyLink = (data) => {
-    if (!selectedUserDetails?.adhaarCardNumber && selectedUserDetails?.role === 'USER') {
-      enqueueSnackbar('Please update your kyc Details', {
-        variant: 'success'
-      });
-      navigate('/userProfile', { replace: true }); // Add leading slash and replace option
-    } else {
+    // if (!selectedUserDetails?.adhaarCardNumber && selectedUserDetails?.role === 'USER') {
+    //   enqueueSnackbar('Please update your kyc Details', {
+    //     variant: 'success'
+    //   });
+    //   navigate('/userProfile', { replace: true }); // Add leading slash and replace option
+    // } else {
       // Construct the URL to copy
       // const linkToCopy = `http://localhost:3000/contentPage?id=${data?.id || 'dmkemkd'}`;
-      const linkToCopy = `https://omify.vercel.app/contentPage?id=${data?.id || 'dmkemkd'}`;
+      const linkToCopy = `http://localhost:3000/telegramLink?id=${data?.id || 'dmkemkd'}`;
 
       // Copy to clipboard
       navigator.clipboard
@@ -210,7 +210,7 @@ export default function TelegramTable(props) {
           });
           console.error('Failed to copy link:', err);
         });
-    }
+    // }
   };
 
   return (

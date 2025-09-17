@@ -1,5 +1,5 @@
 import { createSlice } from '@reduxjs/toolkit';
-import { countAllTelegramPagesByUserNameApi, getTelegramPagePaginatedApi } from './telegramApi';
+import { countAllTelegramPagesByUserNameApi, getTelegramPageDetailsByIdApi, getTelegramPagePaginatedApi } from './telegramApi';
 // import { sendOtpApi } from './authApi';
 
 // ----------------------------------------------------------------------
@@ -9,7 +9,8 @@ const initialState = {
   countAllTelegramPage: {},
   isTelegramTablePaginatedLoading: true,
   telegramList: [],
-  telegramListPageSize: 50
+  telegramListPageSize: 50,
+  telegramPageDetail: {}
 };
 
 const slice = createSlice({
@@ -36,6 +37,9 @@ const slice = createSlice({
     });
     builder.addCase(getTelegramPagePaginatedApi.rejected, (state, action) => {
       state.isTelegramTablePaginatedLoading = false;
+    });
+    builder.addCase(getTelegramPageDetailsByIdApi.fulfilled, (state, action) => {
+      state.telegramPageDetail = action.payload;
     });
   }
 });

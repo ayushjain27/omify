@@ -46,6 +46,14 @@ const pages = {
       icon: icons.ProfileOutlined,
       target: true
     },
+    {
+      id: 'telegramLink1',
+      title: 'telegramLink',
+      type: 'item',
+      url: '/telegramLink',
+      icon: icons.ProfileOutlined,
+      target: true
+    },
   ]
 };
 

@@ -10,7 +10,8 @@ const urls = {
   createTelegramPage: 'telegram/create-telegram-page',
   uploadTelegramThumbnail: 'telegram/upload',
   countAllTelegramPagesByUserName: 'telegram/countAllTelegramPagesByUserName',
-  getTelegramPagePaginated: 'telegram/getAllTelegramPagesPaginated'
+  getTelegramPagePaginated: 'telegram/getAllTelegramPagesPaginated',
+  getTelegramPageDetailsById: 'telegram/getTelegramPageDetailsById'
 };
 
 export const telegramSendOtpApi = createAsyncThunk('store/telegramSendOtpApi', async (params, thunkApi) => {
@@ -181,5 +182,17 @@ export const getTelegramPagePaginatedApi = createAsyncThunk('serviceplug/getTele
     return [];
   } catch (err) {
     return thunkApi.rejectWithValue(`Something went wrong. Please try again!, ${err}`);
+  }
+});
+
+export const getTelegramPageDetailsByIdApi = createAsyncThunk('serviceplug/getTelegramPageDetailsByIdApi', async (params, thunkApi) => {
+  try {
+    const response = await axios.get(`${urls.getTelegramPageDetailsById}`, { params });
+    if (response.data) {
+      return response.data;
+    }
+    return thunkApi.rejectWithValue('Something went wrong with this');
+  } catch (error) {
+    return thunkApi.rejectWithValue(error);
   }
 });
