@@ -21,6 +21,132 @@ import PaymentTable from './PaymentTable';
 
 // ==============================|| SAMPLE PAGE ||============================== //
 
+// components/PDFViewer.js
+import { Dialog, DialogContent, IconButton, Typography, CircularProgress } from '@mui/material';
+import { Close, Download, Visibility } from '@mui/icons-material';
+
+const PDFViewer = ({ pdfUrl, fileName = "document.pdf" }) => {
+  const [open, setOpen] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
+
+  const handleOpen = () => setOpen(true);
+  const handleClose = () => setOpen(false);
+
+  const handleDownload = () => {
+    const link = document.createElement('a');
+    link.href = pdfUrl;
+    link.download = fileName;
+    link.target = '_blank';
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+  };
+
+  return (
+    <>
+      {/* PDF Preview Button */}
+      <IconButton 
+        onClick={handleOpen}
+        color="primary"
+        size="small"
+        title="View PDF"
+      >
+        <Visibility />
+      </IconButton>
+
+      {/* PDF Viewer Modal */}
+      <Dialog
+        open={open}
+        onClose={handleClose}
+        maxWidth="lg"
+        fullWidth
+        sx={{
+          '& .MuiDialog-paper': {
+            height: '80vh'
+          }
+        }}
+      >
+        <DialogContent sx={{ p: 1, display: 'flex', flexDirection: 'column' }}>
+          {/* Header */}
+          <Box sx={{ 
+            display: 'flex', 
+            justifyContent: 'space-between', 
+            alignItems: 'center',
+            p: 1,
+            borderBottom: 1,
+            borderColor: 'divider'
+          }}>
+            <Typography variant="h6">PDF Preview</Typography>
+            <Box>
+              <IconButton onClick={handleDownload} color="primary" title="Download PDF">
+                <Download />
+              </IconButton>
+              <IconButton onClick={handleClose}>
+                <Close />
+              </IconButton>
+            </Box>
+          </Box>
+
+          {/* PDF Content */}
+          <Box sx={{ flex: 1, position: 'relative' }}>
+            {isLoading && (
+              <Box sx={{ 
+                display: 'flex', 
+                justifyContent: 'center', 
+                alignItems: 'center',
+                height: '100%'
+              }}>
+                <CircularProgress />
+              </Box>
+            )}
+            
+            <iframe
+              src={pdfUrl}
+              width="100%"
+              height="100%"
+              style={{ 
+                border: 'none',
+                display: isLoading ? 'none' : 'block'
+              }}
+              title="PDF Viewer"
+              onLoad={() => setIsLoading(false)}
+            />
+            
+            {/* Fallback for mobile devices */}
+            <Box 
+              sx={{ 
+                display: isLoading ? 'none' : 'flex',
+                justifyContent: 'center', 
+                alignItems: 'center',
+                height: '100%',
+                flexDirection: 'column',
+                gap: 2
+              }}
+            >
+              <Typography variant="body2" color="text.secondary">
+                If PDF is not visible, 
+              </Typography>
+              <button 
+                onClick={handleDownload}
+                style={{
+                  padding: '8px 16px',
+                  backgroundColor: '#1976d2',
+                  color: 'white',
+                  border: 'none',
+                  borderRadius: '4px',
+                  cursor: 'pointer'
+                }}
+              >
+                Download PDF
+              </button>
+            </Box>
+          </Box>
+        </DialogContent>
+      </Dialog>
+    </>
+  );
+};
+
 export default function PaymentPage() {
   const navigate = useNavigate();
   const dispatch = useDispatch();
@@ -178,6 +304,7 @@ export default function PaymentPage() {
             >
               Create Payment Page
             </Button>
+            {/* <PDFViewer pdfUrl="https://res.cloudinary.com/dmvudmx86/raw/upload/v1759806340/doc_1759806338508.pdf" /> */}
           </AnimateButton>
         </div>
         <Grid container rowSpacing={4.5} columnSpacing={2.75} mt={0.1}>

@@ -80,7 +80,6 @@ export default function ContentPage() {
             ? `url(${paymentPageDetail.imageUrl})`
             : 'linear-gradient(to right, #4facfe 0%, #00f2fe 100%)',
           backgroundSize: 'cover',
-          backgroundSize: 'cover',
           backgroundPosition: 'center',
           borderRadius: 2,
           mx: 4,

@@ -17,7 +17,13 @@ import {
   RadioGroup,
   FormControlLabel,
   Radio,
-  Chip
+  Chip,
+  Modal,
+  Backdrop,
+  TextField,
+  CircularProgress,
+  Alert,
+  IconButton
 } from '@mui/material';
 import { useLocation } from 'react-router-dom';
 import { isEmpty } from 'lodash';
@@ -26,16 +32,30 @@ import * as Yup from 'yup';
 import { Formik } from 'formik';
 import { useDispatch, useSelector } from 'react-redux';
 import { createUserPaymentDetailsApi, getPaymentPageDetailByIdApi } from '../../store/payment-page/paymentPageApi';
-import { getTelegramPageDetailsByIdApi } from '../../store/telegram/telegramApi';
+import { addUserToChannelApi, getTelegramPageDetailsByIdApi } from '../../store/telegram/telegramApi';
+import CloseIcon from '@mui/icons-material/Close';
 
 // Validation Schema
 const validationSchema = Yup.object().shape({
-  name: Yup.string().required('Full name is required').min(3, 'Name must be at least 3 characters'),
-  email: Yup.string().required('Email is required').email('Invalid email format'),
   phoneNumber: Yup.string()
     .required('Phone number is required')
     .matches(/^[0-9]{10}$/, 'Phone number must be 10 digits')
 });
+
+const modalStyle = {
+  position: 'absolute',
+  top: '50%',
+  left: '50%',
+  transform: 'translate(-50%, -50%)',
+  width: 400,
+  bgcolor: 'background.paper',
+  borderRadius: 3,
+  boxShadow: 24,
+  p: 4,
+  maxWidth: '90vw',
+  maxHeight: '90vh',
+  overflow: 'auto'
+};
 
 export default function TelegramLink() {
   const location = useLocation();
@@ -46,6 +66,11 @@ export default function TelegramLink() {
 
   const [userDetail, setUserDetail] = useState({});
   const [qrCode, setQrCode] = useState(null);
+  const [selectedPlan, setSelectedPlan] = useState('');
+  const [modalOpen, setModalOpen] = useState(false);
+  const [apiResponse, setApiResponse] = useState(null);
+  const [loading, setLoading] = useState(false);
+  const [selectedPlanDetails, setSelectedPlanDetails] = useState(null);
 
   useEffect(() => {
     const fetchData = async () => {
@@ -57,19 +82,62 @@ export default function TelegramLink() {
     }
   }, [id]);
 
-  // const handleSubmit = async (values, { setSubmitting }) => {
-  //   // Handle form submission
-  //   console.log('Form submitted:', values);
-  //   let reqBody = { ...values };
-  //   reqBody.paymentAmount = paymentPageDetail?.price;
-  //   reqBody.paymentId = paymentPageDetail?._id;
-  //   reqBody.userName = paymentPageDetail?.userName;
-  //   await dispatch(createUserPaymentDetailsApi(reqBody));
-  //   // Add your payment processing logic here
-  //   setSubmitting(false);
-  // };
   const { selectedUserDetails } = useSelector(({ authReducer }) => authReducer);
-  const [selectedPlan, setSelectedPlan] = useState('');
+
+  const handleJoinNow = () => {
+    if (selectedPlan && telegramPageDetail.plans) {
+      const plan = telegramPageDetail.plans[selectedPlan];
+      setSelectedPlanDetails(plan);
+      setModalOpen(true);
+      setApiResponse(null);
+    }
+  };
+
+  const handleCloseModal = () => {
+    setModalOpen(false);
+    setApiResponse(null);
+    setLoading(false);
+  };
+
+  const handleSubmit = async (values) => {
+    setLoading(true);
+    setApiResponse(null);
+
+    try {
+      const newSelectedPlans = {
+        ...selectedPlanDetails,
+        joinDate: new Date()
+      }
+      // Prepare request body
+      const requestBody = {
+        channelId: telegramPageDetail.channelId,
+        phoneNumber: values.phoneNumber,
+        username: telegramPageDetail?.userName,
+        selectedPlan: newSelectedPlans
+      };
+      console.log(requestBody,"Sd[;l;wemlkfw")
+
+      // Call your API endpoint
+      const response = await dispatch(addUserToChannelApi(requestBody)).unwrap();
+
+      setApiResponse({
+        success: true,
+        invite_link: response.invite_link || response.message,
+        message: response.message || 'Invite link generated successfully!'  
+      });
+    } catch (error) {
+      setApiResponse({
+        success: false,
+        error: error.response?.data || { error: 'Something went wrong' }
+      });
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const initialValues = {
+    phoneNumber: ''
+  };
 
   return (
     <Grid item xs={12} md={8} sx={{ height: '100%', overflow: 'auto' }}>
@@ -106,7 +174,7 @@ export default function TelegramLink() {
                     }}
                   />
                   <Chip
-                    label={`${telegramPageDetail.plans.length} Plans`}
+                    label={`${telegramPageDetail.plans?.length} Plans`}
                     size="small"
                     sx={{
                       backgroundColor: 'rgba(76, 175, 80, 0.2)',
@@ -123,7 +191,6 @@ export default function TelegramLink() {
                   {telegramPageDetail.description || 'Your page description will appear here...'}
                 </Typography>
 
-                {/* {preview && ( */}
                 <Box sx={{ mb: 3 }}>
                   <img
                     src={telegramPageDetail?.imageUrl}
@@ -136,7 +203,6 @@ export default function TelegramLink() {
                     }}
                   />
                 </Box>
-                {/* )} */}
 
                 <Typography variant="body2" color="grey.400" sx={{ mt: 1 }}>
                   Disclaimer
@@ -195,7 +261,7 @@ export default function TelegramLink() {
                   Select a plan and continue
                 </Typography>
 
-                {telegramPageDetail.plans.length > 0 ? (
+                {telegramPageDetail.plans?.length > 0 ? (
                   <RadioGroup value={selectedPlan} onChange={(e) => setSelectedPlan(e.target.value)}>
                     {telegramPageDetail.plans.map((plan, index) => {
                       const finalPrice = plan.price - plan.discount;
@@ -228,9 +294,6 @@ export default function TelegramLink() {
                                   <Typography variant="h6" fontWeight="bold">
                                     {plan.totalNumber} {plan.value}
                                   </Typography>
-                                  {/* <Typography variant="body2">
-                                  {plan.totalNumber}
-                                </Typography> */}
                                 </Box>
                                 <Box sx={{ textAlign: 'right' }}>
                                   {hasDiscount && (
@@ -268,11 +331,12 @@ export default function TelegramLink() {
                   </Paper>
                 )}
 
-                {telegramPageDetail.plans.length > 0 && (
+                {telegramPageDetail.plans?.length > 0 && (
                   <Button
                     variant="contained"
                     fullWidth
                     disabled={!selectedPlan}
+                    onClick={handleJoinNow}
                     sx={{
                       mt: 3,
                       py: 1.5,
@@ -283,7 +347,7 @@ export default function TelegramLink() {
                       fontWeight: 'bold'
                     }}
                   >
-                    {telegramPageDetail.buttonText}
+                    {telegramPageDetail.buttonText || 'Join Now'}
                   </Button>
                 )}
 
@@ -294,6 +358,128 @@ export default function TelegramLink() {
             </Grid>
           </Grid>
         </Box>
+
+        {/* Modal */}
+        <Modal
+          open={modalOpen}
+          onClose={handleCloseModal}
+          closeAfterTransition
+          BackdropComponent={Backdrop}
+          BackdropProps={{ timeout: 500 }}
+        >
+          <Fade in={modalOpen}>
+            <Box sx={modalStyle}>
+              <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 3 }}>
+                <Typography variant="h5" component="h2">
+                  Join {telegramPageDetail.title}
+                </Typography>
+                <IconButton onClick={handleCloseModal} size="small">
+                  <CloseIcon />
+                </IconButton>
+              </Box>
+              <Typography variant="h6" component="h2" mb={2}>
+                  Enter the phonenumber to which you want to join
+                </Typography>
+
+              {selectedPlanDetails && (
+                <Paper sx={{ p: 2, mb: 3, backgroundColor: '#f5f5f5' }}>
+                  <Typography variant="subtitle1" fontWeight="bold">
+                    Selected Plan:
+                  </Typography>
+                  <Typography>
+                    {selectedPlanDetails.totalNumber} {selectedPlanDetails.value} - ₹
+                    {(selectedPlanDetails.price - selectedPlanDetails.discount).toFixed(2)}
+                  </Typography>
+                </Paper>
+              )}
+
+              {!apiResponse ? (
+                <Formik initialValues={initialValues} validationSchema={validationSchema} onSubmit={handleSubmit}>
+                  {({ values, errors, touched, handleChange, handleBlur, handleSubmit, isSubmitting }) => (
+                    <form onSubmit={handleSubmit}>
+                      <Stack spacing={3}>
+                        <TextField
+                          fullWidth
+                          label="Phone Number"
+                          name="phoneNumber"
+                          value={values.phoneNumber}
+                          onChange={handleChange}
+                          onBlur={handleBlur}
+                          error={touched.phoneNumber && Boolean(errors.phoneNumber)}
+                          helperText={touched.phoneNumber && errors.phoneNumber}
+                          disabled={loading}
+                          placeholder="10 digit phone number"
+                        />
+
+                        <Button type="submit" variant="contained" fullWidth disabled={loading} sx={{ py: 1.5 }}>
+                          {loading ? <CircularProgress size={24} /> : 'Generate Invite Link'}
+                        </Button>
+                      </Stack>
+                    </form>
+                  )}
+                </Formik>
+              ) : (
+                <Box>
+                  {apiResponse.success ? (
+                    <Box>
+                      <Alert severity="success" sx={{ mb: 2 }}>
+                        {apiResponse.message || 'Invite link generated successfully!'}
+                      </Alert>
+
+                      {apiResponse.invite_link ? (
+                        <Paper sx={{ p: 2, backgroundColor: '#e8f5e8', mb: 2 }}>
+                          <Typography variant="subtitle2" gutterBottom>
+                            Your exclusive invite link:
+                          </Typography>
+                          <Typography
+                            variant="body2"
+                            sx={{
+                              wordBreak: 'break-all',
+                              backgroundColor: 'white',
+                              p: 1,
+                              borderRadius: 1,
+                              mt: 1
+                            }}
+                          >
+                            {apiResponse.invite_link}
+                          </Typography>
+                          <Button
+                            variant="outlined"
+                            fullWidth
+                            sx={{ mt: 2 }}
+                            onClick={() => {
+                              navigator.clipboard.writeText(apiResponse.invite_link);
+                              // You can add a toast notification here
+                            }}
+                          >
+                            Copy Link
+                          </Button>
+                        </Paper>
+                      ) : (
+                        <Typography variant="body2" color="textSecondary">
+                          {apiResponse.message}
+                        </Typography>
+                      )}
+                    </Box>
+                  ) : (
+                    <Alert severity="error" sx={{ mb: 2 }}>
+                      {apiResponse.error.error || 'Failed to generate invite link'}
+                      {apiResponse.error.details && (
+                        <Typography variant="body2" sx={{ mt: 1 }}>
+                          {apiResponse.error.details}
+                        </Typography>
+                      )}
+                    </Alert>
+                  )}
+
+                  <Button variant="contained" fullWidth onClick={handleCloseModal} sx={{ mt: 2 }}>
+                    Close
+                  </Button>
+                </Box>
+              )}
+            </Box>
+          </Fade>
+        </Modal>
       </Box>
     </Grid>
   );

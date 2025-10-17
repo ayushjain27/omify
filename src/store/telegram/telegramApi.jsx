@@ -11,7 +11,8 @@ const urls = {
   uploadTelegramThumbnail: 'telegram/upload',
   countAllTelegramPagesByUserName: 'telegram/countAllTelegramPagesByUserName',
   getTelegramPagePaginated: 'telegram/getAllTelegramPagesPaginated',
-  getTelegramPageDetailsById: 'telegram/getTelegramPageDetailsById'
+  getTelegramPageDetailsById: 'telegram/getTelegramPageDetailsById',
+  addUserToChannel: 'telegram/add-user-to-channel'
 };
 
 export const telegramSendOtpApi = createAsyncThunk('store/telegramSendOtpApi', async (params, thunkApi) => {
@@ -196,3 +197,28 @@ export const getTelegramPageDetailsByIdApi = createAsyncThunk('serviceplug/getTe
     return thunkApi.rejectWithValue(error);
   }
 });
+
+export const addUserToChannelApi = createAsyncThunk('store/addUserToChannelApi', async (params, thunkApi) => {
+  try {
+    console.log(params,"params")
+    const response = await axios.request({
+      url: `${urls.addUserToChannel}`,
+      method: 'post',
+      data: params
+    });
+    const data = await response.data;
+
+    // if (data?.message) {
+    //   return data;
+    // }
+
+    if (data) {
+      return data;
+    }
+    return thunkApi.rejectWithValue('Something went wrong');
+  } catch (err) {
+    // thunkApi.dispatch(showMessage({ message: 'Something went wrong. please try again!', variant: 'error' }));
+    return thunkApi.rejectWithValue('Something went wrong. Please try again!');
+  }
+});
+

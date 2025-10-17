@@ -149,7 +149,11 @@ const TelegramVerificationModal = ({ open, onClose, onVerificationComplete }) =>
         setSelectedChannel(result.channel.id);
 
         // Navigate to telegram page with the new channel
-        navigateToTelegramPage(result.channel);
+        const channelWithPhone = {
+          ...result.channel,
+          phoneNumber: phoneNumber
+        };
+        navigateToTelegramPage(channelWithPhone);
       } else {
         setError(result.message || 'Failed to create channel');
       }
@@ -166,10 +170,16 @@ const TelegramVerificationModal = ({ open, onClose, onVerificationComplete }) =>
       return;
     }
     console.log(channels, 'Dewkfnj');
-    const channel = channels.find((c) => c.id === selectedChannel);
+    let channel = channels.find((c) => c.id === selectedChannel);
     console.log(channel, 'Dwel;k');
+    const channelWithPhone = {
+      ...channel,
+      phoneNumber: phoneNumber
+    };
+
+    // 5. Navigate
     if (channel) {
-      navigateToTelegramPage(channel);
+      navigateToTelegramPage(channelWithPhone);
     }
   };
 

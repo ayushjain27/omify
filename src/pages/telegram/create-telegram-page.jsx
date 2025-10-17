@@ -36,6 +36,7 @@ export default function CreateTelegramPage() {
   
   // Get channel data from navigation state
   const channel = location.state?.channel;
+  console.log(channel,"Asd;lwekm")
 
   const [file, setFile] = useState(null);
   const [preview, setPreview] = useState(null);
@@ -51,7 +52,8 @@ export default function CreateTelegramPage() {
     buttonText: 'Join Now',
     category: 'Finance',
     imageUrl: '',
-    plans: []
+    plans: [],
+    phoneNumber: channel.phoneNumber || ''
   });
 
   // Plan management state
@@ -210,7 +212,7 @@ export default function CreateTelegramPage() {
 
     try {
       await dispatch(uploadTelegramThumbnailApi(formData));
-      enqueueSnackbar('Thumbnail uploaded successfully', { variant: 'success' });
+      // enqueueSnackbar('Thumbnail uploaded successfully', { variant: 'success' });
     } catch (error) {
       enqueueSnackbar(`Failed to upload the file: ${error.message}`, { variant: 'error' });
       throw error;
@@ -229,15 +231,14 @@ export default function CreateTelegramPage() {
               Create Telegram Page
             </Typography>
 
-            {channel && (
+            {/* {channel && (
               <Box sx={{ mb: 2, p: 1, backgroundColor: '#f5f5f5', borderRadius: 1 }}>
                 <Typography variant="subtitle1" sx={{ fontWeight: 'bold' }}>
                   Creating page for: {channel.title || channel.name}
                 </Typography>
                 <Typography variant="body2">Channel ID: {channel.id}</Typography>
-                {/* Removed the invite link display from the UI */}
               </Box>
-            )}
+            )} */}
 
             <TextField
               label="Channel Name *"
@@ -438,7 +439,7 @@ export default function CreateTelegramPage() {
                 mt: 2
               }}
               onClick={handleSubmit}
-              disabled={uploading}
+              // disabled={uploading}
             >
               {uploading ? 'Uploading...' : 'Save and Continue'}
             </Button>

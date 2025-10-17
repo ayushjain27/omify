@@ -18,7 +18,8 @@ import {
   colors,
   Grow,
   Fade,
-  Zoom
+  Zoom,
+  CircularProgress
 } from '@mui/material';
 import { CloudUpload } from '@mui/icons-material';
 import PictureAsPdfIcon from '@mui/icons-material/PictureAsPdf';
@@ -65,6 +66,7 @@ export default function SamplePage() {
   const dispatch = useDispatch();
 
   const navigate = useNavigate();
+  const [loading, setLoading] = useState(false);
 
   const handleSubmit = async () => {
     if (!file) {
@@ -95,15 +97,26 @@ export default function SamplePage() {
       ...data,
       userName: selectedUserDetails?.userName
     };
-    let response = await dispatch(createPaymentApi(requestData));
-    response = unwrapResult(response);
-    let paymentPageId = response?._id;
-    await handleUpload(paymentPageId);
-    if (anyFile) {
-      console.log('dmkeik');
-      await handleAnyFileUpload(paymentPageId);
+    setLoading(true);
+    try {
+      let response = await dispatch(createPaymentApi(requestData));
+      response = unwrapResult(response);
+      let paymentPageId = response?._id;
+      await handleUpload(paymentPageId);
+      if (anyFile) {
+        console.log('dmkeik');
+        await handleAnyFileUpload(paymentPageId);
+      }
+      enqueueSnackbar('Payment Page has created', {
+        variant: 'success'
+      });
+      setLoading(false);
+      navigate('/payment-page');
+    } catch (error) {
+      enqueueSnackbar(`Failed to upload the file. ${error || error.message}`, {
+        variant: 'error'
+      });
     }
-    navigate('/payment-page');
   };
 
   const handleFileChange = (event) => {
@@ -248,9 +261,9 @@ export default function SamplePage() {
 
     try {
       await dispatch(uploadThumbnailApi(formData));
-      enqueueSnackbar('Thumbnail uploaded successfully', {
-        variant: 'success'
-      });
+      // enqueueSnackbar('Thumbnail uploaded successfully', {
+      //   variant: 'success'
+      // });
     } catch (error) {
       enqueueSnackbar(`Failed to upload the file. ${error || error.message}`, {
         variant: 'error'
@@ -274,9 +287,9 @@ export default function SamplePage() {
     console.log(anyFile, 'anyFile');
     try {
       await dispatch(uploadFileApi(formData));
-      enqueueSnackbar('File Uploaded successfully', {
-        variant: 'success'
-      });
+      // enqueueSnackbar('File Uploaded successfully', {
+      //   variant: 'success'
+      // });
     } catch (error) {
       console.error(error);
       enqueueSnackbar(`Failed to upload the file. ${error || error.message}`, {
@@ -498,13 +511,27 @@ export default function SamplePage() {
                 sx={{
                   backgroundColor: '#000000',
                   color: '#FFFFFF',
-                  '&:hover': { backgroundColor: '#333333' },
+                  '&:hover': {
+                    backgroundColor: loading ? '#000000' : '#333333'
+                  },
                   height: 48,
-                  borderRadius: 2
+                  borderRadius: 2,
+                  position: 'relative'
                 }}
                 onClick={handleSubmit}
               >
-                Save and Continue
+                {loading && (
+                  <CircularProgress
+                    size={24}
+                    sx={{
+                      color: '#FFFFFF',
+                      position: 'absolute',
+                      left: '50%',
+                      marginLeft: '-12px'
+                    }}
+                  />
+                )}
+                <span style={{ visibility: loading ? 'hidden' : 'visible' }}>Save and Continue</span>
               </Button>
             </Box>
           </Grid>
@@ -533,7 +560,6 @@ export default function SamplePage() {
                 sx={{
                   height: '200px',
                   backgroundImage: !data?.imageUrl ? `url(${data.imageUrl})` : 'linear-gradient(to right, #4facfe 0%, #00f2fe 100%)',
-                  backgroundSize: 'cover',
                   backgroundSize: 'cover',
                   backgroundPosition: 'center',
                   borderRadius: 2,
