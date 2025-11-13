@@ -1,5 +1,5 @@
 import { createSlice } from '@reduxjs/toolkit';
-import { countAllTelegramPagesByUserNameApi, getTelegramPageDetailsByIdApi, getTelegramPagePaginatedApi } from './telegramApi';
+import { countAllTelegramPagesByUserNameApi, countAllTelegramUsersByChannelIdApi, getAllTelegramUsersByChannelIdApi, getTelegramPageDetailsByIdApi, getTelegramPagePaginatedApi } from './telegramApi';
 // import { sendOtpApi } from './authApi';
 
 // ----------------------------------------------------------------------
@@ -10,7 +10,11 @@ const initialState = {
   isTelegramTablePaginatedLoading: true,
   telegramList: [],
   telegramListPageSize: 50,
-  telegramPageDetail: {}
+  telegramNewUserListPageSize: 50,
+  telegramPageDetail: {},
+  countAllTelegramUsers: {},
+  isTelegramNewUSerLoading: true,
+  telegramNewUserList: []
 };
 
 const slice = createSlice({
@@ -40,6 +44,19 @@ const slice = createSlice({
     });
     builder.addCase(getTelegramPageDetailsByIdApi.fulfilled, (state, action) => {
       state.telegramPageDetail = action.payload;
+    });
+    builder.addCase(countAllTelegramUsersByChannelIdApi.fulfilled, (state, action) => {
+      state.countAllTelegramUsers = action.payload;
+    });
+    builder.addCase(getAllTelegramUsersByChannelIdApi.pending, (state, action) => {
+      state.isTelegramNewUSerLoading = false;
+    });
+    builder.addCase(getAllTelegramUsersByChannelIdApi.fulfilled, (state, action) => {
+      state.isTelegramNewUSerLoading = true;
+      state.telegramNewUserList = action.payload;
+    });
+    builder.addCase(getAllTelegramUsersByChannelIdApi.rejected, (state, action) => {
+      state.isTelegramNewUSerLoading = false;
     });
   }
 });

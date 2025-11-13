@@ -17,6 +17,7 @@ const ContentPage = Loadable(lazy(() => import('pages/extra-pages/content-page')
 const PaymentList = Loadable(lazy(() => import('pages/extra-pages/sample-page')));
 const CreateTelegramPage = Loadable(lazy(() => import('pages/telegram/create-telegram-page')));
 const TelegramLink = Loadable(lazy(() => import('pages/telegram/telegram-link')));
+const TelegramPageUserDetailsPage = Loadable(lazy(() => import('pages/telegram/telegram-page-user-details')));
 
 // jwt auth
 // const LoginPage = Loadable(lazy(() => import('pages/auth/Login')));
@@ -63,6 +64,10 @@ const LoginRoutes = {
     {
       path: '/telegramLink',
       element: <TelegramLink />
+    },
+    {
+      path: '/userData',
+      element: <TelegramPageUserDetailsPage />
     },
     {
       path: 'create-telegram-page',

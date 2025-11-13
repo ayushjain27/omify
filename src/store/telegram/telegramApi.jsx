@@ -12,7 +12,9 @@ const urls = {
   countAllTelegramPagesByUserName: 'telegram/countAllTelegramPagesByUserName',
   getTelegramPagePaginated: 'telegram/getAllTelegramPagesPaginated',
   getTelegramPageDetailsById: 'telegram/getTelegramPageDetailsById',
-  addUserToChannel: 'telegram/add-user-to-channel'
+  addUserToChannel: 'telegram/add-user-to-channel',
+  countAllTelegramUsersByChannelId: 'telegram/countAllTelegramUsersByChannelId',
+  getAllTelegramUsersByChannelId: 'telegram/getAllTelegramUsersByChannelId'
 };
 
 export const telegramSendOtpApi = createAsyncThunk('store/telegramSendOtpApi', async (params, thunkApi) => {
@@ -40,7 +42,7 @@ export const telegramSendOtpApi = createAsyncThunk('store/telegramSendOtpApi', a
 
 export const uploadTelegramThumbnailApi = createAsyncThunk('store/uploadTelegramThumbnailApi', async (params, thunkApi) => {
   try {
-    console.log(params,"dlke3mw")
+    console.log(params, 'dlke3mw');
     const response = await axios.request({
       url: `${urls.uploadTelegramThumbnail}`,
       method: 'post',
@@ -109,7 +111,7 @@ export const telegramCreateChannelApi = createAsyncThunk('store/telegramCreateCh
 
 export const telegramVerify2FAApi = createAsyncThunk('store/telegramVerify2FAApi', async (params, thunkApi) => {
   try {
-    console.log(params,"params")
+    console.log(params, 'params');
     const response = await axios.request({
       url: `${urls.telegramVerify2FA}`,
       method: 'post',
@@ -200,7 +202,7 @@ export const getTelegramPageDetailsByIdApi = createAsyncThunk('serviceplug/getTe
 
 export const addUserToChannelApi = createAsyncThunk('store/addUserToChannelApi', async (params, thunkApi) => {
   try {
-    console.log(params,"params")
+    console.log(params, 'params');
     const response = await axios.request({
       url: `${urls.addUserToChannel}`,
       method: 'post',
@@ -222,3 +224,34 @@ export const addUserToChannelApi = createAsyncThunk('store/addUserToChannelApi',
   }
 });
 
+export const countAllTelegramUsersByChannelIdApi = createAsyncThunk(
+  'serviceplug/countAllTelegramUsersByChannelIdApi',
+  async (params, thunkApi) => {
+    try {
+      const response = await axios.get(`${urls.countAllTelegramUsersByChannelId}`, { params });
+      if (response.data.data) {
+        return response.data.data;
+      }
+      return thunkApi.rejectWithValue('Something went wrong with this');
+    } catch (error) {
+      return thunkApi.rejectWithValue(error);
+    }
+  }
+);
+
+export const getAllTelegramUsersByChannelIdApi = createAsyncThunk('serviceplug/getAllTelegramUsersByChannelIdApi', async (params, thunkApi) => {
+  try {
+    const response = await axios.request({
+      url: `${urls.getAllTelegramUsersByChannelId}`,
+      method: 'post',
+      data: params
+    });
+    const data = await response.data;
+    if (data) {
+      return data;
+    }
+    return [];
+  } catch (err) {
+    return thunkApi.rejectWithValue(`Something went wrong. Please try again!, ${err}`);
+  }
+});

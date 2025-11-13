@@ -42,7 +42,7 @@ const createRowData = (data, callBackFns) => {
   return result;
 };
 
-export default function TelegramTable(props) {
+export default function TelegramNewUserTable(props) {
   const { telegramList = [], selectedTab, isTelegramTablePaginatedLoading, setStatus } = props;
   const [gridApi, setGridApi] = useState(null);
   const [openPaymentDialog, setPaymentDialog] = useState(false);
