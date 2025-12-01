@@ -1,7 +1,7 @@
 /* eslint-disable react-hooks/exhaustive-deps */
 // material-ui
 import React, { useEffect, useState } from 'react';
-import { Box, Card, Grid, Tab, Tabs, useMediaQuery, useTheme } from '@mui/material';
+import { Box, Card, Fade, Grid, Paper, Stack, Tab, Tabs, Typography, useMediaQuery, useTheme } from '@mui/material';
 import AnalyticEcommerce from 'components/cards/statistics/AnalyticEcommerce';
 import MainCard from 'components/MainCard';
 import AnimateButton from 'components/@extended/AnimateButton';
@@ -18,6 +18,7 @@ import { toUpper } from 'lodash';
 import TelegramVerificationModal from './telegram-verification-modal';
 import TelegramTable from './TelegramTable';
 import { countAllTelegramPagesByUserNameApi, getTelegramPagePaginatedApi } from '../../store/telegram/telegramApi';
+import AddCircleOutlineRoundedIcon from '@mui/icons-material/AddCircleOutlineRounded';
 
 // ==============================|| SAMPLE PAGE ||============================== //
 
@@ -25,6 +26,7 @@ export default function TelegramPage() {
   const navigate = useNavigate();
   const dispatch = useDispatch();
   const theme = useTheme();
+  const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
   const isDesktop = useMediaQuery(theme.breakpoints.down('sm'));
   const [tabValue, setValue] = useState('active');
   const [forcePage, setForcePage] = useState(0);
@@ -161,51 +163,128 @@ export default function TelegramPage() {
 
   const handleVerificationComplete = (groups) => {
     setShowVerificationModal(false);
-    navigate('/create-telegram-page', { state: { channel: groups } }); // Note: channel is inside an object
-    // navigate('/create-telegram-page');
+    navigate('/create-telegram-page', { state: { channel: groups } });
   };
+
+  const statCards = [
+    {
+      title: 'Total Telegram Pages',
+      count: countAllTelegramPage?.total,
+      gradient: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+      icon: '📊'
+    },
+    {
+      title: 'Active Pages',
+      count: countAllTelegramPage?.active,
+      gradient: 'linear-gradient(135deg, #f093fb 0%, #f5576c 100%)',
+      icon: '✅'
+    },
+    {
+      title: 'Inactive Pages',
+      count: countAllTelegramPage?.inActive,
+      gradient: 'linear-gradient(135deg, #4facfe 0%, #00f2fe 100%)',
+      icon: '⏸️'
+    },
+    {
+      title: 'Rejected Pages',
+      count: countAllTelegramPage?.rejected || 0,
+      gradient: 'linear-gradient(135deg, #fa709a 0%, #fee140 100%)',
+      icon: '❌'
+    }
+  ];
 
   return (
     <>
-      <div style={{ margin: '0px' }}>
-        <div style={{ display: 'flex', flexDirection: 'row', justifyContent: 'flex-end' }}>
-          <AnimateButton>
-            <Button fullWidth size="large" type="submit" variant="contained" color="primary" onClick={handleNavigation}>
-              Create Telegram Page
-            </Button>
-          </AnimateButton>
-        </div>
+      <Box style={{ margin: '0px' }}>
+        <Fade in timeout={500}>
+          <Paper
+            elevation={0}
+            sx={{
+              p: 3,
+              mb: 3,
+              background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+              borderRadius: 3,
+              color: 'white'
+            }}
+          >
+            <Stack direction="row" justifyContent="space-between" alignItems="center" flexWrap="wrap" gap={2}>
+              <Box>
+                <Typography variant="h4" fontWeight="700" gutterBottom>
+                  Telegram Pages
+                </Typography>
+                <Typography variant="body2" sx={{ opacity: 0.9 }}>
+                  Manage and monitor all your Telegram pages
+                </Typography>
+              </Box>
+              <AnimateButton>
+                <Button
+                  variant="contained"
+                  startIcon={<AddCircleOutlineRoundedIcon />}
+                  onClick={handleNavigation}
+                  size={isMobile ? 'medium' : 'large'}
+                  sx={{
+                    bgcolor: 'white',
+                    color: 'primary.main',
+                    borderRadius: 2,
+                    px: 3,
+                    py: 1.5,
+                    fontWeight: 600,
+                    boxShadow: '0 8px 24px rgba(0,0,0,0.15)',
+                    '&:hover': {
+                      bgcolor: 'rgba(255,255,255,0.95)',
+                      transform: 'translateY(-2px)',
+                      boxShadow: '0 12px 32px rgba(0,0,0,0.2)'
+                    }
+                  }}
+                >
+                  Create Telegram Page
+                </Button>
+              </AnimateButton>
+            </Stack>
+          </Paper>
+        </Fade>
+
         <TelegramVerificationModal
           open={showVerificationModal}
           onClose={() => setShowVerificationModal(false)}
           onVerificationComplete={handleVerificationComplete}
         />
-        <Grid container rowSpacing={4.5} columnSpacing={2.75} mt={1}>
-          <Grid item xs={12} sm={12} md={4} lg={4}>
-            <AnalyticsEachNumberData
-              title="Total Telegram Pages"
-              number={countAllTelegramPage?.total}
-              loading={isCountAllTelegramPageLoading}
-              sx={{ backgroundColor: '#74CAFF' }}
-            />
-          </Grid>
-          <Grid item xs={12} sm={12} md={4} lg={4}>
-            <AnalyticsEachNumberData
-              title="Total Active Telegram Pages"
-              number={countAllTelegramPage?.active}
-              loading={isCountAllTelegramPageLoading}
-              sx={{ backgroundColor: '#5BE584' }}
-            />
-          </Grid>
-          <Grid item xs={12} sm={12} md={4} lg={4}>
-            <AnalyticsEachNumberData
-              title="Total In-Active Telegram Pages"
-              number={countAllTelegramPage?.inActive}
-              loading={isCountAllTelegramPageLoading}
-              sx={{ backgroundColor: '#ffe704' }}
-            />
-          </Grid>
+
+        <Grid container spacing={3} mb={3}>
+          {statCards.map((card, index) => (
+            <Grid item xs={12} sm={6} md={3} key={index}>
+              <Fade in timeout={500 + index * 100}>
+                <Card
+                  elevation={0}
+                  sx={{
+                    p: 3,
+                    borderRadius: 3,
+                    background: card.gradient,
+                    color: 'white',
+                    transition: 'all 0.3s ease',
+                    '&:hover': {
+                      transform: 'translateY(-8px)',
+                      boxShadow: '0 12px 32px rgba(0,0,0,0.2)'
+                    }
+                  }}
+                >
+                  <Stack direction="row" justifyContent="space-between" alignItems="center">
+                    <Box>
+                      <Typography variant="body2" sx={{ opacity: 0.9, mb: 1, fontWeight: 500 }}>
+                        {card.title}
+                      </Typography>
+                      <Typography variant="h3" fontWeight="700">
+                        {isCountAllTelegramPageLoading ? '...' : card.count || 0}
+                      </Typography>
+                    </Box>
+                    <Box sx={{ fontSize: 48, opacity: 0.3 }}>{card.icon}</Box>
+                  </Stack>
+                </Card>
+              </Fade>
+            </Grid>
+          ))}
         </Grid>
+
         <Card sx={{ marginTop: '16px' }}>
           <Box sx={{ borderBottom: 1, borderColor: 'divider' }}>
             <Tabs
@@ -255,7 +334,7 @@ export default function TelegramPage() {
             renderOnZeroPageCount={null}
           />
         </Card>
-      </div>
+      </Box>
     </>
   );
 }

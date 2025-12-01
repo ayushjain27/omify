@@ -30,13 +30,14 @@ export const telegramSendOtpApi = createAsyncThunk('store/telegramSendOtpApi', a
     //   return data;
     // }
 
-    if (data) {
+    // if (data) {
       return data;
-    }
-    return thunkApi.rejectWithValue('Something went wrong');
+    // }
+    // return thunkApi.rejectWithValue('Something went wrong');
   } catch (err) {
     // thunkApi.dispatch(showMessage({ message: 'Something went wrong. please try again!', variant: 'error' }));
-    return thunkApi.rejectWithValue('Something went wrong. Please try again!');
+    console.log(err,"Dwlem")
+    return thunkApi.rejectWithValue(`Something went wrong. Please try again! ${err?.message}`);
   }
 });
 
@@ -53,10 +54,10 @@ export const uploadTelegramThumbnailApi = createAsyncThunk('store/uploadTelegram
     });
     const data = await response.data;
 
-    if (data?.message) {
+    // if (data?.message) {
       return data;
-    }
-    return thunkApi.rejectWithValue('Something went wrong');
+    // }
+    // return thunkApi.rejectWithValue('Something went wrong');
   } catch (err) {
     // thunkApi.dispatch(showMessage({ message: 'Something went wrong. please try again!', variant: 'error' }));
     return thunkApi.rejectWithValue('Something went wrong. Please try again!');
@@ -152,7 +153,8 @@ export const createTelegramPageApi = createAsyncThunk('store/createTelegramPageA
     return thunkApi.rejectWithValue('Something went wrong');
   } catch (err) {
     // thunkApi.dispatch(showMessage({ message: 'Something went wrong. please try again!', variant: 'error' }));
-    return thunkApi.rejectWithValue('Something went wrong. Please try again!');
+    console.log(err,"Fwel")
+    return thunkApi.rejectWithValue(`${err.details}`);
   }
 });
 
