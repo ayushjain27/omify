@@ -1,16 +1,7 @@
 /* eslint-disable react-hooks/exhaustive-deps */
 
 import React, { useCallback, useEffect, useState } from 'react';
-import { 
-  Box, 
-  Chip, 
-  Dialog, 
-  IconButton, 
-  Tooltip,
-  Typography,
-  Paper,
-  Skeleton
-} from '@mui/material';
+import { Box, Chip, Dialog, IconButton, Tooltip, Typography, Paper, Skeleton } from '@mui/material';
 import { styled } from '@mui/material/styles';
 import { useSnackbar } from 'notistack';
 import _ from 'lodash';
@@ -22,9 +13,12 @@ import { CustomLoadingCellRenderer } from '../../utils/constant';
 import ContentCopyIcon from '@mui/icons-material/ContentCopy';
 import VisibilityIcon from '@mui/icons-material/Visibility';
 import AnalyticsIcon from '@mui/icons-material/Analytics';
+import EditIcon from '@mui/icons-material/Edit'; // Import Edit icon
 import { AllCommunityModule, ModuleRegistry } from 'ag-grid-community';
 import moment from 'moment';
 import { useNavigate } from 'react-router';
+import TelegramDialogData from './telegram-dialog-data';
+import { getTelegramPageDetailsByIdApi } from '../../store/telegram/telegramApi';
 
 ModuleRegistry.registerModules([AllCommunityModule]);
 
@@ -37,18 +31,18 @@ const StyledGridContainer = styled(Box)(({ theme }) => ({
     overflow: 'hidden',
     '& .ag-header': {
       backgroundColor: theme.palette.background.paper,
-      borderBottom: `2px solid ${theme.palette.divider}`,
+      borderBottom: `2px solid ${theme.palette.divider}`
     },
     '& .ag-header-cell': {
       padding: '16px 8px',
       fontWeight: '600',
       fontSize: '14px',
-      color: theme.palette.text.primary,
+      color: theme.palette.text.primary
     },
     '& .ag-row': {
       borderBottom: `1px solid ${theme.palette.divider}`,
       '&:hover': {
-        backgroundColor: theme.palette.action.hover,
+        backgroundColor: theme.palette.action.hover
       }
     },
     '& .ag-cell': {
@@ -93,7 +87,7 @@ const ImageContainer = styled(Box)({
   }
 });
 
-const createRowData = (data, callBackFns) => {
+const createRowData = (data) => {
   return {
     id: data?._id,
     image: data?.imageUrl,
@@ -103,8 +97,7 @@ const createRowData = (data, callBackFns) => {
     status: data?.status,
     createdAt: moment(data?.createdAt).format('DD MMM YYYY, hh:mm A'),
     userId: data?.userName,
-    channelId: data?.channelId,
-    ...callBackFns
+    channelId: data?.channelId
   };
 };
 
@@ -165,13 +158,7 @@ export default function TelegramTable(props) {
       filter: 'agTextColumnFilter',
       minWidth: 120,
       maxWidth: 120,
-      cellRenderer: ({ data }) => (
-        <StatusChip 
-          label={data.status?.toLowerCase() || 'Unknown'} 
-          status={data.status}
-          size="small"
-        />
-      )
+      cellRenderer: ({ data }) => <StatusChip label={data.status?.toLowerCase() || 'Unknown'} status={data.status} size="small" />
     },
     {
       field: 'createdAt',
@@ -184,15 +171,15 @@ export default function TelegramTable(props) {
       field: 'action',
       headerName: 'Actions',
       sortable: false,
-      minWidth: 140,
-      maxWidth: 140,
-      cellRenderer: ({ data }) => renderActionButtons(data)
+      minWidth: 180,
+      maxWidth: 180,
+      cellRenderer: (params) => renderActionButtons(params.data, params.context)
     }
   ];
 
   useEffect(() => {
     if (!_.isEmpty(telegramList)) {
-      const rowD = _.map(telegramList, (data) => createRowData(data, { showTelegramDetails, copyLink }));
+      const rowD = _.map(telegramList, (data) => createRowData(data));
       setRowData(rowD || []);
     } else {
       setRowData([]);
@@ -221,10 +208,10 @@ export default function TelegramTable(props) {
         {data.title}
       </Typography>
       <Tooltip title="View Details">
-        <IconButton 
-          size="small" 
+        <IconButton
+          size="small"
           onClick={() => showTelegramDetails(data)}
-          sx={{ 
+          sx={{
             color: 'primary.main',
             '&:hover': { backgroundColor: 'primary.light', color: 'white' }
           }}
@@ -235,19 +222,33 @@ export default function TelegramTable(props) {
     </Box>
   );
 
-  const renderActionButtons = (data) => (
+  const renderActionButtons = (data, context) => (
     <Box sx={{ display: 'flex', gap: 1 }}>
+      <Tooltip title="Edit Telegram Page">
+        <IconButton
+          size="small"
+          onClick={() => context.handleEdit(data)}
+          sx={{
+            backgroundColor: 'warning.light',
+            color: 'white',
+            '&:hover': { backgroundColor: 'warning.main' }
+          }}
+        >
+          <EditIcon fontSize="small" />
+        </IconButton>
+      </Tooltip>
+
       <Tooltip title="Copy Telegram Link">
         <IconButton
           size="small"
           onClick={() => {
-            if(data?.status === "INACTIVE") {
+            if (data?.status === 'INACTIVE') {
               enqueueSnackbar('Telegram Page is Inactive', { variant: 'error' });
             } else {
-              data?.copyLink(data);
+              context.copyLink(data);
             }
           }}
-          sx={{ 
+          sx={{
             backgroundColor: 'primary.light',
             color: 'white',
             '&:hover': { backgroundColor: 'primary.main' }
@@ -256,14 +257,14 @@ export default function TelegramTable(props) {
           <ContentCopyIcon fontSize="small" />
         </IconButton>
       </Tooltip>
-      
+
       <Tooltip title="View Analytics">
         <IconButton
           size="small"
           onClick={() => {
             navigate('/userData', { state: { telegramChannelId: data?.channelId } });
           }}
-          sx={{ 
+          sx={{
             backgroundColor: 'success.light',
             color: 'white',
             '&:hover': { backgroundColor: 'success.main' }
@@ -278,8 +279,33 @@ export default function TelegramTable(props) {
   const showTelegramDetails = async (data) => {
     // You can implement Telegram detail view here if needed
     console.log('Telegram details:', data);
+    const response = await dispatch(getTelegramPageDetailsByIdApi({ telegramId: data?.id }));
+    setTelegramDialog(true);
     // await dispatch(getTelegramPageDetailByIdApi({ id: data?.id }));
     // setTelegramDialog(true);
+  };
+
+  const handleEdit = (data) => {
+    // Navigate to edit page with only the page ID
+    navigate('/create-telegram-page', { 
+      state: { 
+        isEdit: true, 
+        id: data?.id
+      } 
+    });
+  };
+
+  const copyLink = (data) => {
+    const linkToCopy = `http://localhost:3000/telegramLink?id=${data?.id || 'dmkemkd'}`;
+    navigator.clipboard
+      .writeText(linkToCopy)
+      .then(() => {
+        enqueueSnackbar('Telegram link copied to clipboard!', { variant: 'success' });
+      })
+      .catch((err) => {
+        enqueueSnackbar('Failed to copy link', { variant: 'error' });
+        console.error('Failed to copy link:', err);
+      });
   };
 
   const loadingCellRenderer = useCallback(CustomLoadingCellRenderer, []);
@@ -293,25 +319,13 @@ export default function TelegramTable(props) {
     }
   }, [isTelegramTablePaginatedLoading, gridApi]);
 
-  const copyLink = (data) => {
-    const linkToCopy = `http://localhost:3000/telegramLink?id=${data?.id || 'dmkemkd'}`;
-    navigator.clipboard.writeText(linkToCopy)
-      .then(() => {
-        enqueueSnackbar('Telegram link copied to clipboard!', { variant: 'success' });
-      })
-      .catch((err) => {
-        enqueueSnackbar('Failed to copy link', { variant: 'error' });
-        console.error('Failed to copy link:', err);
-      });
-  };
-
   return (
     <StyledGridContainer>
       {/* You can add a Telegram detail dialog here if needed */}
-      {/* <Dialog fullScreen open={openTelegramDialog} onClose={() => setTelegramDialog(false)}>
+      <Dialog fullScreen open={openTelegramDialog} onClose={() => setTelegramDialog(false)}>
         <TelegramDialogData setTelegramDialog={setTelegramDialog} setStatus={setStatus} />
-      </Dialog> */}
-      
+      </Dialog>
+
       <div className="ag-theme-alpine" style={{ height: '100%', width: '100%' }}>
         <AgGridReact
           idProperty="id"
@@ -323,7 +337,7 @@ export default function TelegramTable(props) {
           suppressCellSelection={true}
           suppressRowClickSelection={true}
           onGridReady={onGridReady}
-          context={{ showTelegramDetails, copyLink }}
+          context={{ showTelegramDetails, copyLink, handleEdit }}
           loadingCellRenderer={loadingCellRenderer}
           loadingOverlayComponent={isTelegramTablePaginatedLoading ? CustomLoadingCellRenderer : undefined}
           defaultColDef={{

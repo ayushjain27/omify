@@ -1,3 +1,4 @@
+/* eslint-disable react-hooks/exhaustive-deps */
 // material-ui
 import React, { useState, useEffect } from 'react';
 import {
@@ -22,17 +23,17 @@ import {
   CardContent,
   Container,
   LinearProgress,
-  alpha
+  CircularProgress
 } from '@mui/material';
-import { 
-  CloudUpload, 
-  Add, 
-  Delete, 
-  InfoOutlined, 
-  CheckCircle, 
-  LocalOffer, 
-  CalendarToday, 
-  Security, 
+import {
+  CloudUpload,
+  Add,
+  Delete,
+  InfoOutlined,
+  CheckCircle,
+  LocalOffer,
+  CalendarToday,
+  Security,
   ArrowBack,
   Title,
   Description,
@@ -40,15 +41,21 @@ import {
   Person,
   Telegram,
   Shield,
-  TrendingUp
+  TrendingUp,
+  Edit
 } from '@mui/icons-material';
-import { useLocation, useNavigate } from 'react-router';
+import { useLocation, useNavigate, useParams } from 'react-router';
 
 // project imports
 import { useDispatch, useSelector } from 'react-redux';
 import { useSnackbar } from 'notistack';
 import { unwrapResult } from '@reduxjs/toolkit';
-import { createTelegramPageApi, uploadTelegramThumbnailApi } from '../../store/telegram/telegramApi';
+import {
+  createTelegramPageApi,
+  uploadTelegramThumbnailApi,
+  getTelegramPageDetailsByIdApi,
+  updateTelegramApi
+} from '../../store/telegram/telegramApi';
 
 export default function CreateTelegramPage() {
   const { enqueueSnackbar } = useSnackbar();
@@ -56,14 +63,21 @@ export default function CreateTelegramPage() {
   const dispatch = useDispatch();
   const navigate = useNavigate();
   const location = useLocation();
-  
+  console.log(location, 'Dwdnw');
+  // const {id } = params;
+  console.log(location.state, 'Dweklnfkedw');
+
   const channel = location.state?.channel;
+  const id = location.state?.id;
 
   const [file, setFile] = useState(null);
   const [preview, setPreview] = useState(null);
   const [uploading, setUploading] = useState(false);
+  const [loading, setLoading] = useState(false);
   const [selectedPlan, setSelectedPlan] = useState('');
   const [step, setStep] = useState(1);
+  const [isEditMode, setIsEditMode] = useState(false);
+  const [existingImageUrl, setExistingImageUrl] = useState('');
 
   const [data, setData] = useState({
     channelName: '',
@@ -85,29 +99,62 @@ export default function CreateTelegramPage() {
     value: 'Month'
   });
 
+  // Check if we're in edit mode and load data
   useEffect(() => {
-    if (channel) {
-      setData(prevData => ({
-        ...prevData,
-        channelName: channel.title || channel.name || '',
-        channelLink: channel.inviteLink || '',
-        title: channel.title || channel.name || '',
-        description: channel.description || `Join ${channel.title || channel.name} for exclusive content and insights`
-      }));
+    if (id) {
+      setIsEditMode(true);
+      fetchTelegramPageDetails();
     }
-  }, [channel]);
+  }, [id]);
+
+  // Fetch existing Telegram page details for edit mode
+  const fetchTelegramPageDetails = async () => {
+    setLoading(true);
+    try {
+      const response = await dispatch(getTelegramPageDetailsByIdApi({ telegramId: id }));
+      const result = unwrapResult(response);
+
+      if (result) {
+        const pageData = result;
+
+        // Update state with existing data
+        setData({
+          channelName: pageData.channelName || '',
+          channelLink: pageData.channelLink || '',
+          userName: pageData.userName || selectedUserDetails?.userName || '',
+          title: pageData.title || '',
+          description: pageData.description || '',
+          buttonText: pageData.buttonText || 'Join Now',
+          category: pageData.category || 'Finance',
+          imageUrl: pageData.imageUrl || '',
+          plans: pageData.plans || [],
+          phoneNumber: pageData.phoneNumber || ''
+        });
+
+        // Set existing image URL for preview
+        if (pageData.imageUrl) {
+          setExistingImageUrl(pageData.imageUrl);
+          setPreview(pageData.imageUrl);
+        }
+      }
+    } catch (error) {
+      enqueueSnackbar(`Failed to load page details: ${error}`, { variant: 'error' });
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const handleAddPlan = () => {
     if (!newPlan.price) {
       enqueueSnackbar('Please enter a price for the plan', { variant: 'error' });
       return;
     }
-    
+
     if (parseFloat(newPlan.discount) > parseFloat(newPlan.price)) {
       enqueueSnackbar('Discount cannot exceed price', { variant: 'error' });
       return;
     }
-    
+
     if (!newPlan.totalNumber) {
       enqueueSnackbar('Please enter the total number for the plan', { variant: 'error' });
       return;
@@ -120,7 +167,7 @@ export default function CreateTelegramPage() {
       value: newPlan.value
     };
 
-    setData(prevData => ({
+    setData((prevData) => ({
       ...prevData,
       plans: [...prevData.plans, plan]
     }));
@@ -136,7 +183,7 @@ export default function CreateTelegramPage() {
   };
 
   const handleRemovePlan = (index) => {
-    setData(prevData => ({
+    setData((prevData) => ({
       ...prevData,
       plans: prevData.plans.filter((_, i) => i !== index)
     }));
@@ -148,7 +195,7 @@ export default function CreateTelegramPage() {
       { field: data.channelName, message: 'Please enter a channel name' },
       { field: data.title, message: 'Please enter a title' },
       { field: data.description, message: 'Please enter a description' },
-      { field: file, message: 'Please select a thumbnail file' },
+      { field: isEditMode ? true : file, message: 'Please select a thumbnail file' },
       { field: data.plans.length > 0, message: 'Please add at least one plan' }
     ];
 
@@ -162,39 +209,67 @@ export default function CreateTelegramPage() {
     try {
       const requestData = {
         ...data,
-        channelLink: channel?.inviteLink || '',
+        channelLink: channel?.inviteLink || data.channelLink,
         userName: selectedUserDetails?.userName,
         channelId: channel?.id
       };
-      
-      let response = await dispatch(createTelegramPageApi(requestData));
-      response = unwrapResult(response);
-      const telegramId = response?.result?._id;
-      
-      await handleUpload(telegramId);
-      enqueueSnackbar('🎉 Telegram page created successfully!', { variant: 'success' });
-      // navigate('/telegram-page');
+
+      let response;
+
+      if (isEditMode) {
+        // Update existing page
+        requestData.id = id;
+        response = await dispatch(updateTelegramApi(requestData));
+        response = unwrapResult(response);
+
+        // Upload new image if changed
+        if (file) {
+          await handleUpload(id);
+        }
+
+        enqueueSnackbar('🎉 Telegram page updated successfully!', { variant: 'success' });
+      } else {
+        // Create new page
+        response = await dispatch(createTelegramPageApi(requestData));
+        response = unwrapResult(response);
+        const telegramId = response?.result?._id;
+
+        // Upload image for new page
+        if (file) {
+          await handleUpload(telegramId);
+        }
+
+        enqueueSnackbar('🎉 Telegram page created successfully!', { variant: 'success' });
+      }
+
+      // Navigate back or to listing page
+      navigate('/telegram-page');
     } catch (error) {
-      console.log(error,"dwel")
-      enqueueSnackbar(`Failed to create Telegram page: ${error}`, { variant: 'error' });
+      console.log(error, 'error');
+      enqueueSnackbar(`Failed to ${isEditMode ? 'update' : 'create'} Telegram page: ${error}`, { variant: 'error' });
     }
   };
 
   const handleFileChange = (event) => {
     const selectedFile = event.target.files[0];
     if (!selectedFile) return;
-    
+
     if (!selectedFile.type.startsWith('image/')) {
       enqueueSnackbar('Please select an image file', { variant: 'error' });
       return;
     }
-    
+
     setFile(selectedFile);
     const previewUrl = URL.createObjectURL(selectedFile);
     setPreview(previewUrl);
+
+    // Clear existing image URL when new file is selected
+    setExistingImageUrl('');
   };
 
   const handleUpload = async (telegramId) => {
+    if (!file) return;
+
     const formData = new FormData();
     formData.append('telegramId', telegramId);
     formData.append('image', file);
@@ -211,34 +286,63 @@ export default function CreateTelegramPage() {
     }
   };
 
+  const handleClearImage = () => {
+    setFile(null);
+    setPreview(null);
+    setExistingImageUrl('');
+    setData((prev) => ({ ...prev, imageUrl: '' }));
+  };
+
+  if (loading) {
+    return (
+      <Box
+        sx={{
+          minHeight: '100vh',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)'
+        }}
+      >
+        <CircularProgress size={60} sx={{ color: 'white' }} />
+      </Box>
+    );
+  }
+
   return (
-    <Box sx={{ 
-      minHeight: '100vh',
-      background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
-      py: 3
-    }}>
+    <Box
+      sx={{
+        minHeight: '100vh',
+        background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+        py: 3
+      }}
+    >
       <Container maxWidth="xl" sx={{ height: '100%' }}>
-        <Box sx={{ 
-          display: 'flex', 
-          flexDirection: 'column', 
-          height: '100%',
-          backgroundColor: 'rgba(255, 255, 255, 0.95)',
-          borderRadius: 3,
-          overflow: 'hidden',
-          boxShadow: '0 20px 60px rgba(0, 0, 0, 0.3)'
-        }}>
+        <Box
+          sx={{
+            display: 'flex',
+            flexDirection: 'column',
+            height: '100%',
+            backgroundColor: 'rgba(255, 255, 255, 0.95)',
+            borderRadius: 3,
+            overflow: 'hidden',
+            boxShadow: '0 20px 60px rgba(0, 0, 0, 0.3)'
+          }}
+        >
           {/* Header with Progress */}
-          <Box sx={{ 
-            p: 3, 
-            background: 'linear-gradient(90deg, #4f46e5 0%, #7c3aed 100%)',
-            color: 'white'
-          }}>
+          <Box
+            sx={{
+              p: 3,
+              background: 'linear-gradient(90deg, #4f46e5 0%, #7c3aed 100%)',
+              color: 'white'
+            }}
+          >
             <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mb: 2 }}>
               <Box>
                 <Button
                   startIcon={<ArrowBack />}
                   onClick={() => navigate(-1)}
-                  sx={{ 
+                  sx={{
                     color: 'white',
                     '&:hover': { backgroundColor: 'rgba(255,255,255,0.1)' }
                   }}
@@ -246,30 +350,50 @@ export default function CreateTelegramPage() {
                   Back
                 </Button>
                 <Typography variant="h4" fontWeight="bold" sx={{ mt: 1 }}>
-                  ✨ Create Premium Telegram Page
+                  {isEditMode ? '✏️ Edit Telegram Page' : '✨ Create Premium Telegram Page'}
                 </Typography>
                 <Typography variant="body2" sx={{ opacity: 0.9 }}>
-                  Design your exclusive Telegram channel subscription page
+                  {isEditMode
+                    ? 'Update your Telegram channel subscription page'
+                    : 'Design your exclusive Telegram channel subscription page'}
                 </Typography>
               </Box>
-              {channel && (
-                <Chip
-                  icon={<Telegram />}
-                  label={`${channel.title}`}
-                  sx={{ 
-                    backgroundColor: 'rgba(255,255,255,0.2)',
-                    color: 'white',
-                    fontWeight: 600
-                  }}
-                />
-              )}
+              <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
+                {channel && (
+                  <Chip
+                    icon={<Telegram />}
+                    label={`${channel.title}`}
+                    sx={{
+                      backgroundColor: 'rgba(255,255,255,0.2)',
+                      color: 'white',
+                      fontWeight: 600
+                    }}
+                  />
+                )}
+                {isEditMode && (
+                  <Chip
+                    icon={<Edit />}
+                    label="Edit Mode"
+                    color="warning"
+                    sx={{
+                      fontWeight: 600
+                    }}
+                  />
+                )}
+              </Box>
             </Box>
-            
-            <LinearProgress 
-              variant="determinate" 
-              value={(data.plans.length > 0 ? 20 : 0) + (file ? 20 : 0) + (data.title ? 20 : 0) + (data.description ? 20 : 0) + (data.channelName ? 20 : 0)} 
-              sx={{ 
-                height: 8, 
+
+            <LinearProgress
+              variant="determinate"
+              value={
+                (data.plans.length > 0 ? 20 : 0) +
+                (file || existingImageUrl ? 20 : 0) +
+                (data.title ? 20 : 0) +
+                (data.description ? 20 : 0) +
+                (data.channelName ? 20 : 0)
+              }
+              sx={{
+                height: 8,
                 borderRadius: 4,
                 backgroundColor: 'rgba(255,255,255,0.2)',
                 '& .MuiLinearProgress-bar': {
@@ -282,40 +406,46 @@ export default function CreateTelegramPage() {
           <Grid container sx={{ flex: 1, overflow: 'hidden' }}>
             {/* Form Section - Now Scrollable */}
             <Grid item xs={12} md={5} sx={{ height: '100%' }}>
-              <Box sx={{ 
-                height: '100%', 
-                overflow: 'auto',
-                '&::-webkit-scrollbar': {
-                  width: '8px',
-                },
-                '&::-webkit-scrollbar-track': {
-                  background: '#f1f1f1',
-                },
-                '&::-webkit-scrollbar-thumb': {
-                  background: '#c1c1c1',
-                  borderRadius: '4px',
-                },
-                '&::-webkit-scrollbar-thumb:hover': {
-                  background: '#a8a8a8',
-                }
-              }}>
+              <Box
+                sx={{
+                  height: '100%',
+                  overflow: 'auto',
+                  '&::-webkit-scrollbar': {
+                    width: '8px'
+                  },
+                  '&::-webkit-scrollbar-track': {
+                    background: '#f1f1f1'
+                  },
+                  '&::-webkit-scrollbar-thumb': {
+                    background: '#c1c1c1',
+                    borderRadius: '4px'
+                  },
+                  '&::-webkit-scrollbar-thumb:hover': {
+                    background: '#a8a8a8'
+                  }
+                }}
+              >
                 <Box sx={{ p: 3 }}>
                   {/* Step 1: Basic Info */}
-                  <Card sx={{ 
-                    mb: 3, 
-                    borderRadius: 3,
-                    border: '1px solid',
-                    borderColor: 'divider',
-                    boxShadow: '0 4px 20px rgba(0,0,0,0.08)'
-                  }}>
+                  <Card
+                    sx={{
+                      mb: 3,
+                      borderRadius: 3,
+                      border: '1px solid',
+                      borderColor: 'divider',
+                      boxShadow: '0 4px 20px rgba(0,0,0,0.08)'
+                    }}
+                  >
                     <CardContent sx={{ p: 3 }}>
                       <Box sx={{ display: 'flex', alignItems: 'center', mb: 3 }}>
-                        <Avatar sx={{ 
-                          bgcolor: '#4f46e5', 
-                          mr: 2,
-                          width: 40,
-                          height: 40
-                        }}>
+                        <Avatar
+                          sx={{
+                            bgcolor: '#4f46e5',
+                            mr: 2,
+                            width: 40,
+                            height: 40
+                          }}
+                        >
                           <Person />
                         </Avatar>
                         <Box>
@@ -334,22 +464,22 @@ export default function CreateTelegramPage() {
                           placeholder="Enter your channel name"
                           variant="outlined"
                           fullWidth
-                          disabled
+                          disabled={isEditMode}
                           value={data.channelName}
-                          onChange={(e) => setData(prevData => ({ ...prevData, channelName: e.target.value }))}
+                          onChange={(e) => setData((prevData) => ({ ...prevData, channelName: e.target.value }))}
                           InputProps={{
                             startAdornment: (
                               <InputAdornment position="start">
                                 <Telegram color="primary" />
                               </InputAdornment>
-                            ),
+                            )
                           }}
                           sx={{
                             '& .MuiOutlinedInput-root': {
                               borderRadius: 2,
                               '&:hover fieldset': {
-                                borderColor: '#4f46e5',
-                              },
+                                borderColor: '#4f46e5'
+                              }
                             }
                           }}
                         />
@@ -360,18 +490,18 @@ export default function CreateTelegramPage() {
                           variant="outlined"
                           fullWidth
                           value={data.title}
-                          onChange={(e) => setData(prevData => ({ ...prevData, title: e.target.value }))}
+                          onChange={(e) => setData((prevData) => ({ ...prevData, title: e.target.value }))}
                           InputProps={{
                             startAdornment: (
                               <InputAdornment position="start">
                                 <Title color="primary" />
                               </InputAdornment>
-                            ),
+                            )
                           }}
                           helperText="Make it catchy and descriptive"
                           sx={{
                             '& .MuiOutlinedInput-root': {
-                              borderRadius: 2,
+                              borderRadius: 2
                             }
                           }}
                         />
@@ -384,17 +514,31 @@ export default function CreateTelegramPage() {
                           multiline
                           rows={3}
                           value={data.description}
-                          onChange={(e) => setData(prevData => ({ ...prevData, description: e.target.value }))}
+                          onChange={(e) => setData((prevData) => ({ ...prevData, description: e.target.value }))}
                           InputProps={{
                             startAdornment: (
                               <InputAdornment position="start">
                                 <Description color="primary" />
                               </InputAdornment>
-                            ),
+                            )
                           }}
                           sx={{
                             '& .MuiOutlinedInput-root': {
-                              borderRadius: 2,
+                              borderRadius: 2
+                            }
+                          }}
+                        />
+
+                        <TextField
+                          label="Button Text"
+                          placeholder="Join Now"
+                          variant="outlined"
+                          fullWidth
+                          value={data.buttonText}
+                          onChange={(e) => setData((prevData) => ({ ...prevData, buttonText: e.target.value }))}
+                          sx={{
+                            '& .MuiOutlinedInput-root': {
+                              borderRadius: 2
                             }
                           }}
                         />
@@ -405,17 +549,17 @@ export default function CreateTelegramPage() {
                           variant="outlined"
                           fullWidth
                           value={data.category}
-                          onChange={(e) => setData(prevData => ({ ...prevData, category: e.target.value }))}
+                          onChange={(e) => setData((prevData) => ({ ...prevData, category: e.target.value }))}
                           InputProps={{
                             startAdornment: (
                               <InputAdornment position="start">
                                 <Category color="primary" />
                               </InputAdornment>
-                            ),
+                            )
                           }}
                           sx={{
                             '& .MuiOutlinedInput-root': {
-                              borderRadius: 2,
+                              borderRadius: 2
                             }
                           }}
                         >
@@ -431,21 +575,25 @@ export default function CreateTelegramPage() {
                   </Card>
 
                   {/* Step 2: Plans */}
-                  <Card sx={{ 
-                    mb: 3, 
-                    borderRadius: 3,
-                    border: '1px solid',
-                    borderColor: 'divider',
-                    boxShadow: '0 4px 20px rgba(0,0,0,0.08)'
-                  }}>
+                  <Card
+                    sx={{
+                      mb: 3,
+                      borderRadius: 3,
+                      border: '1px solid',
+                      borderColor: 'divider',
+                      boxShadow: '0 4px 20px rgba(0,0,0,0.08)'
+                    }}
+                  >
                     <CardContent sx={{ p: 3 }}>
                       <Box sx={{ display: 'flex', alignItems: 'center', mb: 3 }}>
-                        <Avatar sx={{ 
-                          bgcolor: '#10b981', 
-                          mr: 2,
-                          width: 40,
-                          height: 40
-                        }}>
+                        <Avatar
+                          sx={{
+                            bgcolor: '#10b981',
+                            mr: 2,
+                            width: 40,
+                            height: 40
+                          }}
+                        >
                           <LocalOffer />
                         </Avatar>
                         <Box>
@@ -458,11 +606,11 @@ export default function CreateTelegramPage() {
                         </Box>
                       </Box>
 
-                      <Paper 
-                        variant="outlined" 
-                        sx={{ 
-                          p: 2.5, 
-                          mb: 3, 
+                      <Paper
+                        variant="outlined"
+                        sx={{
+                          p: 2.5,
+                          mb: 3,
                           borderRadius: 2,
                           background: 'linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%)'
                         }}
@@ -470,7 +618,7 @@ export default function CreateTelegramPage() {
                         <Typography variant="subtitle2" fontWeight="bold" sx={{ mb: 2, color: '#475569' }}>
                           Add New Plan
                         </Typography>
-                        
+
                         <Grid container spacing={2}>
                           <Grid item xs={12} sm={6}>
                             <TextField
@@ -478,13 +626,13 @@ export default function CreateTelegramPage() {
                               type="number"
                               label="Price (₹)"
                               value={newPlan.price}
-                              onChange={(e) => setNewPlan(prev => ({ ...prev, price: e.target.value }))}
+                              onChange={(e) => setNewPlan((prev) => ({ ...prev, price: e.target.value }))}
                               InputProps={{
-                                startAdornment: <InputAdornment position="start">₹</InputAdornment>,
+                                startAdornment: <InputAdornment position="start">₹</InputAdornment>
                               }}
                               sx={{
                                 '& .MuiOutlinedInput-root': {
-                                  borderRadius: 2,
+                                  borderRadius: 2
                                 }
                               }}
                             />
@@ -501,14 +649,14 @@ export default function CreateTelegramPage() {
                                   enqueueSnackbar('Discount cannot exceed price', { variant: 'error' });
                                   return;
                                 }
-                                setNewPlan(prev => ({ ...prev, discount: discountValue }));
+                                setNewPlan((prev) => ({ ...prev, discount: discountValue }));
                               }}
                               InputProps={{
-                                startAdornment: <InputAdornment position="start">-₹</InputAdornment>,
+                                startAdornment: <InputAdornment position="start">-₹</InputAdornment>
                               }}
                               sx={{
                                 '& .MuiOutlinedInput-root': {
-                                  borderRadius: 2,
+                                  borderRadius: 2
                                 }
                               }}
                             />
@@ -519,11 +667,11 @@ export default function CreateTelegramPage() {
                               type="number"
                               label="Duration"
                               value={newPlan.totalNumber}
-                              onChange={(e) => setNewPlan(prev => ({ ...prev, totalNumber: e.target.value }))}
+                              onChange={(e) => setNewPlan((prev) => ({ ...prev, totalNumber: e.target.value }))}
                               helperText="Number of time units"
                               sx={{
                                 '& .MuiOutlinedInput-root': {
-                                  borderRadius: 2,
+                                  borderRadius: 2
                                 }
                               }}
                             />
@@ -534,10 +682,10 @@ export default function CreateTelegramPage() {
                               fullWidth
                               label="Time Unit"
                               value={newPlan.value}
-                              onChange={(e) => setNewPlan(prev => ({ ...prev, value: e.target.value }))}
+                              onChange={(e) => setNewPlan((prev) => ({ ...prev, value: e.target.value }))}
                               sx={{
                                 '& .MuiOutlinedInput-root': {
-                                  borderRadius: 2,
+                                  borderRadius: 2
                                 }
                               }}
                             >
@@ -549,11 +697,11 @@ export default function CreateTelegramPage() {
                             </TextField>
                           </Grid>
                         </Grid>
-                        
-                        <Button 
-                          variant="contained" 
-                          onClick={handleAddPlan} 
-                          startIcon={<Add />} 
+
+                        <Button
+                          variant="contained"
+                          onClick={handleAddPlan}
+                          startIcon={<Add />}
                           fullWidth
                           disabled={!newPlan.price || !newPlan.totalNumber}
                           sx={{
@@ -577,12 +725,12 @@ export default function CreateTelegramPage() {
                           </Typography>
                           <Stack spacing={1.5}>
                             {data.plans.map((plan, index) => (
-                              <Paper 
-                                key={index} 
-                                sx={{ 
-                                  p: 2, 
-                                  display: 'flex', 
-                                  justifyContent: 'space-between', 
+                              <Paper
+                                key={index}
+                                sx={{
+                                  p: 2,
+                                  display: 'flex',
+                                  justifyContent: 'space-between',
                                   alignItems: 'center',
                                   background: index % 2 === 0 ? '#f8fafc' : 'white',
                                   borderRadius: 2,
@@ -606,10 +754,10 @@ export default function CreateTelegramPage() {
                                   <Typography variant="h6" fontWeight="bold" color="#10b981">
                                     ₹{plan.price - plan.discount}
                                   </Typography>
-                                  <IconButton 
-                                    size="small" 
+                                  <IconButton
+                                    size="small"
                                     onClick={() => handleRemovePlan(index)}
-                                    sx={{ 
+                                    sx={{
                                       color: '#ef4444',
                                       '&:hover': { backgroundColor: '#fee2e2' }
                                     }}
@@ -622,10 +770,10 @@ export default function CreateTelegramPage() {
                           </Stack>
                         </Box>
                       ) : (
-                        <Alert 
-                          severity="info" 
+                        <Alert
+                          severity="info"
                           icon={<InfoOutlined />}
-                          sx={{ 
+                          sx={{
                             borderRadius: 2,
                             backgroundColor: '#f0f9ff',
                             color: '#0369a1',
@@ -639,21 +787,25 @@ export default function CreateTelegramPage() {
                   </Card>
 
                   {/* Step 3: Thumbnail */}
-                  <Card sx={{ 
-                    mb: 3, 
-                    borderRadius: 3,
-                    border: '1px solid',
-                    borderColor: 'divider',
-                    boxShadow: '0 4px 20px rgba(0,0,0,0.08)'
-                  }}>
+                  <Card
+                    sx={{
+                      mb: 3,
+                      borderRadius: 3,
+                      border: '1px solid',
+                      borderColor: 'divider',
+                      boxShadow: '0 4px 20px rgba(0,0,0,0.08)'
+                    }}
+                  >
                     <CardContent sx={{ p: 3 }}>
                       <Box sx={{ display: 'flex', alignItems: 'center', mb: 3 }}>
-                        <Avatar sx={{ 
-                          bgcolor: '#f59e0b', 
-                          mr: 2,
-                          width: 40,
-                          height: 40
-                        }}>
+                        <Avatar
+                          sx={{
+                            bgcolor: '#f59e0b',
+                            mr: 2,
+                            width: 40,
+                            height: 40
+                          }}
+                        >
                           <CloudUpload />
                         </Avatar>
                         <Box>
@@ -661,19 +813,49 @@ export default function CreateTelegramPage() {
                             Thumbnail Image
                           </Typography>
                           <Typography variant="caption" color="text.secondary">
-                            Upload a cover image for your page
+                            {isEditMode ? 'Update your cover image' : 'Upload a cover image for your page'}
                           </Typography>
                         </Box>
                       </Box>
 
+                      {existingImageUrl && !file && (
+                        <Box sx={{ mb: 2, position: 'relative' }}>
+                          <img
+                            src={existingImageUrl}
+                            alt="Current thumbnail"
+                            style={{
+                              width: '100%',
+                              maxHeight: '200px',
+                              objectFit: 'cover',
+                              borderRadius: '8px'
+                            }}
+                          />
+                          <Button
+                            variant="contained"
+                            color="error"
+                            size="small"
+                            onClick={handleClearImage}
+                            sx={{
+                              position: 'absolute',
+                              top: 8,
+                              right: 8,
+                              minWidth: 'auto',
+                              padding: '4px 8px'
+                            }}
+                          >
+                            <Delete fontSize="small" />
+                          </Button>
+                        </Box>
+                      )}
+
                       <Box
                         sx={{
                           border: '2px dashed',
-                          borderColor: file ? '#10b981' : '#cbd5e1',
+                          borderColor: file || existingImageUrl ? '#10b981' : '#cbd5e1',
                           borderRadius: 3,
                           p: 4,
                           textAlign: 'center',
-                          backgroundColor: file ? '#f0fdf4' : '#f8fafc',
+                          backgroundColor: file || existingImageUrl ? '#f0fdf4' : '#f8fafc',
                           cursor: 'pointer',
                           transition: 'all 0.3s',
                           '&:hover': {
@@ -683,18 +865,15 @@ export default function CreateTelegramPage() {
                         }}
                         onClick={() => document.getElementById('file-input').click()}
                       >
-                        <input
-                          id="file-input"
-                          hidden
-                          accept=".jpg,.jpeg,.png,.webp"
-                          type="file"
-                          onChange={handleFileChange}
-                        />
-                        {file ? (
+                        <input id="file-input" hidden accept=".jpg,.jpeg,.png,.webp" type="file" onChange={handleFileChange} />
+                        {file || existingImageUrl ? (
                           <>
                             <CheckCircle sx={{ fontSize: 48, color: '#10b981', mb: 2 }} />
                             <Typography variant="body1" fontWeight="medium" color="#10b981">
-                              ✓ {file.name}
+                              {file ? `✓ ${file.name}` : '✓ Image loaded'}
+                            </Typography>
+                            <Typography variant="caption" color="#64748b" sx={{ mt: 1, display: 'block' }}>
+                              {isEditMode ? 'Click to change image' : 'Image selected'}
                             </Typography>
                           </>
                         ) : (
@@ -709,6 +888,12 @@ export default function CreateTelegramPage() {
                           1280 × 720px recommended • JPG, PNG, WebP
                         </Typography>
                       </Box>
+
+                      {isEditMode && existingImageUrl && (
+                        <Alert severity="info" sx={{ mt: 2 }}>
+                          Current image will be kept if no new file is selected
+                        </Alert>
+                      )}
                     </CardContent>
                   </Card>
 
@@ -718,7 +903,7 @@ export default function CreateTelegramPage() {
                     fullWidth
                     size="large"
                     onClick={handleSubmit}
-                    disabled={uploading || data.plans.length === 0 || !file}
+                    disabled={uploading || data.plans.length === 0 || (!file && !existingImageUrl && !isEditMode)}
                     sx={{
                       py: 1.8,
                       borderRadius: 3,
@@ -737,17 +922,17 @@ export default function CreateTelegramPage() {
                     }}
                   >
                     {uploading ? (
-                      <>Creating Page...</>
+                      <>Saving...</>
                     ) : (
                       <>
                         <CheckCircle sx={{ mr: 1.5, fontSize: 24 }} />
-                        🚀 Create Premium Page
+                        {isEditMode ? 'Update Premium Page' : '🚀 Create Premium Page'}
                       </>
                     )}
                   </Button>
 
                   <Typography variant="caption" color="text.secondary" sx={{ textAlign: 'center', mt: 2, display: 'block' }}>
-                    Page will be live immediately after creation
+                    {isEditMode ? 'Page will be updated immediately' : 'Page will be live immediately after creation'}
                   </Typography>
                 </Box>
               </Box>
@@ -755,24 +940,26 @@ export default function CreateTelegramPage() {
 
             {/* Preview Section - Also Scrollable */}
             <Grid item xs={12} md={7} sx={{ height: '100%' }}>
-              <Box sx={{ 
-                height: '100%', 
-                background: 'linear-gradient(135deg, #1e293b 0%, #0f172a 100%)',
-                overflow: 'auto',
-                '&::-webkit-scrollbar': {
-                  width: '8px',
-                },
-                '&::-webkit-scrollbar-track': {
-                  background: 'rgba(255,255,255,0.05)',
-                },
-                '&::-webkit-scrollbar-thumb': {
-                  background: 'rgba(255,255,255,0.2)',
-                  borderRadius: '4px',
-                },
-                '&::-webkit-scrollbar-thumb:hover': {
-                  background: 'rgba(255,255,255,0.3)',
-                }
-              }}>
+              <Box
+                sx={{
+                  height: '100%',
+                  background: 'linear-gradient(135deg, #1e293b 0%, #0f172a 100%)',
+                  overflow: 'auto',
+                  '&::-webkit-scrollbar': {
+                    width: '8px'
+                  },
+                  '&::-webkit-scrollbar-track': {
+                    background: 'rgba(255,255,255,0.05)'
+                  },
+                  '&::-webkit-scrollbar-thumb': {
+                    background: 'rgba(255,255,255,0.2)',
+                    borderRadius: '4px'
+                  },
+                  '&::-webkit-scrollbar-thumb:hover': {
+                    background: 'rgba(255,255,255,0.3)'
+                  }
+                }}
+              >
                 <Box sx={{ p: 3 }}>
                   <Typography variant="h5" fontWeight="bold" sx={{ mb: 3, color: 'white' }}>
                     📱 Live Preview
@@ -781,20 +968,22 @@ export default function CreateTelegramPage() {
                   <Grid container spacing={3}>
                     {/* Left Preview Card */}
                     <Grid item xs={12} lg={6}>
-                      <Paper sx={{ 
-                        p: 3, 
-                        borderRadius: 3, 
-                        background: 'rgba(255, 255, 255, 0.97)',
-                        backdropFilter: 'blur(10px)',
-                        height: '100%',
-                        boxShadow: '0 10px 40px rgba(0,0,0,0.3)'
-                      }}>
+                      <Paper
+                        sx={{
+                          p: 3,
+                          borderRadius: 3,
+                          background: 'rgba(255, 255, 255, 0.97)',
+                          backdropFilter: 'blur(10px)',
+                          height: '100%',
+                          boxShadow: '0 10px 40px rgba(0,0,0,0.3)'
+                        }}
+                      >
                         <Box sx={{ display: 'flex', alignItems: 'center', mb: 3 }}>
-                          <Avatar 
-                            src={preview}
-                            sx={{ 
-                              width: 64, 
-                              height: 64, 
+                          <Avatar
+                            src={preview || existingImageUrl}
+                            sx={{
+                              width: 64,
+                              height: 64,
                               mr: 2,
                               border: '3px solid',
                               borderColor: '#4f46e5',
@@ -804,10 +993,10 @@ export default function CreateTelegramPage() {
                             {data.channelName?.[0] || 'T'}
                           </Avatar>
                           <Box>
-                            <Chip 
-                              label="PREMIUM" 
-                              size="small" 
-                              sx={{ 
+                            <Chip
+                              label="PREMIUM"
+                              size="small"
+                              sx={{
                                 backgroundColor: '#fef3c7',
                                 color: '#92400e',
                                 fontWeight: 'bold',
@@ -825,10 +1014,10 @@ export default function CreateTelegramPage() {
                             <Person fontSize="small" /> Created by
                           </Typography>
                           <Box sx={{ display: 'flex', alignItems: 'center', mb: 3 }}>
-                            <Avatar 
-                              sx={{ 
-                                width: 36, 
-                                height: 36, 
+                            <Avatar
+                              sx={{
+                                width: 36,
+                                height: 36,
                                 mr: 1.5,
                                 bgcolor: '#4f46e5',
                                 boxShadow: '0 2px 8px rgba(79, 70, 229, 0.4)'
@@ -856,7 +1045,7 @@ export default function CreateTelegramPage() {
                           <Typography variant="body2" color="#475569" paragraph sx={{ lineHeight: 1.7 }}>
                             {data.description || 'Join our exclusive community for premium content and insights...'}
                           </Typography>
-                          
+
                           {data.category && (
                             <Chip
                               label={data.category}
@@ -871,12 +1060,14 @@ export default function CreateTelegramPage() {
                           )}
                         </Box>
 
-                        <Box sx={{ 
-                          backgroundColor: '#f8fafc', 
-                          borderRadius: 2, 
-                          p: 2,
-                          border: '1px solid #e2e8f0'
-                        }}>
+                        <Box
+                          sx={{
+                            backgroundColor: '#f8fafc',
+                            borderRadius: 2,
+                            p: 2,
+                            border: '1px solid #e2e8f0'
+                          }}
+                        >
                           <Typography variant="subtitle2" fontWeight="bold" sx={{ mb: 1.5, color: '#1e293b' }}>
                             ✅ Premium Benefits:
                           </Typography>
@@ -887,13 +1078,13 @@ export default function CreateTelegramPage() {
                               'Priority support',
                               'Early access to new features'
                             ].map((item, index) => (
-                              <Typography 
-                                key={index} 
-                                variant="caption" 
-                                sx={{ 
-                                  display: 'flex', 
-                                  alignItems: 'center', 
-                                  gap: 1, 
+                              <Typography
+                                key={index}
+                                variant="caption"
+                                sx={{
+                                  display: 'flex',
+                                  alignItems: 'center',
+                                  gap: 1,
                                   color: '#475569'
                                 }}
                               >
@@ -907,41 +1098,47 @@ export default function CreateTelegramPage() {
 
                     {/* Right Pricing Card */}
                     <Grid item xs={12} lg={6}>
-                      <Paper sx={{ 
-                        p: 3, 
-                        borderRadius: 3,
-                        background: 'linear-gradient(135deg, #334155 0%, #1e293b 100%)',
-                        color: 'white',
-                        height: '100%',
-                        boxShadow: '0 10px 40px rgba(0,0,0,0.4)',
-                        border: '1px solid rgba(255,255,255,0.1)'
-                      }}>
+                      <Paper
+                        sx={{
+                          p: 3,
+                          borderRadius: 3,
+                          background: 'linear-gradient(135deg, #334155 0%, #1e293b 100%)',
+                          color: 'white',
+                          height: '100%',
+                          boxShadow: '0 10px 40px rgba(0,0,0,0.4)',
+                          border: '1px solid rgba(255,255,255,0.1)'
+                        }}
+                      >
                         <Box sx={{ textAlign: 'center', mb: 3 }}>
-                          <Box sx={{ 
-                            display: 'inline-flex',
-                            alignItems: 'center',
-                            justifyContent: 'center',
-                            width: 80,
-                            height: 80,
-                            borderRadius: '50%',
-                            background: 'linear-gradient(135deg, #f59e0b 0%, #d97706 100%)',
-                            mb: 2,
-                            position: 'relative',
-                            boxShadow: '0 8px 32px rgba(245, 158, 11, 0.4)'
-                          }}>
+                          <Box
+                            sx={{
+                              display: 'inline-flex',
+                              alignItems: 'center',
+                              justifyContent: 'center',
+                              width: 80,
+                              height: 80,
+                              borderRadius: '50%',
+                              background: 'linear-gradient(135deg, #f59e0b 0%, #d97706 100%)',
+                              mb: 2,
+                              position: 'relative',
+                              boxShadow: '0 8px 32px rgba(245, 158, 11, 0.4)'
+                            }}
+                          >
                             <Typography variant="h4" fontWeight="bold" color="#1e293b">
                               VIP
                             </Typography>
-                            <Security sx={{ 
-                              position: 'absolute', 
-                              bottom: -5, 
-                              right: -5,
-                              color: '#fbbf24',
-                              fontSize: 24,
-                              backgroundColor: '#1e293b',
-                              borderRadius: '50%',
-                              p: 0.5
-                            }} />
+                            <Security
+                              sx={{
+                                position: 'absolute',
+                                bottom: -5,
+                                right: -5,
+                                color: '#fbbf24',
+                                fontSize: 24,
+                                backgroundColor: '#1e293b',
+                                borderRadius: '50%',
+                                p: 0.5
+                              }}
+                            />
                           </Box>
                           <Typography variant="h5" fontWeight="bold" sx={{ mb: 1 }}>
                             {data.title || 'Premium Membership'} 🔥
@@ -958,28 +1155,29 @@ export default function CreateTelegramPage() {
                                 {data.plans.map((plan, index) => {
                                   const finalPrice = plan.price - plan.discount;
                                   const hasDiscount = plan.discount > 0;
-                                  const discountPercent = Math.round((plan.discount/plan.price)*100);
-                                  
+                                  const discountPercent = Math.round((plan.discount / plan.price) * 100);
+
                                   return (
                                     <Paper
                                       key={index}
                                       sx={{
                                         p: 2.5,
-                                        background: selectedPlan === index.toString()
-                                          ? 'linear-gradient(90deg, #4f46e5 0%, #7c3aed 100%)'
-                                          : 'rgba(255, 255, 255, 0.08)',
+                                        background:
+                                          selectedPlan === index.toString()
+                                            ? 'linear-gradient(90deg, #4f46e5 0%, #7c3aed 100%)'
+                                            : 'rgba(255, 255, 255, 0.08)',
                                         borderRadius: 2,
                                         cursor: 'pointer',
-                                        border: selectedPlan === index.toString() 
-                                          ? '2px solid #f59e0b' 
-                                          : '1px solid rgba(255,255,255,0.15)',
+                                        border:
+                                          selectedPlan === index.toString() ? '2px solid #f59e0b' : '1px solid rgba(255,255,255,0.15)',
                                         transition: 'all 0.3s ease',
                                         position: 'relative',
                                         overflow: 'hidden',
                                         '&:hover': {
-                                          background: selectedPlan === index.toString()
-                                            ? 'linear-gradient(90deg, #4f46e5 0%, #7c3aed 100%)'
-                                            : 'rgba(255, 255, 255, 0.12)',
+                                          background:
+                                            selectedPlan === index.toString()
+                                              ? 'linear-gradient(90deg, #4f46e5 0%, #7c3aed 100%)'
+                                              : 'rgba(255, 255, 255, 0.12)',
                                           transform: 'translateY(-2px)',
                                           boxShadow: '0 8px 32px rgba(0,0,0,0.3)'
                                         }
@@ -992,7 +1190,7 @@ export default function CreateTelegramPage() {
                                           size="small"
                                           sx={{
                                             position: 'absolute',
-                                            top: -8,
+                                            top: -2,
                                             right: -8,
                                             backgroundColor: '#10b981',
                                             color: 'white',
@@ -1005,11 +1203,11 @@ export default function CreateTelegramPage() {
                                       <FormControlLabel
                                         value={index.toString()}
                                         control={
-                                          <Radio 
-                                            sx={{ 
+                                          <Radio
+                                            sx={{
                                               color: 'rgba(255,255,255,0.7)',
                                               '&.Mui-checked': { color: '#f59e0b' }
-                                            }} 
+                                            }}
                                           />
                                         }
                                         label={
@@ -1063,17 +1261,13 @@ export default function CreateTelegramPage() {
                               sx={{
                                 mt: 3,
                                 py: 1.5,
-                                background: selectedPlan 
-                                  ? 'linear-gradient(90deg, #10b981 0%, #34d399 100%)'
-                                  : 'rgba(255,255,255,0.1)',
+                                background: selectedPlan ? 'linear-gradient(90deg, #10b981 0%, #34d399 100%)' : 'rgba(255,255,255,0.1)',
                                 fontWeight: 'bold',
                                 fontSize: '1.1rem',
                                 borderRadius: 2,
                                 boxShadow: selectedPlan ? '0 8px 32px rgba(16, 185, 129, 0.4)' : 'none',
                                 '&:hover': {
-                                  background: selectedPlan 
-                                    ? 'linear-gradient(90deg, #059669 0%, #10b981 100%)'
-                                    : 'rgba(255,255,255,0.15)',
+                                  background: selectedPlan ? 'linear-gradient(90deg, #059669 0%, #10b981 100%)' : 'rgba(255,255,255,0.15)',
                                   transform: selectedPlan ? 'translateY(-2px)' : 'none'
                                 }
                               }}
@@ -1099,13 +1293,15 @@ export default function CreateTelegramPage() {
                             </Box>
                           </>
                         ) : (
-                          <Paper sx={{ 
-                            p: 4, 
-                            textAlign: 'center', 
-                            background: 'rgba(255,255,255,0.05)',
-                            borderRadius: 2,
-                            border: '1px dashed rgba(255,255,255,0.2)'
-                          }}>
+                          <Paper
+                            sx={{
+                              p: 4,
+                              textAlign: 'center',
+                              background: 'rgba(255,255,255,0.05)',
+                              borderRadius: 2,
+                              border: '1px dashed rgba(255,255,255,0.2)'
+                            }}
+                          >
                             <LocalOffer sx={{ fontSize: 56, color: 'rgba(255,255,255,0.3)', mb: 2 }} />
                             <Typography variant="body1" color="rgba(255,255,255,0.7)">
                               Add subscription plans to see pricing preview

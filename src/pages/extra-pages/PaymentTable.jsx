@@ -100,6 +100,7 @@ const createRowData = (data, callBackFns) => {
     description: data?.description,
     price: `₹${data?.price}`,
     status: data?.status,
+    accountNumber: data?.accountNumber,
     createdAt: moment(data?.createdAt).format('DD MMM YYYY, hh:mm A'),
     userId: data?.userName,
     ...callBackFns
@@ -239,13 +240,7 @@ export default function PaymentTable(props) {
         <IconButton
           size="small"
           onClick={() => {
-            if (!data?.accountNumber) {
-              navigate('/userProfile');
-            } else if(data?.status === "INACTIVE") {
-              enqueueSnackbar('Payment Page is Inactive', { variant: 'error' });
-            } else {
-              data?.copyLink(data);
-            }
+            copyLink(data);
           }}
           sx={{ 
             backgroundColor: 'primary.light',
@@ -280,7 +275,8 @@ export default function PaymentTable(props) {
       enqueueSnackbar('Please update your KYC details', { variant: 'success' });
       navigate('/userProfile', { replace: true });
     } else {
-      const linkToCopy = `https://omify.vercel.app/contentPage?id=${data?.id || 'dmkemkd'}`;
+      // const linkToCopy = `https://omify.vercel.app/contentPage?id=${data?.id || 'dmkemkd'}`;
+      const linkToCopy = `http://localhost:3000/contentPage?id=${data?.id || 'dmkemkd'}`;
       navigator.clipboard.writeText(linkToCopy)
         .then(() => {
           enqueueSnackbar('Payment link copied to clipboard!', { variant: 'success' });
