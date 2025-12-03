@@ -19,6 +19,7 @@ import 'ag-grid-community/styles/ag-theme-alpine.css';
 import { CustomLoadingCellRenderer } from '../../utils/constant';
 import ContentCopyIcon from '@mui/icons-material/ContentCopy';
 import VisibilityIcon from '@mui/icons-material/Visibility';
+import EditIcon from '@mui/icons-material/Edit'; // Import EditIcon
 import { AllCommunityModule, ModuleRegistry } from 'ag-grid-community';
 import moment from 'moment';
 import { getPaymentPageDetailByIdApi } from '../../store/payment-page/paymentPageApi';
@@ -183,15 +184,19 @@ export default function PaymentTable(props) {
       field: 'action',
       headerName: 'Actions',
       sortable: false,
-      minWidth: 120,
-      maxWidth: 120,
+      minWidth: 150, // Increased minWidth to accommodate extra button
+      maxWidth: 150,
       cellRenderer: ({ data }) => renderActionButtons(data)
     }
   ];
 
   useEffect(() => {
     if (!_.isEmpty(paymentList)) {
-      const rowD = _.map(paymentList, (data) => createRowData(data, { showPaymentDetails, copyLink }));
+      const rowD = _.map(paymentList, (data) => createRowData(data, { 
+        showPaymentDetails, 
+        copyLink,
+        handleEdit 
+      }));
       setRowData(rowD || []);
     } else {
       setRowData([]);
@@ -251,12 +256,40 @@ export default function PaymentTable(props) {
           <ContentCopyIcon fontSize="small" />
         </IconButton>
       </Tooltip>
+      
+      <Tooltip title="Edit Payment Page">
+        <IconButton
+          size="small"
+          onClick={() => handleEdit(data)}
+          sx={{ 
+            backgroundColor: 'warning.light',
+            color: 'white',
+            '&:hover': { backgroundColor: 'warning.main' }
+          }}
+        >
+          <EditIcon fontSize="small" />
+        </IconButton>
+      </Tooltip>
     </Box>
   );
 
   const showPaymentDetails = async (data) => {
     await dispatch(getPaymentPageDetailByIdApi({ id: data?.id }));
     setPaymentDialog(true);
+  };
+
+  const handleEdit = (data) => {
+    // Navigate to the edit page with the payment page ID
+    // Adjust the route according to your application structure
+    navigate(`/createPayment`, {
+      state: { id: data.id, isEditMode: true }
+    });
+    
+    // Alternatively, if you have a query parameter approach:
+    // navigate(`/edit-payment-page?id=${data.id}`);
+    
+    // Or if you want to use a specific route name:
+    // navigate(`/payment-page/edit/${data.id}`);
   };
 
   const loadingCellRenderer = useCallback(CustomLoadingCellRenderer, []);
@@ -305,7 +338,7 @@ export default function PaymentTable(props) {
           suppressCellSelection={true}
           suppressRowClickSelection={true}
           onGridReady={onGridReady}
-          context={{ showPaymentDetails, copyLink }}
+          context={{ showPaymentDetails, copyLink, handleEdit }}
           loadingCellRenderer={loadingCellRenderer}
           loadingOverlayComponent={isPaymentTablePaginatedLoading ? CustomLoadingCellRenderer : undefined}
           defaultColDef={{

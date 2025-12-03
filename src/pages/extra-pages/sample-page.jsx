@@ -1,5 +1,5 @@
 // material-ui
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   Box,
   Typography,
@@ -62,12 +62,23 @@ import {
   Lock,
   Star,
   Verified,
-  Diamond
+  Diamond,
+  Save,
+  Update,
+  FolderZip,
+  Audiotrack,
+  Delete
 } from '@mui/icons-material';
 import { useTheme } from '@mui/material/styles';
-import { useNavigate } from 'react-router';
+import { useNavigate, useLocation } from 'react-router';
 import { useDispatch, useSelector } from 'react-redux';
-import { createPaymentApi, uploadFileApi, uploadThumbnailApi } from '../../store/payment-page/paymentPageApi';
+import { 
+  createPaymentApi, 
+  updatePaymentPageApi,
+  uploadFileApi, 
+  uploadThumbnailApi,
+  getPaymentPageDetailByIdApi 
+} from '../../store/payment-page/paymentPageApi';
 import { useSnackbar } from 'notistack';
 import { unwrapResult } from '@reduxjs/toolkit';
 
@@ -79,6 +90,93 @@ const elegantTheme = {
   background: '#F8FAFC',
   surface: '#FFFFFF',
   text: '#1E293B'
+};
+
+// File Preview Component
+const FilePreview = ({ file, previewUrl, fileType, onRemove, showRemove = true }) => {
+  const theme = useTheme();
+  
+  if (!file && !previewUrl) return null;
+  
+  return (
+    <Box sx={{ 
+      display: 'flex', 
+      alignItems: 'center',
+      p: 2,
+      borderRadius: 2,
+      bgcolor: alpha(theme.palette.primary.main, 0.05),
+      border: `1px solid ${alpha(theme.palette.primary.main, 0.1)}`,
+      mb: 2
+    }}>
+      <Box sx={{ mr: 2 }}>
+        {renderFileIcon(fileType)}
+      </Box>
+      <Box sx={{ flexGrow: 1, overflow: 'hidden' }}>
+        <Typography variant="body1" fontWeight="600" noWrap>
+          {file?.name || previewUrl?.split('/').pop()?.split('?')[0]}
+        </Typography>
+        <Typography variant="caption" color="text.secondary">
+          {fileType?.toUpperCase()} • {file ? formatFileSize(file.size) : 'Uploaded'}
+        </Typography>
+      </Box>
+      {showRemove && onRemove && (
+        <IconButton 
+          size="small" 
+          onClick={onRemove}
+          sx={{ color: '#EF4444' }}
+        >
+          <Delete />
+        </IconButton>
+      )}
+    </Box>
+  );
+};
+
+// Format file size
+const formatFileSize = (bytes) => {
+  if (bytes === 0) return '0 Bytes';
+  const k = 1024;
+  const sizes = ['Bytes', 'KB', 'MB', 'GB'];
+  const i = Math.floor(Math.log(bytes) / Math.log(k));
+  return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
+};
+
+// Render file icon
+const renderFileIcon = (type) => {
+  const iconProps = { sx: { fontSize: 40 } };
+  const ext = type?.toLowerCase();
+  
+  switch (ext) {
+    case 'pdf': 
+      return <PictureAsPdf sx={{ color: '#EF4444', ...iconProps }} />;
+    case 'doc':
+    case 'docx': 
+      return <Description sx={{ color: '#3B82F6', ...iconProps }} />;
+    case 'xls':
+    case 'xlsx': 
+      return <TableChart sx={{ color: '#10B981', ...iconProps }} />;
+    case 'mp4':
+    case 'avi':
+    case 'mov':
+    case 'wmv': 
+      return <Videocam sx={{ color: '#8B5CF6', ...iconProps }} />;
+    case 'jpg':
+    case 'jpeg':
+    case 'png':
+    case 'gif':
+    case 'bmp': 
+      return <Image sx={{ color: '#EC4899', ...iconProps }} />;
+    case 'zip':
+    case 'rar':
+    case '7z': 
+      return <FolderZip sx={{ color: '#F59E0B', ...iconProps }} />;
+    case 'mp3':
+    case 'wav':
+    case 'aac': 
+      return <Audiotrack sx={{ color: '#8B5CF6', ...iconProps }} />;
+    default: 
+      return <AttachFile sx={{ color: '#6B7280', ...iconProps }} />;
+  }
 };
 
 export default function CreatePaymentPage() {
@@ -93,9 +191,14 @@ export default function CreatePaymentPage() {
   const [activeStep, setActiveStep] = useState(0);
   const { enqueueSnackbar } = useSnackbar();
   const { selectedUserDetails } = useSelector(({ authReducer }) => authReducer);
+  const { paymentPageDetail } = useSelector(({ paymentPageReducer }) => paymentPageReducer || {});
   const dispatch = useDispatch();
   const navigate = useNavigate();
+  const location = useLocation();
   const [loading, setLoading] = useState(false);
+  const [isEditMode, setIsEditMode] = useState(false);
+  const [paymentPageId, setPaymentPageId] = useState(null);
+  const [initialDataLoaded, setInitialDataLoaded] = useState(false);
 
   const [data, setData] = useState({
     price: '',
@@ -108,10 +211,70 @@ export default function CreatePaymentPage() {
     themeColor: elegantTheme.primary
   });
 
+  // Check if we're in edit mode from location state
+  useEffect(() => {
+    if (location.state) {
+      setIsEditMode(location.state.isEditMode || false);
+      setPaymentPageId(location.state.id || null);
+    }
+  }, [location.state]);
+
+  // Fetch payment page details if in edit mode
+  useEffect(() => {
+    const fetchPaymentPageDetails = async () => {
+      if (isEditMode && paymentPageId && !initialDataLoaded) {
+        try {
+          setLoading(true);
+          const result = await dispatch(getPaymentPageDetailByIdApi({ id: paymentPageId }));
+          const paymentData = unwrapResult(result);
+          
+          if (paymentData) {
+            // Map API response to form data
+            setData({
+              price: paymentData.price || '',
+              pageTitle: paymentData.pageTitle || '',
+              category: paymentData.category || 'Finance',
+              description: paymentData.description || '',
+              buttonText: paymentData.buttonText || 'Pay Now',
+              phoneNumber: paymentData.phoneNumber || '',
+              link: paymentData.link || '',
+              themeColor: paymentData.themeColor || elegantTheme.primary
+            });
+
+            // Set thumbnail preview if exists
+            if (paymentData.imageUrl) {
+              setPreview(paymentData.imageUrl);
+            }
+
+            // Set other file preview if exists
+            if (paymentData.fileUrl) {
+              setAnyPreview(paymentData.fileUrl);
+              // Extract file type from URL
+              const urlParts = paymentData.fileUrl.split('.');
+              const ext = urlParts[urlParts.length - 1].toLowerCase();
+              setFileType(ext);
+            }
+
+            setInitialDataLoaded(true);
+          }
+        } catch (error) {
+          enqueueSnackbar('Failed to load payment page details', { 
+            variant: 'error',
+            anchorOrigin: { vertical: 'top', horizontal: 'right' }
+          });
+        } finally {
+          setLoading(false);
+        }
+      }
+    };
+
+    fetchPaymentPageDetails();
+  }, [isEditMode, paymentPageId, dispatch, enqueueSnackbar, initialDataLoaded]);
+
   const steps = ['Content', 'Design', 'Preview'];
 
   const handleSubmit = async () => {
-    if (!file) {
+    if (!file && !preview) {
       enqueueSnackbar('Upload a thumbnail image', { 
         variant: 'warning',
         anchorOrigin: { vertical: 'top', horizontal: 'right' }
@@ -144,26 +307,57 @@ export default function CreatePaymentPage() {
       ...data,
       userName: selectedUserDetails?.userName
     };
+
+    // Add ID for update
+    if (isEditMode && paymentPageId) {
+      requestData.id = paymentPageId;
+    }
     
     setLoading(true);
     try {
-      let response = await dispatch(createPaymentApi(requestData));
-      response = unwrapResult(response);
-      let paymentPageId = response?._id;
-      
-      await handleUpload(paymentPageId);
-      if (anyFile) {
-        await handleAnyFileUpload(paymentPageId);
+      if (isEditMode) {
+        // Update existing payment page
+        let response = await dispatch(updatePaymentPageApi(requestData));
+        response = unwrapResult(response);
+        
+        // Upload new thumbnail if changed
+        if (file) {
+          await handleUpload(paymentPageId);
+        }
+        
+        // Upload new file if changed
+        if (anyFile) {
+          await handleAnyFileUpload(paymentPageId);
+        }
+        
+        enqueueSnackbar('✨ Payment page updated successfully!', { 
+          variant: 'success',
+          anchorOrigin: { vertical: 'top', horizontal: 'right' }
+        });
+        setTimeout(() => {
+          setLoading(false);
+          navigate('/payment-page');
+        }, 1500);
+      } else {
+        // Create new payment page
+        let response = await dispatch(createPaymentApi(requestData));
+        response = unwrapResult(response);
+        let newPaymentPageId = response?._id;
+        
+        await handleUpload(newPaymentPageId);
+        if (anyFile) {
+          await handleAnyFileUpload(newPaymentPageId);
+        }
+        
+        enqueueSnackbar('✨ Payment page created successfully!', { 
+          variant: 'success',
+          anchorOrigin: { vertical: 'top', horizontal: 'right' }
+        });
+        setTimeout(() => {
+          setLoading(false);
+          navigate('/payment-page');
+        }, 1500);
       }
-      
-      enqueueSnackbar('✨ Payment page created successfully!', { 
-        variant: 'success',
-        anchorOrigin: { vertical: 'top', horizontal: 'right' }
-      });
-      setTimeout(() => {
-        setLoading(false);
-        navigate('/payment-page');
-      }, 1500);
     } catch (error) {
       enqueueSnackbar(`Failed: ${error.message || 'Unknown error'}`, {
         variant: 'error',
@@ -187,7 +381,7 @@ export default function CreatePaymentPage() {
     if (!selectedFile) return;
 
     const fileExt = selectedFile.name.split('.').pop().toLowerCase();
-    const allowedExtensions = ['pdf', 'doc', 'docx', 'xls', 'xlsx', 'mp4', 'jpg', 'jpeg', 'png'];
+    const allowedExtensions = ['pdf', 'doc', 'docx', 'xls', 'xlsx', 'mp4', 'jpg', 'jpeg', 'png', 'zip', 'rar', 'mp3', 'wav', 'avi', 'mov'];
     
     if (!allowedExtensions.includes(fileExt)) {
       enqueueSnackbar('Please upload supported files only', { variant: 'error' });
@@ -197,7 +391,7 @@ export default function CreatePaymentPage() {
     setAnyFile(selectedFile);
     setFileType(fileExt);
     
-    if (selectedFile.type.startsWith('image/') || fileExt === 'mp4') {
+    if (selectedFile.type.startsWith('image/') || ['mp4', 'avi', 'mov', 'wmv'].includes(fileExt)) {
       setAnyPreview(URL.createObjectURL(selectedFile));
     } else {
       setAnyPreview(null);
@@ -207,20 +401,16 @@ export default function CreatePaymentPage() {
   };
 
   const handleUpload = async (paymentPageId) => {
+    if (!file) return; // No new file to upload
+
     const formData = new FormData();
     formData.append('paymentPageId', paymentPageId);
     formData.append('image', file);
 
     setUploading(true);
 
-    console.log(formData, 'dlemrnje');
-    console.log('FormData contents:');
-
     try {
       await dispatch(uploadThumbnailApi(formData));
-      // enqueueSnackbar('Thumbnail uploaded successfully', {
-      //   variant: 'success'
-      // });
     } catch (error) {
       enqueueSnackbar(`Failed to upload the file. ${error || error.message}`, {
         variant: 'error'
@@ -231,24 +421,15 @@ export default function CreatePaymentPage() {
   };
 
   const handleAnyFileUpload = async (paymentPageId) => {
-    if (!anyFile) {
-      enqueueSnackbar('Please select a file', {
-        variant: 'error'
-      });
-      return;
-    }
+    if (!anyFile) return; // No new file to upload
 
     const formData = new FormData();
     formData.append('paymentPageId', paymentPageId);
     formData.append('image', anyFile);
-    console.log(anyFile, 'anyFile');
+    
     try {
       await dispatch(uploadFileApi(formData));
-      // enqueueSnackbar('File Uploaded successfully', {
-      //   variant: 'success'
-      // });
     } catch (error) {
-      console.error(error);
       enqueueSnackbar(`Failed to upload the file. ${error || error.message}`, {
         variant: 'error'
       });
@@ -257,18 +438,22 @@ export default function CreatePaymentPage() {
     }
   };
 
-  const renderFileIcon = (type) => {
-    const iconProps = { sx: { fontSize: 40 } };
-    switch (type) {
-      case 'pdf': return <PictureAsPdf sx={{ color: '#EF4444', ...iconProps }} />;
-      case 'doc':
-      case 'docx': return <Description sx={{ color: '#3B82F6', ...iconProps }} />;
-      case 'xls':
-      case 'xlsx': return <TableChart sx={{ color: '#10B981', ...iconProps }} />;
-      case 'mp4': return <Videocam sx={{ color: '#8B5CF6', ...iconProps }} />;
-      default: return <AttachFile sx={{ color: '#6B7280', ...iconProps }} />;
-    }
-  };
+  if (loading && isEditMode && !initialDataLoaded) {
+    return (
+      <Box sx={{ 
+        display: 'flex', 
+        justifyContent: 'center', 
+        alignItems: 'center', 
+        minHeight: '100vh',
+        background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)'
+      }}>
+        <CircularProgress sx={{ color: 'white' }} />
+        <Typography variant="h6" sx={{ color: 'white', ml: 2 }}>
+          Loading payment page details...
+        </Typography>
+      </Box>
+    );
+  }
 
   return (
     <Box sx={{ 
@@ -309,7 +494,7 @@ export default function CreatePaymentPage() {
           border: '1px solid rgba(255, 255, 255, 0.2)',
           boxShadow: '0 8px 32px rgba(0, 0, 0, 0.1)'
         }}>
-          <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+          <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap' }}>
             <Box>
               <Typography variant="h4" fontWeight="800" sx={{ 
                 background: 'linear-gradient(135deg, #7C3AED 0%, #10B981 100%)',
@@ -317,27 +502,54 @@ export default function CreatePaymentPage() {
                 WebkitTextFillColor: 'transparent',
                 mb: 1
               }}>
-                Create Payment Page
+                {isEditMode ? 'Edit Payment Page' : 'Create Payment Page'}
               </Typography>
               <Typography variant="body1" color="text.secondary" sx={{ display: 'flex', alignItems: 'center' }}>
                 <Diamond sx={{ fontSize: 16, mr: 1, color: elegantTheme.accent }} />
-                Design beautiful payment pages in minutes
+                {isEditMode ? 'Update your payment page details' : 'Design beautiful payment pages in minutes'}
+                {isEditMode && paymentPageId && (
+                  <Chip 
+                    label={`ID: ${paymentPageId.substring(0, 8)}...`}
+                    size="small"
+                    sx={{ ml: 2 }}
+                  />
+                )}
               </Typography>
             </Box>
-            <Chip 
-              icon={<Star sx={{ color: '#F59E0B' }} />}
-              label="Premium" 
-              sx={{ 
-                bgcolor: 'rgba(245, 158, 11, 0.1)',
-                color: '#92400E',
-                fontWeight: 600
-              }}
-            />
+            <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, mt: { xs: 2, md: 0 } }}>
+              <Chip 
+                icon={isEditMode ? <Update sx={{ color: '#F59E0B' }} /> : <Star sx={{ color: '#F59E0B' }} />}
+                label={isEditMode ? "Edit Mode" : "Premium"} 
+                sx={{ 
+                  bgcolor: isEditMode ? 'rgba(59, 130, 246, 0.1)' : 'rgba(245, 158, 11, 0.1)',
+                  color: isEditMode ? '#1D4ED8' : '#92400E',
+                  fontWeight: 600
+                }}
+              />
+              {isEditMode && (
+                <Button
+                  variant="outlined"
+                  startIcon={<Cancel />}
+                  onClick={() => navigate('/payment-page')}
+                  sx={{
+                    borderRadius: 2,
+                    borderColor: elegantTheme.primary,
+                    color: elegantTheme.primary,
+                    '&:hover': {
+                      borderColor: elegantTheme.primary,
+                      bgcolor: alpha(elegantTheme.primary, 0.1)
+                    }
+                  }}
+                >
+                  Cancel
+                </Button>
+              )}
+            </Box>
           </Box>
         </Paper>
 
         <Grid container spacing={3}>
-          {/* Left Panel - Creation Form */}
+          {/* Left Panel - Creation/Edit Form */}
           <Grid item xs={12} md={5} lg={4}>
             <Paper sx={{ 
               p: 3, 
@@ -407,17 +619,44 @@ export default function CreatePaymentPage() {
                 }
               }}>
                 <CardContent sx={{ textAlign: 'center', p: 4 }}>
-                  <CloudUpload sx={{ 
-                    fontSize: 56, 
-                    color: elegantTheme.primary,
-                    mb: 2 
-                  }} />
-                  <Typography variant="h6" fontWeight="700" gutterBottom>
-                    Upload Your Content
-                  </Typography>
-                  <Typography variant="body2" color="text.secondary" sx={{ mb: 3 }}>
-                    Drag & drop files or click to browse
-                  </Typography>
+                  {/* Show uploaded file preview if exists */}
+                  {(anyFile || anyPreview) ? (
+                    <Box>
+                      <Box sx={{ 
+                        display: 'flex', 
+                        alignItems: 'center', 
+                        justifyContent: 'center',
+                        mb: 2
+                      }}>
+                        {anyFile ? renderFileIcon(fileType) : anyPreview && renderFileIcon(anyPreview.split('.').pop().toLowerCase())}
+                      </Box>
+                      <Typography variant="h6" fontWeight="700" gutterBottom>
+                        {anyFile?.name || anyPreview?.split('/').pop()?.split('?')[0] || 'File uploaded'}
+                      </Typography>
+                      <Chip 
+                        label={fileType ? fileType.toUpperCase() : 'File'}
+                        size="small"
+                        sx={{ mb: 2, bgcolor: alpha(elegantTheme.primary, 0.1), color: elegantTheme.primary }}
+                      />
+                      <Typography variant="body2" color="text.secondary" sx={{ mb: 3 }}>
+                        {anyFile?.size ? formatFileSize(anyFile.size) : 'Ready to upload'}
+                      </Typography>
+                    </Box>
+                  ) : (
+                    <>
+                      <CloudUpload sx={{ 
+                        fontSize: 56, 
+                        color: elegantTheme.primary,
+                        mb: 2 
+                      }} />
+                      <Typography variant="h6" fontWeight="700" gutterBottom>
+                        {isEditMode ? 'Update Your Content' : 'Upload Your Content'}
+                      </Typography>
+                      <Typography variant="body2" color="text.secondary" sx={{ mb: 3 }}>
+                        {isEditMode ? 'Upload new files or keep existing ones' : 'Drag & drop files or click to browse'}
+                      </Typography>
+                    </>
+                  )}
                   
                   <Button
                     component="label"
@@ -435,17 +674,43 @@ export default function CreatePaymentPage() {
                       }
                     }}
                   >
-                    Browse Files
+                    {isEditMode ? 'Update Files' : 'Browse Files'}
                     <input 
                       hidden 
-                      accept=".pdf,.doc,.docx,.xls,.xlsx,.mp4,.jpg,.jpeg,.png" 
+                      accept=".pdf,.doc,.docx,.xls,.xlsx,.mp4,.jpg,.jpeg,.png,.zip,.rar,.mp3,.wav,.avi,.mov" 
                       type="file" 
                       onChange={handleAnyfileChange} 
                     />
                   </Button>
                   
+                  {(anyFile || anyPreview) && (
+                    <Button
+                      variant="outlined"
+                      size="small"
+                      onClick={() => {
+                        setAnyFile(null);
+                        setAnyPreview(null);
+                        setFileType('');
+                      }}
+                      sx={{
+                        mt: 2,
+                        ml: 1,
+                        borderRadius: 2,
+                        borderColor: '#EF4444',
+                        color: '#EF4444',
+                        '&:hover': {
+                          borderColor: '#DC2626',
+                          bgcolor: alpha('#EF4444', 0.1)
+                        }
+                      }}
+                      startIcon={<Delete />}
+                    >
+                      Remove
+                    </Button>
+                  )}
+                  
                   <Typography variant="caption" color="text.secondary" sx={{ mt: 2, display: 'block' }}>
-                    Supports: PDF, DOC, XLS, MP4, JPG, PNG • Max 50MB
+                    Supports: PDF, DOC, XLS, MP4, JPG, PNG, ZIP, MP3, AVI • Max 50MB
                   </Typography>
                 </CardContent>
               </Card>
@@ -587,7 +852,7 @@ export default function CreatePaymentPage() {
                 <Box sx={{ mb: 3 }}>
                   <Typography variant="h6" fontWeight="600" gutterBottom sx={{ display: 'flex', alignItems: 'center' }}>
                     <AddPhotoAlternate sx={{ mr: 1, color: elegantTheme.primary }} />
-                    Thumbnail Image
+                    Thumbnail Image {isEditMode && preview && <Chip label="Current" size="small" sx={{ ml: 1 }} />}
                   </Typography>
                   <Card
                     sx={{
@@ -624,14 +889,14 @@ export default function CreatePaymentPage() {
                           startIcon={<Edit />}
                           sx={{ color: elegantTheme.primary }}
                         >
-                          Change Image
+                          {isEditMode ? 'Change Image' : 'Change Image'}
                         </Button>
                       </Box>
                     ) : (
                       <Box>
                         <AddPhotoAlternate sx={{ fontSize: 48, color: alpha(elegantTheme.primary, 0.5), mb: 1 }} />
                         <Typography variant="body2" color="text.secondary">
-                          Click to upload thumbnail
+                          {isEditMode ? 'Click to change thumbnail' : 'Click to upload thumbnail'}
                         </Typography>
                         <Typography variant="caption" color="text.secondary">
                           1280x720 recommended • Max 5MB
@@ -640,6 +905,43 @@ export default function CreatePaymentPage() {
                     )}
                   </Card>
                 </Box>
+
+                {/* Existing File Display (Edit Mode) */}
+                {isEditMode && anyPreview && !anyFile && (
+                  <Alert 
+                    severity="info"
+                    icon={<AttachFile />}
+                    sx={{ 
+                      mb: 3,
+                      borderRadius: 2,
+                      bgcolor: alpha('#3B82F6', 0.1),
+                      color: '#1E40AF',
+                      border: `1px solid ${alpha('#3B82F6', 0.2)}`
+                    }}
+                  >
+                    <Typography variant="body2" fontWeight="600">
+                      Current File: {anyPreview.split('/').pop().split('?')[0]}
+                    </Typography>
+                    <Typography variant="caption" display="block">
+                      Upload new file above to replace
+                    </Typography>
+                  </Alert>
+                )}
+
+                {/* File Preview Component */}
+                {(anyFile || anyPreview) && (
+                  <FilePreview 
+                    file={anyFile}
+                    previewUrl={anyPreview}
+                    fileType={fileType}
+                    onRemove={() => {
+                      setAnyFile(null);
+                      setAnyPreview(null);
+                      setFileType('');
+                    }}
+                    showRemove={!isEditMode || (isEditMode && anyFile)}
+                  />
+                )}
 
                 {/* Submit Button */}
                 <Button
@@ -666,10 +968,10 @@ export default function CreatePaymentPage() {
                   }}
                   startIcon={loading ? 
                     <CircularProgress size={24} color="inherit" /> : 
-                    <CheckCircle sx={{ fontSize: 24 }} />
+                    (isEditMode ? <Save sx={{ fontSize: 24 }} /> : <CheckCircle sx={{ fontSize: 24 }} />)
                   }
                 >
-                  {loading ? 'Creating...' : '✨ Publish Payment Page'}
+                  {loading ? (isEditMode ? 'Updating...' : 'Creating...') : (isEditMode ? '✨ Update Payment Page' : '✨ Publish Payment Page')}
                 </Button>
 
                 {/* Security Badge */}
@@ -706,24 +1008,31 @@ export default function CreatePaymentPage() {
               boxShadow: 'none'
             }}>
               {/* Preview Header */}
-              <Box sx={{ mb: 3, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+              <Box sx={{ mb: 3, display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap' }}>
                 <Typography variant="h5" fontWeight="700" sx={{ 
                   color: 'white',
                   display: 'flex',
                   alignItems: 'center'
                 }}>
                   <Visibility sx={{ mr: 1.5 }} />
-                  Live Preview
+                  Live Preview {isEditMode && <Chip label="Edit Mode" size="small" sx={{ ml: 2 }} />}
                 </Typography>
-                <Chip 
-                  icon={<Verified sx={{ color: '#10B981' }} />}
-                  label="Real-time" 
-                  sx={{ 
-                    bgcolor: 'rgba(255, 255, 255, 0.2)',
-                    color: 'white',
-                    backdropFilter: 'blur(10px)'
-                  }}
-                />
+                <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, mt: { xs: 2, md: 0 } }}>
+                  <Chip 
+                    icon={<Verified sx={{ color: '#10B981' }} />}
+                    label="Real-time" 
+                    sx={{ 
+                      bgcolor: 'rgba(255, 255, 255, 0.2)',
+                      color: 'white',
+                      backdropFilter: 'blur(10px)'
+                    }}
+                  />
+                  {isEditMode && (
+                    <Typography variant="caption" sx={{ color: 'rgba(255,255,255,0.7)' }}>
+                      Updates reflect instantly
+                    </Typography>
+                  )}
+                </Box>
               </Box>
 
               {/* Preview Container */}
@@ -927,22 +1236,48 @@ export default function CreatePaymentPage() {
                           </Grid>
                         </Box>
 
-                        {/* File Preview */}
-                        {anyFile && (
-                          <Alert 
-                            severity="info"
-                            icon={<AttachFile />}
-                            sx={{ 
-                              borderRadius: 2,
-                              bgcolor: alpha('#3B82F6', 0.1),
-                              color: '#1E40AF',
-                              border: `1px solid ${alpha('#3B82F6', 0.2)}`
-                            }}
-                          >
-                            <Typography variant="body2" fontWeight="600">
-                              File Included: {anyFile.name}
+                        {/* File Preview in Preview Section */}
+                        {(anyFile || anyPreview) && (
+                          <Box sx={{ 
+                            mt: 3, 
+                            p: 3, 
+                            borderRadius: 2,
+                            bgcolor: alpha(elegantTheme.primary, 0.05),
+                            border: `1px solid ${alpha(elegantTheme.primary, 0.1)}`
+                          }}>
+                            <Typography variant="h6" fontWeight="600" gutterBottom sx={{ display: 'flex', alignItems: 'center' }}>
+                              <AttachFile sx={{ mr: 1 }} />
+                              Included File
                             </Typography>
-                          </Alert>
+                            <Box sx={{ 
+                              display: 'flex', 
+                              alignItems: 'center',
+                              p: 2,
+                              borderRadius: 2,
+                              bgcolor: 'white',
+                              border: `1px solid ${alpha(elegantTheme.primary, 0.1)}`
+                            }}>
+                              <Box sx={{ mr: 2 }}>
+                                {renderFileIcon(anyFile ? fileType : anyPreview?.split('.').pop().toLowerCase())}
+                              </Box>
+                              <Box sx={{ flexGrow: 1 }}>
+                                <Typography variant="body1" fontWeight="600">
+                                  {anyFile?.name || anyPreview?.split('/').pop()?.split('?')[0]}
+                                </Typography>
+                                <Typography variant="caption" color="text.secondary">
+                                  {fileType ? fileType.toUpperCase() : 'File'} • {anyFile?.size ? formatFileSize(anyFile.size) : 'Available after purchase'}
+                                </Typography>
+                              </Box>
+                              <Button
+                                variant="outlined"
+                                size="small"
+                                sx={{ borderRadius: 2 }}
+                                startIcon={<Visibility />}
+                              >
+                                Preview
+                              </Button>
+                            </Box>
+                          </Box>
                         )}
                       </Box>
                     </Grid>
@@ -1110,6 +1445,18 @@ export default function CreatePaymentPage() {
                   variant="outlined"
                   sx={{ color: 'white', borderColor: 'rgba(255,255,255,0.3)' }}
                 />
+                {isEditMode && (
+                  <Chip 
+                    icon={<Edit />}
+                    label="Edit Mode" 
+                    variant="outlined"
+                    sx={{ 
+                      color: 'white', 
+                      borderColor: 'rgba(59, 130, 246, 0.5)',
+                      bgcolor: 'rgba(59, 130, 246, 0.2)'
+                    }}
+                  />
+                )}
               </Box>
             </Paper>
           </Grid>
