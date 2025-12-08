@@ -12,6 +12,7 @@ import { useLocation } from 'react-router-dom';
 import Scrollbar from '../../components/Scrollbar';
 import TelegramNewUserTable from './TelegramNewUserTable';
 import { toUpper } from 'lodash';
+import ReactPaginate from 'react-paginate';
 
 const StatCard = ({ title, value, icon, bgColor }) => (
   <Card sx={{ height: '100%', background: bgColor, color: 'white' }}>
@@ -45,7 +46,7 @@ export default function TelegramPageUserDetailsPage() {
   } = useSelector(({ telegramReducer }) => telegramReducer);
   const [forcePage, setForcePage] = useState(0);
   const [itemOffset, setItemOffset] = useState(0);
-  const [tabValue, setValue] = useState('ACTIVE');
+  const [tabValue, setValue] = useState('active');
 
   console.log(countAllTelegramUsers, 'countAllTelegramUsers', telegramNewUserList);
 
@@ -75,7 +76,7 @@ export default function TelegramPageUserDetailsPage() {
   };
 
   const getAllTelegramPagePaginated = async () => {
-    console.log("aflnekjw")
+    console.log('aflnekjw');
     const data = {
       pageNo: itemOffset,
       pageSize: telegramNewUserListPageSize,
@@ -92,9 +93,9 @@ export default function TelegramPageUserDetailsPage() {
 
   let length = 0;
   if (tabValue === 'active') {
-    length = Math.ceil(countAllTelegramPage?.active / 50);
+    length = Math.ceil(countAllTelegramUsers?.activeUsers / 50);
   } else if (tabValue === 'inActive') {
-    length = Math.ceil(countAllTelegramPage?.inActive / 50);
+    length = Math.ceil(countAllTelegramUsers?.inactiveUsers / 50);
   }
   const items = Array.from({ length }, (_, index) => index + 1);
   const pageCount = Math.ceil(items.length / 1);
@@ -157,7 +158,7 @@ export default function TelegramPageUserDetailsPage() {
   return (
     <Box sx={{ p: 3, backgroundColor: '#f5f5f5', minHeight: '100vh' }}>
       <Typography variant="h4" fontWeight="bold" sx={{ mb: 3 }}>
-        Telegram Dashboard
+        Telegram Analytics Dashboard
       </Typography>
 
       {/* Statistics Cards */}
@@ -224,6 +225,29 @@ export default function TelegramPageUserDetailsPage() {
             isTelegramTablePaginatedLoading={isTelegramNewUSerLoading}
           />
         </Scrollbar>
+      </Card>
+      <Card sx={{ borderTopLeftRadius: '0px', borderTopRightRadius: '0px' }}>
+        <ReactPaginate
+          previousLabel="<"
+          nextLabel=">"
+          breakLabel="..."
+          breakClassName="break-me"
+          pageCount={pageCount}
+          marginPagesDisplayed={2}
+          pageRangeDisplayed={3}
+          onPageChange={handlePageClick}
+          forcePage={forcePage} // Set the active page
+          containerClassName="pagination"
+          pageClassName="page-item"
+          pageLinkClassName="page-link"
+          previousClassName="page-item"
+          previousLinkClassName="page-link"
+          nextClassName="page-item"
+          nextLinkClassName="page-link"
+          breakLinkClassName="page-link"
+          activeClassName="active"
+          renderOnZeroPageCount={null}
+        />
       </Card>
       {/* </Paper> */}
     </Box>

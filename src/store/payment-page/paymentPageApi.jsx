@@ -38,6 +38,32 @@ export const createPaymentApi = createAsyncThunk('store/createPaymentApi', async
   }
 });
 
+export const updatePaymentPageApi = createAsyncThunk('store/updatePaymentPageApi', async (params, thunkApi) => {
+  try {
+    const id = params.id;
+    console.log(id,"dklwndklwe")
+    const response = await axios.request({
+      url: `${urls.createPayment}/${id}`,
+      method: 'put',
+      data: params
+    });
+    const data = await response.data;
+
+    if (data?.message) {
+      return data;
+    }
+
+    if (data) {
+      return data;
+    }
+    return thunkApi.rejectWithValue('Something went wrong');
+  } catch (err) {
+    // thunkApi.dispatch(showMessage({ message: 'Something went wrong. please try again!', variant: 'error' }));
+    console.log(err,"Fwel")
+    return thunkApi.rejectWithValue(`${err.details}`);
+  }
+});
+
 export const uploadThumbnailApi = createAsyncThunk('store/uploadThumbnailApi', async (params, thunkApi) => {
   try {
     const response = await axios.request({

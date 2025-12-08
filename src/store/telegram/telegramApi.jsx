@@ -8,6 +8,7 @@ const urls = {
   telegramCreateChannel: 'telegram/create-channel',
   telegramVerify2FA: 'telegram/verify-2fa',
   createTelegramPage: 'telegram/create-telegram-page',
+  updateTelegram: 'telegram/telegram-pages',
   uploadTelegramThumbnail: 'telegram/upload',
   countAllTelegramPagesByUserName: 'telegram/countAllTelegramPagesByUserName',
   getTelegramPagePaginated: 'telegram/getAllTelegramPagesPaginated',
@@ -30,13 +31,14 @@ export const telegramSendOtpApi = createAsyncThunk('store/telegramSendOtpApi', a
     //   return data;
     // }
 
-    if (data) {
+    // if (data) {
       return data;
-    }
-    return thunkApi.rejectWithValue('Something went wrong');
+    // }
+    // return thunkApi.rejectWithValue('Something went wrong');
   } catch (err) {
     // thunkApi.dispatch(showMessage({ message: 'Something went wrong. please try again!', variant: 'error' }));
-    return thunkApi.rejectWithValue('Something went wrong. Please try again!');
+    console.log(err,"Dwlem")
+    return thunkApi.rejectWithValue(`Something went wrong. Please try again! ${err?.message}`);
   }
 });
 
@@ -53,10 +55,10 @@ export const uploadTelegramThumbnailApi = createAsyncThunk('store/uploadTelegram
     });
     const data = await response.data;
 
-    if (data?.message) {
+    // if (data?.message) {
       return data;
-    }
-    return thunkApi.rejectWithValue('Something went wrong');
+    // }
+    // return thunkApi.rejectWithValue('Something went wrong');
   } catch (err) {
     // thunkApi.dispatch(showMessage({ message: 'Something went wrong. please try again!', variant: 'error' }));
     return thunkApi.rejectWithValue('Something went wrong. Please try again!');
@@ -152,7 +154,33 @@ export const createTelegramPageApi = createAsyncThunk('store/createTelegramPageA
     return thunkApi.rejectWithValue('Something went wrong');
   } catch (err) {
     // thunkApi.dispatch(showMessage({ message: 'Something went wrong. please try again!', variant: 'error' }));
-    return thunkApi.rejectWithValue('Something went wrong. Please try again!');
+    console.log(err,"Fwel")
+    return thunkApi.rejectWithValue(`${err.details}`);
+  }
+});
+
+export const updateTelegramApi = createAsyncThunk('store/updateTelegramApi', async (params, thunkApi) => {
+  try {
+    const id = params.id;
+    const response = await axios.request({
+      url: `${urls.updateTelegram}/${id}`,
+      method: 'put',
+      data: params
+    });
+    const data = await response.data;
+
+    if (data?.message) {
+      return data;
+    }
+
+    if (data) {
+      return data;
+    }
+    return thunkApi.rejectWithValue('Something went wrong');
+  } catch (err) {
+    // thunkApi.dispatch(showMessage({ message: 'Something went wrong. please try again!', variant: 'error' }));
+    console.log(err,"Fwel")
+    return thunkApi.rejectWithValue(`${err.details}`);
   }
 });
 

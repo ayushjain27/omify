@@ -24,12 +24,14 @@ import {
 import CloseIcon from '@mui/icons-material/Close';
 import EditIcon from '@mui/icons-material/Edit';
 import CalendarTodayIcon from '@mui/icons-material/CalendarToday';
-import AttachMoneyIcon from '@mui/icons-material/AttachMoney';
+import PeopleIcon from '@mui/icons-material/People';
 import CategoryIcon from '@mui/icons-material/Category';
 import LinkIcon from '@mui/icons-material/Link';
 import DescriptionIcon from '@mui/icons-material/Description';
+import SmartphoneIcon from '@mui/icons-material/Smartphone';
+import PersonIcon from '@mui/icons-material/Person';
+import ImageIcon from '@mui/icons-material/Image';
 import { useDispatch, useSelector } from 'react-redux';
-import { updatePaymentPageStatusApi } from '../../store/payment-page/paymentPageApi';
 
 const statusColors = {
   ACTIVE: { color: 'success', bg: '#d4edda', text: '#155724' },
@@ -37,10 +39,10 @@ const statusColors = {
   REJECTED: { color: 'error', bg: '#f8d7da', text: '#721c24' }
 };
 
-const DialogData = ({ setPaymentDialog, setStatus }) => {
-  const { paymentPageDetail } = useSelector(({ paymentPageReducer }) => paymentPageReducer);
+const TelegramDialogData = ({ setTelegramDialog, setStatus }) => {
+  const { telegramPageDetail } = useSelector(({ telegramReducer }) => telegramReducer);
   const [openStatusModal, setOpenStatusModal] = useState(false);
-  const [selectedStatus, setSelectedStatus] = useState(paymentPageDetail?.status || 'PENDING');
+  const [selectedStatus, setSelectedStatus] = useState(telegramPageDetail?.status || 'INACTIVE');
   const dispatch = useDispatch();
   const { selectedUserDetails } = useSelector(({ authReducer }) => authReducer);
 
@@ -51,12 +53,12 @@ const DialogData = ({ setPaymentDialog, setStatus }) => {
   const handleSubmitStatus = async () => {
     try {
       const data = {
-        paymentId: paymentPageDetail?._id,
+        telegramId: telegramPageDetail?._id,
         status: selectedStatus
       };
-      await dispatch(updatePaymentPageStatusApi(data));
+      // await dispatch(updateTelegramStatusApi(data));
       setOpenStatusModal(false);
-      setPaymentDialog(false);
+      setTelegramDialog(false);
       setStatus(true);
     } catch (error) {
       console.error('Error updating status:', error);
@@ -86,7 +88,7 @@ const DialogData = ({ setPaymentDialog, setStatus }) => {
             {/* Header */}
             <Box
               sx={{
-                background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+                background: 'linear-gradient(135deg, #0088cc 0%, #00aced 100%)',
                 p: 3,
                 color: 'white'
               }}
@@ -96,24 +98,24 @@ const DialogData = ({ setPaymentDialog, setStatus }) => {
                   <Avatar
                     sx={{
                       bgcolor: 'white',
-                      color: 'primary.main',
+                      color: '#0088cc',
                       width: 56,
                       height: 56
                     }}
                   >
-                    <DescriptionIcon fontSize="large" />
+                    <PeopleIcon fontSize="large" />
                   </Avatar>
                   <Box>
                     <Typography variant="h4" fontWeight="700">
-                      Payment Details
+                      Telegram Channel Details
                     </Typography>
                     <Typography variant="body2" sx={{ opacity: 0.9, mt: 0.5 }}>
-                      View and manage payment page information
+                      View and manage Telegram channel information
                     </Typography>
                   </Box>
                 </Stack>
                 <IconButton
-                  onClick={() => setPaymentDialog(false)}
+                  onClick={() => setTelegramDialog(false)}
                   sx={{
                     color: 'white',
                     bgcolor: 'rgba(255,255,255,0.2)',
@@ -127,10 +129,10 @@ const DialogData = ({ setPaymentDialog, setStatus }) => {
               </Stack>
             </Box>
 
-            {!paymentPageDetail ? (
+            {!telegramPageDetail ? (
               <Box sx={{ p: 8, textAlign: 'center' }}>
                 <Typography variant="h6" color="text.secondary">
-                  No payment data available
+                  No Telegram data available
                 </Typography>
               </Box>
             ) : (
@@ -142,9 +144,9 @@ const DialogData = ({ setPaymentDialog, setStatus }) => {
                       elevation={0}
                       sx={{
                         p: 3,
-                        bgcolor: statusColors[paymentPageDetail.status]?.bg || 'grey.100',
+                        bgcolor: statusColors[telegramPageDetail.status]?.bg || 'grey.100',
                         border: '2px solid',
-                        borderColor: statusColors[paymentPageDetail.status]?.text || 'grey.300',
+                        borderColor: statusColors[telegramPageDetail.status]?.text || 'grey.300',
                         borderRadius: 2
                       }}
                     >
@@ -154,8 +156,8 @@ const DialogData = ({ setPaymentDialog, setStatus }) => {
                             Current Status:
                           </Typography>
                           <Chip
-                            label={paymentPageDetail.status || 'N/A'}
-                            color={statusColors[paymentPageDetail.status]?.color || 'default'}
+                            label={telegramPageDetail.status || 'N/A'}
+                            color={statusColors[telegramPageDetail.status]?.color || 'default'}
                             size="medium"
                             sx={{
                               fontWeight: 700,
@@ -175,7 +177,9 @@ const DialogData = ({ setPaymentDialog, setStatus }) => {
                               px: 3,
                               py: 1.5,
                               fontWeight: 600,
-                              boxShadow: 3
+                              boxShadow: 3,
+                              bgcolor: '#0088cc',
+                              '&:hover': { bgcolor: '#006699' }
                             }}
                           >
                             Update Status
@@ -198,7 +202,7 @@ const DialogData = ({ setPaymentDialog, setStatus }) => {
                 >
                   <Box sx={{ p: 3, bgcolor: 'primary.lighter' }}>
                     <Typography variant="h6" fontWeight={700} color="primary.main">
-                      📝 Basic Information
+                      📢 Channel Information
                     </Typography>
                   </Box>
                   <Divider />
@@ -206,52 +210,164 @@ const DialogData = ({ setPaymentDialog, setStatus }) => {
                     <Grid container spacing={3}>
                       <Grid item xs={12} md={6}>
                         <InfoCard
-                          icon={<DescriptionIcon color="primary" />}
-                          label="Title"
-                          value={paymentPageDetail.pageTitle}
+                          icon={<PeopleIcon color="primary" />}
+                          label="Channel Name"
+                          value={telegramPageDetail.channelName}
                         />
                       </Grid>
                       <Grid item xs={12} md={6}>
-                        <InfoCard icon={<CategoryIcon color="primary" />} label="Category" value={paymentPageDetail.category} />
+                        <InfoCard
+                          icon={<DescriptionIcon color="primary" />}
+                          label="Title"
+                          value={telegramPageDetail.title}
+                        />
+                      </Grid>
+                      <Grid item xs={12} md={6}>
+                        <InfoCard
+                          icon={<PersonIcon color="primary" />}
+                          label="Username"
+                          value={telegramPageDetail.userName}
+                        />
+                      </Grid>
+                      <Grid item xs={12} md={6}>
+                        <InfoCard
+                          icon={<CategoryIcon color="primary" />}
+                          label="Category"
+                          value={telegramPageDetail.category}
+                        />
                       </Grid>
                       <Grid item xs={12}>
                         <InfoCard
                           icon={<DescriptionIcon color="secondary" />}
                           label="Description"
-                          value={paymentPageDetail.description}
+                          value={telegramPageDetail.description}
                         />
                       </Grid>
                       <Grid item xs={12} md={6}>
-                        <InfoCard icon={<AttachMoneyIcon color="success" />} label="Price" value={`₹${paymentPageDetail.price}`} />
+                        <InfoCard
+                          icon={<SmartphoneIcon color="action" />}
+                          label="Phone Number"
+                          value={telegramPageDetail.phoneNumber}
+                        />
                       </Grid>
                       <Grid item xs={12} md={6}>
-                        <InfoCard icon={<LinkIcon color="info" />} label="Button Text" value={paymentPageDetail.buttonText} />
+                        <InfoCard
+                          icon={<LinkIcon color="info" />}
+                          label="Button Text"
+                          value={telegramPageDetail.buttonText}
+                        />
                       </Grid>
                       <Grid item xs={12} md={6}>
                         <InfoCard
                           icon={<CalendarTodayIcon color="action" />}
                           label="Created At"
-                          value={paymentPageDetail.createdAt ? new Date(paymentPageDetail.createdAt).toLocaleString() : 'N/A'}
+                          value={telegramPageDetail.createdAt ? new Date(telegramPageDetail.createdAt).toLocaleString() : 'N/A'}
                         />
                       </Grid>
                       <Grid item xs={12} md={6}>
                         <InfoCard
                           icon={<CalendarTodayIcon color="action" />}
                           label="Updated At"
-                          value={paymentPageDetail.updatedAt ? new Date(paymentPageDetail.updatedAt).toLocaleString() : 'N/A'}
+                          value={telegramPageDetail.updatedAt ? new Date(telegramPageDetail.updatedAt).toLocaleString() : 'N/A'}
                         />
                       </Grid>
-                      {paymentPageDetail.link && (
-                        <Grid item xs={12}>
-                          <InfoCard icon={<LinkIcon color="primary" />} label="Social Media Link" value={paymentPageDetail.link} />
-                        </Grid>
-                      )}
                     </Grid>
                   </Box>
                 </Card>
 
-                {/* Documents Section */}
-                {(paymentPageDetail?.imageUrl || paymentPageDetail?.file) && (
+                {/* Channel Link & ID Section */}
+                <Card
+                  elevation={0}
+                  sx={{
+                    mb: 3,
+                    borderRadius: 2,
+                    border: '1px solid',
+                    borderColor: 'divider'
+                  }}
+                >
+                  <Box sx={{ p: 3, bgcolor: 'secondary.lighter' }}>
+                    <Typography variant="h6" fontWeight={700} color="secondary.main">
+                      🔗 Channel Links & IDs
+                    </Typography>
+                  </Box>
+                  <Divider />
+                  <Box sx={{ p: 3 }}>
+                    <Grid container spacing={3}>
+                      <Grid item xs={12} md={6}>
+                        <InfoCard
+                          icon={<LinkIcon color="primary" />}
+                          label="Channel Link"
+                          value={telegramPageDetail.channelLink}
+                          isLink={true}
+                        />
+                      </Grid>
+                      <Grid item xs={12} md={6}>
+                        <InfoCard
+                          icon={<PeopleIcon color="primary" />}
+                          label="Channel ID"
+                          value={telegramPageDetail.channelId}
+                        />
+                      </Grid>
+                    </Grid>
+                  </Box>
+                </Card>
+
+                {/* Plans Section */}
+                {telegramPageDetail?.plans && telegramPageDetail.plans.length > 0 && (
+                  <Card
+                    elevation={0}
+                    sx={{
+                      mb: 3,
+                      borderRadius: 2,
+                      border: '1px solid',
+                      borderColor: 'divider'
+                    }}
+                  >
+                    <Box sx={{ p: 3, bgcolor: 'success.lighter' }}>
+                      <Typography variant="h6" fontWeight={700} color="success.main">
+                        💰 Subscription Plans
+                      </Typography>
+                    </Box>
+                    <Divider />
+                    <Box sx={{ p: 3 }}>
+                      <Grid container spacing={2}>
+                        {telegramPageDetail.plans.map((plan, index) => (
+                          <Grid item xs={12} md={6} key={index}>
+                            <Card
+                              elevation={0}
+                              sx={{
+                                p: 2,
+                                border: '1px solid',
+                                borderColor: 'divider',
+                                borderRadius: 2,
+                                bgcolor: 'background.paper'
+                              }}
+                            >
+                              <Stack spacing={1}>
+                                <Typography variant="subtitle1" fontWeight={600}>
+                                  Plan {index + 1}
+                                </Typography>
+                                {Object.entries(plan).map(([key, value]) => (
+                                  <Box key={key} sx={{ display: 'flex', justifyContent: 'space-between' }}>
+                                    <Typography variant="caption" color="text.secondary">
+                                      {key}:
+                                    </Typography>
+                                    <Typography variant="body2" fontWeight={500}>
+                                      {String(value)}
+                                    </Typography>
+                                  </Box>
+                                ))}
+                              </Stack>
+                            </Card>
+                          </Grid>
+                        ))}
+                      </Grid>
+                    </Box>
+                  </Card>
+                )}
+
+                {/* Image Section */}
+                {telegramPageDetail?.imageUrl && (
                   <Card
                     elevation={0}
                     sx={{
@@ -260,24 +376,17 @@ const DialogData = ({ setPaymentDialog, setStatus }) => {
                       borderColor: 'divider'
                     }}
                   >
-                    <Box sx={{ p: 3, bgcolor: 'secondary.lighter' }}>
-                      <Typography variant="h6" fontWeight={700} color="secondary.main">
-                        🖼️ Media & Documents
+                    <Box sx={{ p: 3, bgcolor: 'warning.lighter' }}>
+                      <Typography variant="h6" fontWeight={700} color="warning.main">
+                        🖼️ Channel Image
                       </Typography>
                     </Box>
                     <Divider />
                     <Box sx={{ p: 3 }}>
                       <Grid container spacing={3}>
-                        {paymentPageDetail?.imageUrl && (
-                          <Grid item xs={12} md={6}>
-                            <DocumentCard label="Thumbnail Image" src={paymentPageDetail.imageUrl} />
-                          </Grid>
-                        )}
-                        {paymentPageDetail?.file && (
-                          <Grid item xs={12} md={6}>
-                            <DocumentCard label="Additional File" src={paymentPageDetail.file} />
-                          </Grid>
-                        )}
+                        <Grid item xs={12} md={6}>
+                          <DocumentCard label="Channel Thumbnail" src={telegramPageDetail.imageUrl} />
+                        </Grid>
                       </Grid>
                     </Box>
                   </Card>
@@ -318,15 +427,15 @@ const DialogData = ({ setPaymentDialog, setStatus }) => {
             <Box
               sx={{
                 p: 3,
-                background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+                background: 'linear-gradient(135deg, #0088cc 0%, #00aced 100%)',
                 color: 'white'
               }}
             >
               <Typography variant="h5" fontWeight={700}>
-                Update Payment Status
+                Update Telegram Channel Status
               </Typography>
               <Typography variant="body2" sx={{ opacity: 0.9, mt: 0.5 }}>
-                Select a new status for this payment page
+                Select a new status for this Telegram channel
               </Typography>
             </Box>
 
@@ -360,7 +469,7 @@ const DialogData = ({ setPaymentDialog, setStatus }) => {
                         <Box sx={{ py: 1 }}>
                           <Typography fontWeight={600}>Active</Typography>
                           <Typography variant="caption" color="text.secondary">
-                            Payment page is live and accepting payments
+                            Channel is live and accessible
                           </Typography>
                         </Box>
                       }
@@ -384,7 +493,7 @@ const DialogData = ({ setPaymentDialog, setStatus }) => {
                         <Box sx={{ py: 1 }}>
                           <Typography fontWeight={600}>Inactive</Typography>
                           <Typography variant="caption" color="text.secondary">
-                            Payment page is paused temporarily
+                            Channel is temporarily disabled
                           </Typography>
                         </Box>
                       }
@@ -407,7 +516,7 @@ const DialogData = ({ setPaymentDialog, setStatus }) => {
                         <Box sx={{ py: 1 }}>
                           <Typography fontWeight={600}>Rejected</Typography>
                           <Typography variant="caption" color="text.secondary">
-                            Payment page has been declined
+                            Channel has been declined
                           </Typography>
                         </Box>
                       }
@@ -438,7 +547,9 @@ const DialogData = ({ setPaymentDialog, setStatus }) => {
                     py: 1.5,
                     borderRadius: 2,
                     fontWeight: 600,
-                    boxShadow: 3
+                    boxShadow: 3,
+                    bgcolor: '#0088cc',
+                    '&:hover': { bgcolor: '#006699' }
                   }}
                 >
                   Update Status
@@ -453,7 +564,7 @@ const DialogData = ({ setPaymentDialog, setStatus }) => {
 };
 
 // Info Card Component
-const InfoCard = ({ icon, label, value }) => (
+const InfoCard = ({ icon, label, value, isLink = false }) => (
   <Paper
     elevation={0}
     sx={{
@@ -476,9 +587,28 @@ const InfoCard = ({ icon, label, value }) => (
         <Typography variant="caption" color="text.secondary" fontWeight={600} sx={{ mb: 0.5, display: 'block' }}>
           {label}
         </Typography>
-        <Typography variant="body1" fontWeight={500} sx={{ wordBreak: 'break-word' }}>
-          {value || 'N/A'}
-        </Typography>
+        {isLink ? (
+          <Typography
+            component="a"
+            href={value}
+            target="_blank"
+            rel="noopener noreferrer"
+            variant="body1"
+            fontWeight={500}
+            sx={{
+              wordBreak: 'break-word',
+              color: 'primary.main',
+              textDecoration: 'none',
+              '&:hover': { textDecoration: 'underline' }
+            }}
+          >
+            {value || 'N/A'}
+          </Typography>
+        ) : (
+          <Typography variant="body1" fontWeight={500} sx={{ wordBreak: 'break-word' }}>
+            {value || 'N/A'}
+          </Typography>
+        )}
       </Box>
     </Stack>
   </Paper>
@@ -495,7 +625,7 @@ const DocumentCard = ({ label, src }) => (
       overflow: 'hidden',
       transition: 'all 0.3s ease',
       '&:hover': {
-        borderColor: 'primary.main',
+        borderColor: '#0088cc',
         boxShadow: '0 8px 24px rgba(0,0,0,0.12)'
       }
     }}
@@ -529,4 +659,4 @@ const DocumentCard = ({ label, src }) => (
   </Paper>
 );
 
-export default DialogData;
+export default TelegramDialogData;

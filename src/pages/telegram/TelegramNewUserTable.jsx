@@ -28,10 +28,9 @@ const gridStyle = { height: '100%', contain: 'none' };
 const createRowData = (data, callBackFns) => {
   const result = {
     id: data?._id,
-    image: data?.imageUrl,
-    title: data?.title,
-    description: data?.description,
-    category: data?.category,
+    phoneNumber: data?.phoneNumber,
+    firstName: data?.firstName,
+    totalDaysLeft: data?.totalDaysLeft,
     status: data?.status,
     createdAt: moment(data?.createdAt).format('DD-MMM-YYYY hh:mm:ss'),
     userId: data?.userName,
@@ -54,35 +53,27 @@ export default function TelegramNewUserTable(props) {
 
   const columns = [
     {
-      field: 'image',
-      headerName: 'Image',
+      field: 'phoneNumber',
+      headerName: 'Phone Number',
       filter: 'agTextColumnFilter',
       minWidth: 160,
-      editable: false,
-      cellRenderer: ({ data }) => openProductImage(data)
+      editable: false
+      // cellRenderer: ({ data }) => openProductImage(data)
     },
     {
-      field: 'title',
-      headerName: 'Title',
+      field: 'firstName',
+      headerName: 'FirstName',
       filter: 'agNumberColumnFilter',
       minWidth: 120,
       editable: false,
-      cellRenderer: (params) => openPaymentDetails(params.data)
+      // cellRenderer: (params) => openPaymentDetails(params.data)
     },
     {
-      field: 'description',
-      headerName: 'Description',
+      field: 'totalDaysLeft',
+      headerName: 'Total Days Left',
       filter: 'agTextColumnFilter',
       minWidth: 150,
       editable: false
-    },
-    {
-      field: 'category',
-      headerName: 'Category',
-      filter: 'agTextColumnFilter',
-      minWidth: 120,
-      editable: false
-      // valueFormatter: params => `Rs{params.value?.toFixed(2) || '0.00'}`
     },
     {
       field: 'createdAt',
@@ -91,14 +82,6 @@ export default function TelegramNewUserTable(props) {
       minWidth: 180,
       editable: false,
       sortable: true
-    },
-    {
-      field: 'action',
-      headerName: 'Action',
-      description: 'This column has a value getter and is not sortable.',
-      sortable: false,
-      minWidth: 160,
-      cellRenderer: ({ data }) => actionCellRenderer(data)
     }
   ];
   // if (selectedTab === 'manufacturer') {
@@ -213,8 +196,8 @@ export default function TelegramNewUserTable(props) {
     //   navigate('/userProfile', { replace: true }); // Add leading slash and replace option
     // } else {
     // Construct the URL to copy
-    // const linkToCopy = `http://localhost:3000/contentPage?id=${data?.id || 'dmkemkd'}`;
-    const linkToCopy = `http://localhost:3000/telegramLink?id=${data?.id || 'dmkemkd'}`;
+    const linkToCopy = `http://omify.vercel.app/contentPage?id=${data?.id}`;
+    // const linkToCopy = `http://localhost:3000/telegramLink?id=${data?.id || 'dmkemkd'}`;
 
     // Copy to clipboard
     navigator.clipboard

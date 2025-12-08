@@ -1,7 +1,7 @@
 /* eslint-disable react-hooks/exhaustive-deps */
 // material-ui
 import React, { useEffect, useState } from 'react';
-import { Box, Card, Grid, Tab, Tabs, useMediaQuery, useTheme } from '@mui/material';
+import { Box, Card, Fade, Grid, Paper, Stack, Tab, Tabs, useMediaQuery, useTheme } from '@mui/material';
 import AnalyticEcommerce from 'components/cards/statistics/AnalyticEcommerce';
 import MainCard from 'components/MainCard';
 import AnimateButton from 'components/@extended/AnimateButton';
@@ -25,7 +25,7 @@ import PaymentTable from './PaymentTable';
 import { Dialog, DialogContent, IconButton, Typography, CircularProgress } from '@mui/material';
 import { Close, Download, Visibility } from '@mui/icons-material';
 
-const PDFViewer = ({ pdfUrl, fileName = "document.pdf" }) => {
+const PDFViewer = ({ pdfUrl, fileName = 'document.pdf' }) => {
   const [open, setOpen] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
 
@@ -45,12 +45,7 @@ const PDFViewer = ({ pdfUrl, fileName = "document.pdf" }) => {
   return (
     <>
       {/* PDF Preview Button */}
-      <IconButton 
-        onClick={handleOpen}
-        color="primary"
-        size="small"
-        title="View PDF"
-      >
+      <IconButton onClick={handleOpen} color="primary" size="small" title="View PDF">
         <Visibility />
       </IconButton>
 
@@ -68,14 +63,16 @@ const PDFViewer = ({ pdfUrl, fileName = "document.pdf" }) => {
       >
         <DialogContent sx={{ p: 1, display: 'flex', flexDirection: 'column' }}>
           {/* Header */}
-          <Box sx={{ 
-            display: 'flex', 
-            justifyContent: 'space-between', 
-            alignItems: 'center',
-            p: 1,
-            borderBottom: 1,
-            borderColor: 'divider'
-          }}>
+          <Box
+            sx={{
+              display: 'flex',
+              justifyContent: 'space-between',
+              alignItems: 'center',
+              p: 1,
+              borderBottom: 1,
+              borderColor: 'divider'
+            }}
+          >
             <Typography variant="h6">PDF Preview</Typography>
             <Box>
               <IconButton onClick={handleDownload} color="primary" title="Download PDF">
@@ -90,33 +87,35 @@ const PDFViewer = ({ pdfUrl, fileName = "document.pdf" }) => {
           {/* PDF Content */}
           <Box sx={{ flex: 1, position: 'relative' }}>
             {isLoading && (
-              <Box sx={{ 
-                display: 'flex', 
-                justifyContent: 'center', 
-                alignItems: 'center',
-                height: '100%'
-              }}>
+              <Box
+                sx={{
+                  display: 'flex',
+                  justifyContent: 'center',
+                  alignItems: 'center',
+                  height: '100%'
+                }}
+              >
                 <CircularProgress />
               </Box>
             )}
-            
+
             <iframe
               src={pdfUrl}
               width="100%"
               height="100%"
-              style={{ 
+              style={{
                 border: 'none',
                 display: isLoading ? 'none' : 'block'
               }}
               title="PDF Viewer"
               onLoad={() => setIsLoading(false)}
             />
-            
+
             {/* Fallback for mobile devices */}
-            <Box 
-              sx={{ 
+            <Box
+              sx={{
                 display: isLoading ? 'none' : 'flex',
-                justifyContent: 'center', 
+                justifyContent: 'center',
                 alignItems: 'center',
                 height: '100%',
                 flexDirection: 'column',
@@ -124,9 +123,9 @@ const PDFViewer = ({ pdfUrl, fileName = "document.pdf" }) => {
               }}
             >
               <Typography variant="body2" color="text.secondary">
-                If PDF is not visible, 
+                If PDF is not visible,
               </Typography>
-              <button 
+              <button
                 onClick={handleDownload}
                 style={{
                   padding: '8px 16px',
@@ -280,66 +279,116 @@ export default function PaymentPage() {
     document.head.appendChild(style);
   };
 
+  const statCards = [
+    {
+      title: 'Total Payment Pages',
+      count: countAllPaymentPage?.total,
+      gradient: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+      icon: '📊'
+    },
+    {
+      title: 'Active Pages',
+      count: countAllPaymentPage?.active,
+      gradient: 'linear-gradient(135deg, #f093fb 0%, #f5576c 100%)',
+      icon: '✅'
+    },
+    {
+      title: 'Inactive Pages',
+      count: countAllPaymentPage?.inActive,
+      gradient: 'linear-gradient(135deg, #4facfe 0%, #00f2fe 100%)',
+      icon: '⏸️'
+    },
+    {
+      title: 'Rejected Pages',
+      count: countAllPaymentPage?.rejected,
+      gradient: 'linear-gradient(135deg, #fa709a 0%, #fee140 100%)',
+      icon: '❌'
+    }
+  ];
+
   return (
     <>
-      <div style={{ margin: '0px' }}>
-        <div style={{ display: 'flex', flexDirection: 'row', justifyContent: 'flex-end' }}>
-          <AnimateButton>
-            {/* <Button fullWidth size="large" type="submit" variant="contained" color="primary" onClick={handleUpdateKyc}>
-              Update Kyc
-            </Button> */}
-            <Button
-              variant="contained"
-              color="primary"
-              startIcon={<AddCircleOutlineRoundedIcon />}
-              onClick={handleNavigation}
-              size={isMobile ? 'medium' : 'large'}
-              sx={{
-                borderRadius: 2,
-                boxShadow: 'none',
-                '&:hover': {
-                  boxShadow: 'none'
-                }
-              }}
-            >
-              Create Payment Page
-            </Button>
-            {/* <PDFViewer pdfUrl="https://res.cloudinary.com/dmvudmx86/raw/upload/v1759806340/doc_1759806338508.pdf" /> */}
-          </AnimateButton>
-        </div>
-        <Grid container rowSpacing={4.5} columnSpacing={2.75} mt={0.1}>
-          <Grid item xs={12} sm={12} md={3} lg={3}>
-            <AnalyticsEachNumberData
-              title="Total Payment Pages"
-              number={countAllPaymentPage?.total}
-              loading={isCountAllPaymentPageLoading}
-              sx={{ backgroundColor: '#74CAFF' }}
-            />
-          </Grid>
-          <Grid item xs={12} sm={12} md={3} lg={3}>
-            <AnalyticsEachNumberData
-              title="Total Active Payment Pages"
-              number={countAllPaymentPage?.active}
-              loading={isCountAllPaymentPageLoading}
-              sx={{ backgroundColor: '#5BE584' }}
-            />
-          </Grid>
-          <Grid item xs={12} sm={12} md={3} lg={3}>
-            <AnalyticsEachNumberData
-              title="Total In-Active Payment Pages"
-              number={countAllPaymentPage?.inActive}
-              loading={isCountAllPaymentPageLoading}
-              sx={{ backgroundColor: '#ffe704' }}
-            />
-          </Grid>
-          <Grid item xs={12} sm={12} md={3} lg={3}>
-            <AnalyticsEachNumberData
-              title="Total Rejected Users"
-              number={countAllPaymentPage?.rejected}
-              loading={isCountAllPaymentPageLoading}
-              sx={{ backgroundColor: '#ffe704' }}
-            />
-          </Grid>
+      <Box style={{ margin: '0px' }}>
+        <Fade in timeout={500}>
+          <Paper
+            elevation={0}
+            sx={{
+              p: 3,
+              mb: 3,
+              background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+              borderRadius: 3,
+              color: 'white'
+            }}
+          >
+            <Stack direction="row" justifyContent="space-between" alignItems="center" flexWrap="wrap" gap={2}>
+              <Box>
+                <Typography variant="h4" fontWeight="700" gutterBottom>
+                  Payment Pages
+                </Typography>
+                <Typography variant="body2" sx={{ opacity: 0.9 }}>
+                  Manage and monitor all your payment pages
+                </Typography>
+              </Box>
+              <AnimateButton>
+                <Button
+                  variant="contained"
+                  startIcon={<AddCircleOutlineRoundedIcon />}
+                  onClick={handleNavigation}
+                  size={isMobile ? 'medium' : 'large'}
+                  sx={{
+                    bgcolor: 'white',
+                    color: 'primary.main',
+                    borderRadius: 2,
+                    px: 3,
+                    py: 1.5,
+                    fontWeight: 600,
+                    boxShadow: '0 8px 24px rgba(0,0,0,0.15)',
+                    '&:hover': {
+                      bgcolor: 'rgba(255,255,255,0.95)',
+                      transform: 'translateY(-2px)',
+                      boxShadow: '0 12px 32px rgba(0,0,0,0.2)'
+                    }
+                  }}
+                >
+                  Create Payment Page
+                </Button>
+              </AnimateButton>
+            </Stack>
+          </Paper>
+        </Fade>
+        <Grid container spacing={3} mb={3}>
+          {statCards.map((card, index) => (
+            <Grid item xs={12} sm={6} md={3} key={index}>
+              <Fade in timeout={500 + index * 100}>
+                <Card
+                  elevation={0}
+                  sx={{
+                    p: 3,
+                    borderRadius: 3,
+                    background: card.gradient,
+                    color: 'white',
+                    transition: 'all 0.3s ease',
+                    '&:hover': {
+                      transform: 'translateY(-8px)',
+                      boxShadow: '0 12px 32px rgba(0,0,0,0.2)'
+                    }
+                  }}
+                >
+                  <Stack direction="row" justifyContent="space-between" alignItems="center">
+                    <Box>
+                      <Typography variant="body2" sx={{ opacity: 0.9, mb: 1, fontWeight: 500 }}>
+                        {card.title}
+                      </Typography>
+                      <Typography variant="h3" fontWeight="700">
+                        {isCountAllPaymentPageLoading ? '...' : card.count || 0}
+                      </Typography>
+                    </Box>
+                    <Box sx={{ fontSize: 48, opacity: 0.3 }}>{card.icon}</Box>
+                  </Stack>
+                </Card>
+              </Fade>
+            </Grid>
+          ))}
         </Grid>
         <Card sx={{ marginTop: '16px' }}>
           <Box sx={{ borderBottom: 1, borderColor: 'divider' }}>
@@ -392,7 +441,7 @@ export default function PaymentPage() {
             renderOnZeroPageCount={null}
           />
         </Card>
-      </div>
+      </Box>
     </>
   );
 }
