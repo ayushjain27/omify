@@ -308,8 +308,8 @@ export default function PaymentTable(props) {
       enqueueSnackbar('Please update your KYC details', { variant: 'success' });
       navigate('/userProfile', { replace: true });
     } else {
-      const linkToCopy = `https://omify.vercel.app/contentPage?id=${data?.id}`;
-      // const linkToCopy = `http://localhost:3000/contentPage?id=${data?.id || 'dmkemkd'}`;
+      // const linkToCopy = `https://omify.vercel.app/contentPage?id=${data?.id}`;
+      const linkToCopy = `http://localhost:3000/contentPage?id=${data?.id || 'dmkemkd'}`;
       navigator.clipboard.writeText(linkToCopy)
         .then(() => {
           enqueueSnackbar('Payment link copied to clipboard!', { variant: 'success' });

@@ -4,8 +4,8 @@ import axiosRetry from 'axios-retry';
 // ----------------------------------------------------------------------
 // const BASE_URL1 = 'http://localhost:5055/';
 const axiosInstance = axios.create({
-  // baseURL: 'http://localhost:15000',
-  baseURL: 'https://omify-backend.vercel.app',
+  baseURL: 'http://localhost:15000',
+  // baseURL: 'https://omify-backend.vercel.app',
   timeout: 600000
 });
 axiosInstance.interceptors.response.use(

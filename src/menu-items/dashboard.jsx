@@ -1,17 +1,26 @@
 // assets
-import { DashboardOutlined, ChromeOutlined } from '@ant-design/icons';
+import { 
+  DashboardOutlined, 
+  ChromeOutlined,
+  RocketOutlined,
+  SafetyCertificateOutlined,
+  ThunderboltOutlined
+} from '@ant-design/icons';
 
 // icons
 const icons = {
   DashboardOutlined,
-  ChromeOutlined
+  ChromeOutlined,
+  RocketOutlined,
+  SafetyCertificateOutlined,
+  ThunderboltOutlined
 };
 
 // ==============================|| MENU ITEMS - DASHBOARD ||============================== //
 
 const dashboard = {
   id: 'group-dashboard',
-  // title: 'Navigation',
+  title: 'MAIN NAVIGATION',
   type: 'group',
   children: [
     {
@@ -20,23 +29,56 @@ const dashboard = {
       type: 'item',
       url: '/dashboard/default',
       icon: icons.DashboardOutlined,
-      breadcrumbs: false
+      breadcrumbs: false,
+      badge: 'PRO',
+      badgeColor: 'linear-gradient(90deg, #8B5CF6, #EC4899)'
     },
     {
-      id: 'payment-page',
-      title: 'Payment Page',
-      type: 'item',
-      url: '/payment-page',
-      icon: icons.ChromeOutlined,
-      breadcrumbs: false
+      id: 'payment',
+      title: 'Payment',
+      type: 'collapse',
+      icon: icons.RocketOutlined,
+      children: [
+        {
+          id: 'payment-overview',
+          title: 'Overview',
+          type: 'item',
+          url: '/payment/overview',
+          new: true
+        },
+        {
+          id: 'payment-page',
+          title: 'Payment Page',
+          type: 'item',
+          url: '/payment-page',
+        },
+        {
+          id: 'transactions',
+          title: 'Transactions',
+          type: 'item',
+          url: '/payment/transactions',
+          badge: '12',
+          badgeColor: '#3B82F6'
+        }
+      ]
     },
     {
-      id: 'telegram-page',
-      title: 'Telegram Page',
+      id: 'telegram',
+      title: 'Telegram',
       type: 'item',
       url: '/telegram-page',
-      icon: icons.ChromeOutlined,
-      breadcrumbs: false
+      icon: icons.ThunderboltOutlined,
+      breadcrumbs: false,
+      badge: 'HOT',
+      badgeColor: 'linear-gradient(90deg, #EF4444, #F59E0B)'
+    },
+    {
+      id: 'security',
+      title: 'Security',
+      type: 'item',
+      url: '/security',
+      icon: icons.SafetyCertificateOutlined,
+      breadcrumbs: false,
     }
   ]
 };

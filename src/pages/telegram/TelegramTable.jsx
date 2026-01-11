@@ -296,7 +296,8 @@ export default function TelegramTable(props) {
   };
 
   const copyLink = (data) => {
-    const linkToCopy = `http://omify.vercel.app/telegramLink?id=${data?.id}`;
+    // const linkToCopy = `https://omify.vercel.app/telegramLink?id=${data?.id}`;
+    const linkToCopy = `http://localhost:3000/telegramLink?id=${data?.id}`;
     // const linkToCopy = `http://localhost:3000/telegramLink?id=${data?.id || 'dmkemkd'}`;
     navigator.clipboard
       .writeText(linkToCopy)
